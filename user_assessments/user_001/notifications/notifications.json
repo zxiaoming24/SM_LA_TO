@@ -1,0 +1,11 @@
+[
+  {
+    "user_id": "user_001",
+    "assessment_id": "assess_20260716_122605",
+    "type": "new_assessment",
+    "title": "新的学习评估报告",
+    "content": "您的学习评估已完成！\n\n薄弱点：\n- 编程基础语法与调试能力缺失 (高)\n- 学习行为持续性与目标动机不稳定 (高)",
+    "timestamp": "2026-07-16T12:26:09.586630",
+    "read": true
+  }
+]

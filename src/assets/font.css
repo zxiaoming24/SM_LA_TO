@@ -1,0 +1,16 @@
+/* 字体注册 */
+@font-face {
+  font-family: "三极行楷简体-粗";
+  src: url("./fonts/三极行楷简体-粗.ttf")format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "抖音美好体";
+  src: url("./fonts/抖音美好体.otf")format("opentype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}

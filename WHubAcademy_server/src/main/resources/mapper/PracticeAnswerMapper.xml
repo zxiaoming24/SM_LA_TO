@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dhi.wha.mapper.PracticeAnswerMapper">
+
+    <resultMap id="PracticeAnswerResultMap" type="com.dhi.wha.vo.PracticeAnswerVO">
+        <id property="id" column="id"/>
+        <result property="status" column="status"/>
+        <result property="createTime" column="create_time"/>
+        <result property="verdict" column="verdict"/>
+        <result property="score" column="score"/>
+        <result property="passedTests" column="passed_tests"/>
+        <result property="totalTests" column="total_tests"/>
+        <result property="suggestion" column="suggestion" typeHandler="com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler"/>
+        <result property="encouragement" column="encouragement"/>
+        <result property="language" column="language"/>
+        <result property="question" column="question" typeHandler="com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler"/>
+    </resultMap>
+
+    <select id="getPracticeAnswerById" resultMap="PracticeAnswerResultMap" parameterType="java.lang.Long">
+        select id, status, create_time, verdict, score, passed_tests, total_tests, suggestion, encouragement, language,question
+        from practice_answer
+        where id = #{id}
+    </select>
+
+    <select id="getPracticeAnswerList" resultType="com.dhi.wha.vo.PracticeAnswerListVO" parameterType="java.lang.Long">
+        select id, practice_id, create_time, status, verdict, score
+        from practice_answer
+        where practice_id = #{practiceId}
+        and user_id = #{userId}
+        order by create_time desc
+    </select>
+
+</mapper>

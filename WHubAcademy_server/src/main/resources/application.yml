@@ -1,0 +1,101 @@
+spring:
+  servlet:
+    multipart:
+      # 单个文件上限，按需调整 50MB/100MB
+      max-file-size: 200MB
+      # 单次请求总大小上限，要大于max-file-size
+      max-request-size: 300MB
+  web:
+    resources:
+      static-locations:
+          - classpath:/static/
+          - file:D:/WisdomHubAcademy/WHubAcademy/assets/
+  # ????
+  mail:
+    host:
+    port:
+    username:
+    password:
+    default-encoding:
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+    # Redis??
+  redis:
+    host:
+    port:
+    password:
+    database:
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+  main:
+    allow-circular-references: true
+  datasource:
+    url: jdbc:mysql://localhost:3306/WisdomHubAcademy?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=GMT%2B8&allowPublicKeyRetrieval=true
+    username:
+    password:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    type: com.zaxxer.hikari.HikariDataSource
+
+    hikari:
+      connection-timeout: 20000
+      minimum-idle: 5
+      maximum-pool-size: 12
+      idle-timeout: 300000
+      max-lifetime: 1200000
+      auto-commit: true
+dhi:
+  jwt:
+    # ??jwt??????????
+    admin-secret-key: itcast
+    # ??jwt????
+    admin-ttl: 43200000
+    # ?????????????
+    admin-token-name: token
+#    user-secret-key: itheima
+#    user-ttl: 43200000
+#    user-token-name: authentication
+mybatis:
+  #mapper????
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.dhi.entity
+  configuration:
+    #??????
+    map-underscore-to-camel-case: true
+autodl:
+  host: connect.bjb2.seetacloud.com
+  port:
+  username:
+  password:
+  base-dir: /root/autodl-tmp
+  connect-timeout: 30000
+
+server:
+  address: 0.0.0.0
+  port: 8080
+  tomcat:
+    uri-encoding: UTF-8
+hmp:
+  alioss:
+    bucket-name:
+    access-key-secret:
+    access-key-id:
+    endpoint:
+# 阿里云 PPT 生成接口配置
+ppt:
+  api:
+    host:
+    app-code:
+mybatis-plus:
+  global-config:
+    db-config:
+      id-type: auto
+      field-strategy: not_empty
+  configuration:
+    #??????
+    map-underscore-to-camel-case: true

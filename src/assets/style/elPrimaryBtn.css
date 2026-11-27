@@ -1,0 +1,86 @@
+/* ============================================
+   Element Plus / Element UI Primary Button 覆盖（统一按钮颜色）
+   文件: elPrimaryBtn.css
+   用法: 在 main.js 中导入
+   ============================================ */
+
+/* ---------- 主按钮覆盖 ---------- */
+.el-button--primary {
+  background-color: var(--primary) !important;
+  border-color: var(--primary) !important;
+  color: #fff !important;
+  box-shadow: none !important;
+}
+
+.el-button--primary:hover {
+  background-color: var(--primary-hv) !important;
+  border-color: var(--primary-hv) !important;
+  color: #fff !important;
+}
+
+.el-button--primary:active {
+  background-color: var(--primary-act) !important;
+  border-color: var(--primary-act) !important;
+  color: #fff !important;
+}
+
+.el-button--primary.is-disabled,
+.el-button--primary.is-disabled:hover,
+.el-button--primary.is-disabled:active {
+  background-color: var(--primary-disa-bgc) !important;
+  border-color: var(--primary-disa-border) !important;
+  color: rgba(0, 0, 0, 0.25) !important;
+  cursor: not-allowed;
+  box-shadow: none !important;
+}
+
+.el-button--primary .el-button__text {
+  color: inherit !important;
+}
+
+/* ---------- 文本按钮 primary 变体 ---------- */
+.el-button--primary.is-text {
+  background-color: transparent !important;
+  border-color: transparent !important;
+  color: var(--primary) !important;
+}
+
+.el-button--primary.is-text:hover {
+  background-color: var(--primary-light) !important;
+  color: var(--primary-hv) !important;
+}
+
+.el-button--primary.is-text:active {
+  background-color: var(--primary-fade) !important;
+  color: var(--primary-act) !important;
+}
+
+.el-button--primary.is-text.is-disabled {
+  background-color: transparent !important;
+  color: var(--primary-disa-border) !important;
+}
+
+/* ---------- 朴素按钮 primary 变体 ---------- */
+.el-button--primary.is-plain {
+  background-color: var(--primary-light) !important;
+  border-color: var(--primary-fade) !important;
+  color: var(--primary) !important;
+}
+
+.el-button--primary.is-plain:hover {
+  background-color: var(--primary) !important;
+  border-color: var(--primary) !important;
+  color: #fff !important;
+}
+
+.el-button--primary.is-plain:active {
+  background-color: var(--primary-act) !important;
+  border-color: var(--primary-act) !important;
+  color: #fff !important;
+}
+
+.el-button--primary.is-plain.is-disabled {
+  background-color: var(--primary-disa-bgc) !important;
+  border-color: var(--primary-disa-border) !important;
+  color: rgba(0, 0, 0, 0.25) !important;
+}

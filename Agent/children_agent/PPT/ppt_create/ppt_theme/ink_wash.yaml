@@ -1,0 +1,49 @@
+# ink_wash.yaml 水墨风格（中国传统美学）
+layout:
+  slide_width_emu: 12192000
+  slide_height_emu: 6858000
+  floating_shadow_blur: "3pt"
+  floating_shadow_dist: "1pt"
+  floating_shadow_alpha: "50000"
+  floating_title_box_height_emu: 1500000
+  cover_title_separator: "："
+  cover_main_title_top_emu: 980000
+  cover_subtitle_top_emu: 2050000
+  cover_section_start_top_emu: 2800000
+  cover_section_gap_emu: 260000
+  section_title_box_height_emu: 360000
+  section_title_to_content_gap_emu: 340000
+  section_content_box_height_emu: 530000
+  content_margin_left_emu: 480000
+  content_margin_top_emu: 440000
+  content_width_emu: 5600000
+  content_title_box_height_emu: 780000
+  content_title_to_points_gap_emu: 1250000
+  content_shadow_blur: "10pt"
+  content_shadow_dist: "5pt"
+  content_shadow_alpha: "45000"
+  point_bullet: "◆"
+  point_box_height_emu: 460000
+  point_to_detail_gap_emu: 360000
+  detail_indent_emu: 290000
+  detail_box_height_emu: 660000
+  point_vertical_gap_emu: 1020000
+
+font_size:
+  cover_main_title_pt: 70
+  cover_subtitle_pt: 22
+  section_title_pt: 24
+  section_content_pt: 15
+  content_title_pt: 34
+  point_pt: 20
+  detail_pt: 15
+  code_pt: 13
+
+color:
+  cover_main_title_color: "#2C2C2C"
+  cover_subtitle_color: "#5A5A5A"
+  section_title_color: "#2C2C2C"
+  section_content_color: "#6B6B6B"
+  content_title_color: "#2C2C2C"
+  accent: "#8B0000"
+  text_body: "#3D3D3D"

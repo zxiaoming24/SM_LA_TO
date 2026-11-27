@@ -1,0 +1,48 @@
+layout:
+  slide_width_emu: 12192000
+  slide_height_emu: 6858000
+  floating_shadow_blur: "3pt"
+  floating_shadow_dist: "1pt"
+  floating_shadow_alpha: "7500"
+  floating_title_box_height_emu: 1500000
+  cover_title_separator: "："
+  cover_main_title_top_emu: 950000
+  cover_subtitle_top_emu: 2000000
+  cover_section_start_top_emu: 2800000
+  cover_section_gap_emu: 250000
+  section_title_box_height_emu: 350000
+  section_title_to_content_gap_emu: 320000
+  section_content_box_height_emu: 520000
+  content_margin_left_emu: 480000
+  content_margin_top_emu: 420000
+  content_width_emu: 5600000
+  content_title_box_height_emu: 750000
+  content_title_to_points_gap_emu: 1200000
+  content_shadow_blur: "10pt"
+  content_shadow_dist: "5pt"
+  content_shadow_alpha: "38000"
+  point_bullet: "●"
+  point_box_height_emu: 450000
+  point_to_detail_gap_emu: 350000
+  detail_indent_emu: 280000
+  detail_box_height_emu: 650000
+  point_vertical_gap_emu: 1000000
+
+font_size:
+  cover_main_title_pt: 68
+  cover_subtitle_pt: 22
+  section_title_pt: 24
+  section_content_pt: 15
+  content_title_pt: 34
+  point_pt: 20
+  detail_pt: 15
+  code_pt: 13
+
+color:
+  cover_main_title_color: "#0052CC"
+  cover_subtitle_color: "#0052CC"
+  section_title_color: "#0052CC"
+  section_content_color: "#333333"
+  content_title_color: "#0052CC"
+  accent: "#007FFF"
+  text_body: "#2F2F2F"

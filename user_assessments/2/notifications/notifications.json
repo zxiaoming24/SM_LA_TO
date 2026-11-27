@@ -1,0 +1,20 @@
+[
+  {
+    "user_id": "2",
+    "assessment_id": "assess_20260722_213942",
+    "type": "new_assessment",
+    "title": "新的学习评估报告",
+    "content": "您的学习评估已完成！\n\n薄弱点：\n- 时间管理能力近乎缺失 (高)\n- Python核心基础（字符串、列表字典、循环）系统性薄弱 (高)",
+    "timestamp": "2026-07-22T21:39:45.614345",
+    "read": false
+  },
+  {
+    "user_id": "2",
+    "assessment_id": "assess_20260718_134349",
+    "type": "new_assessment",
+    "title": "新的学习评估报告",
+    "content": "您的学习评估已完成！\n\n薄弱点：\n- 循环结构基础知识掌握严重不足 (高)\n- 专注度低、学习投入浮于表面 (高)",
+    "timestamp": "2026-07-18T13:43:52.829407",
+    "read": false
+  }
+]

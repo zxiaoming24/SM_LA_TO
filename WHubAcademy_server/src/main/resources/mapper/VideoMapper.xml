@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.dhi.wha.mapper.VideoMapper">
+    <select id="getListByUserId" resultType="com.dhi.wha.vo.VideoVO">
+        SELECT v.id, v.status, v.text, v.create_time, v.batch_id
+        FROM video v
+                 INNER JOIN (
+            SELECT batch_id, MIN(id) AS min_id
+            FROM video
+            WHERE user_id = #{userId}
+            GROUP BY batch_id
+        ) t ON v.id = t.min_id
+        ORDER BY v.create_time DESC
+    </select>
+    <select id="getVideoInfoById" resultType="com.dhi.wha.vo.ChatResourceVO">
+        SELECT batch_id AS id,status,text,create_time
+        FROM video
+        WHERE batch_id = #{taskId}
+        LIMIT 1;
+    </select>
+    <select id="getByUrl" resultType="com.dhi.wha.entity.Video">
+        select * from video where url = #{url} limit 1
+    </select>
+</mapper>

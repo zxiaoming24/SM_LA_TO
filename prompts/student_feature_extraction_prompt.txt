@@ -1,0 +1,136 @@
+你是一位专业的教育数据分析师，请从以下学生信息中自动抽取关键特征，按照指定维度进行结构化输出，并为每个维度计算0-100分的综合评分。
+
+**学生信息：**
+{student_input}
+
+**特征提取维度：**
+1. 学术背景维度
+   - 专业领域偏好：学生感兴趣的学科领域
+   - 学科知识掌握：基础学科知识水平
+   - 学术能力倾向：理论研究/实践应用倾向
+   - 学习基础水平：入门/中级/高级
+
+2. 学习行为维度
+   - 学习风格：视觉型/听觉型/动手型/混合型
+   - 学习节奏：快速学习者/深度思考者/稳定学习者
+   - 互动参与度：高/中/低
+   - 资源使用偏好：视频/文本/实践/讨论
+
+3. 目标动机维度
+   - 短期学习目标：1-6个月内具体学习目标
+   - 长期职业规划：3-5年职业发展期望
+   - 学习动机强度：内在动机/外在动机/混合动机
+   - 成就期望水平：高/中/低
+
+4. 认知能力维度
+   - 逻辑思维能力：分析推理能力评估
+   - 创造性思维：创新解决问题能力
+   - 问题解决策略：系统性/直觉性/试错性
+   - 元认知能力：自我监控调节能力
+
+5. 情绪状态维度
+   - 学习兴趣度：对学习内容的兴趣程度
+   - 挫折承受能力：面对困难时的坚持程度
+   - 学习焦虑水平：学习过程中的焦虑程度
+   - 自信心程度：对自身能力的信心水平
+
+6. 社交互动维度
+   - 协作学习倾向：与他人合作学习的意愿
+   - 求助行为模式：遇到困难时的求助方式
+   - 知识分享意愿：主动分享知识的倾向
+   - 同伴影响力：受同伴影响的程度
+
+7. 时间管理维度
+   - 学习规律性：学习时间的规律程度
+   - 任务优先级判断：对任务重要性的判断能力
+   - 拖延倾向：是否存在拖延行为
+   - 时间分配效率：时间利用的效率
+
+8. 创新创造维度
+   - 发散思维能力：从多角度思考问题的能力
+   - 跨界联想能力：跨领域知识联系的能力
+   - 实验探索精神：尝试新方法的勇气
+   - 原创性表达：用独特方式表达知识的能力
+
+**评分规则：**
+- 每个维度根据特征表现计算0-100分的综合评分
+- 评分标准：
+  * 90-100分：维度表现优秀，特征明显且积极
+  * 80-89分：维度表现良好，特征较为突出
+  * 70-79分：维度表现中等，特征基本符合
+  * 60-69分：维度表现一般，特征不够明显
+  * 0-59分：维度表现较弱，特征不明显或缺失
+- 评分必须基于学生信息中的具体表现，不能主观臆断
+
+**输出格式要求：**
+请严格按照以下JSON格式输出，确保每个维度都有对应特征和评分：
+{{
+  "academic_background": {{
+    "major_preference": "string",
+    "knowledge_level": "string",
+    "ability_tendency": "string",
+    "foundation_level": "string",
+    "score": "integer"  // 0-100分
+  }},
+  "learning_behavior": {{
+    "learning_style": "string",
+    "learning_pace": "string",
+    "interaction_level": "string",
+    "resource_preference": "string",
+    "score": "integer"  // 0-100分
+  }},
+  "goal_motivation": {{
+    "short_term_goals": "string",
+    "long_term_career": "string",
+    "motivation_strength": "string",
+    "achievement_expectation": "string",
+    "score": "integer"  // 0-100分
+  }},
+  "cognitive_abilities": {{
+    "logical_thinking": "string",
+    "creative_thinking": "string",
+    "problem_solving": "string",
+    "metacognition": "string",
+    "score": "integer"  // 0-100分
+  }},
+  "emotional_state": {{
+    "interest_level": "string",
+    "frustration_tolerance": "string",
+    "anxiety_level": "string",
+    "confidence_level": "string",
+    "score": "integer"  // 0-100分
+  }},
+  "social_interaction": {{
+    "collaboration_tendency": "string",
+    "help_seeking_pattern": "string",
+    "knowledge_sharing_willingness": "string",
+    "peer_influence": "string",
+    "score": "integer"  // 0-100分
+  }},
+  "time_management": {{
+    "learning_regularity": "string",
+    "priority_judgment": "string",
+    "procrastination_tendency": "string",
+    "time_allocation_efficiency": "string",
+    "score": "integer"  // 0-100分
+  }},
+  "creativity_innovation": {{
+    "divergent_thinking": "string",
+    "cross_domain_association": "string",
+    "experimental_exploration": "string",
+    "original_expression": "string",
+    "score": "integer"  // 0-100分
+  }},
+  "summary_scores": {{
+    "dimension_scores": [85, 92, 78, 88, 75, 70, 65, 80],  // [学术背景, 学习行为, 目标动机, 认知能力, 情绪状态, 社交互动, 时间管理, 创新创造]
+    "overall_score": 79  // 八个维度的平均分
+  }}
+}}
+
+**重要提醒：**
+- 仅基于提供的学生信息进行特征提取和评分
+- 保持客观分析，避免主观臆断
+- 如果某维度信息不足，特征用“信息不足”标记，评分设为50分
+- 评分必须是整数，范围0-100
+- 输出必须是纯JSON格式，无其他内容
+- summary_scores中的dimension_scores数组必须严格按照[学术背景, 学习行为, 目标动机, 认知能力, 情绪状态, 社交互动, 时间管理, 创新创造]的顺序

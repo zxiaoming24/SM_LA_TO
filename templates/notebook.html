@@ -1,0 +1,3680 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>学习笔记</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+       background: #f5f7fa; color: #1a1a2e; height: 100vh; display: flex; flex-direction: column; }
+
+/* Header */
+.header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+           color: #fff; padding: 12px 24px; display: flex; align-items: center;
+           justify-content: space-between; flex-shrink: 0; }
+.header h2 { font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.header .actions { display: flex; gap: 10px; }
+.header .actions button { padding: 7px 18px; border: none; border-radius: 8px;
+                          background: rgba(255,255,255,0.2); color: #fff; cursor: pointer;
+                          font-size: 13px; transition: all .2s; }
+.header .actions button:hover { background: rgba(255,255,255,0.35); }
+.header .actions button.primary { background: #fff; color: #667eea; font-weight: 600; }
+.header .actions button.primary:hover { background: #f0f0ff; }
+
+/* Main layout */
+.main { flex: 1; display: flex; overflow: hidden; }
+
+/* Sidebar */
+.sidebar { width: 280px; background: #fff; border-right: 1px solid #e8e8e8;
+           display: flex; flex-direction: column; flex-shrink: 0; }
+.sidebar .search-box { padding: 12px 14px; border-bottom: 1px solid #eee; }
+.sidebar .search-box input { width: 100%; padding: 8px 12px; border: 2px solid #e0e0e0;
+                             border-radius: 8px; font-size: 13px; outline: none;
+                             transition: border-color .2s; }
+.sidebar .search-box input:focus { border-color: #667eea; }
+.sidebar .note-list { flex: 1; overflow-y: auto; }
+.sidebar .note-item { padding: 14px 16px; border-bottom: 1px solid #f0f0f0;
+                      cursor: pointer; transition: all .2s; }
+.sidebar .note-item:hover { background: #f8f9ff; }
+.sidebar .note-item.active { background: #eef0ff; border-left: 3px solid #667eea; }
+.sidebar .note-item .title { font-size: 14px; font-weight: 600; color: #333;
+                              margin-bottom: 4px; white-space: nowrap; overflow: hidden;
+                              text-overflow: ellipsis; }
+.sidebar .note-item .meta { font-size: 11px; color: #999; display: flex;
+                             justify-content: space-between; align-items: center; }
+.sidebar .note-item .meta .badge { display: inline-block; padding: 1px 6px;
+                                    border-radius: 4px; font-size: 10px;
+                                    background: #e8f5e9; color: #2e7d32; }
+.sidebar .note-item .meta .badge.organized { background: #e3f2fd; color: #1565c0; }
+.sidebar .note-item .kp-tags { margin: 3px 0; display: flex; gap: 4px; flex-wrap: wrap; }
+.sidebar .note-item .kp-tag { display: inline-block; padding: 1px 7px; border-radius: 10px;
+                               font-size: 10px; background: #fef3e2; color: #d98c1a;
+                               border: 1px solid #fde4b5; line-height: 1.6; }
+
+/* 编辑器知识点标签 */
+.editor .kp-bar { padding: 6px 20px; border-bottom: 1px solid #f0f0f0;
+                  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+                  background: #fafafa; font-size: 12px; min-height: 32px; }
+.editor .kp-bar .kp-label { color: #999; font-size: 11px; margin-right: 4px; }
+.editor .kp-bar .kp-tag { display: inline-block; padding: 2px 10px; border-radius: 12px;
+                           font-size: 11px; background: #fef3e2; color: #d98c1a;
+                           border: 1px solid #fde4b5; font-weight: 500; }
+.sidebar .note-list .empty { text-align: center; color: #ccc; padding: 40px 0; font-size: 14px; }
+
+/* Editor */
+.editor { flex: 1; display: flex; flex-direction: column; background: #fff; }
+.editor .no-note { flex: 1; display: flex; align-items: center; justify-content: center;
+                    color: #ccc; font-size: 16px; flex-direction: column; gap: 12px; }
+.editor .no-note .icon { font-size: 48px; opacity: 0.5; }
+.editor .toolbar { padding: 10px 20px; border-bottom: 1px solid #eee;
+                    display: flex; align-items: center; gap: 8px;
+                    background: #fafafa; flex-wrap: wrap; }
+.editor .toolbar .note-title-input { flex: 1; padding: 8px 12px; border: 2px solid #e0e0e0;
+                                      border-radius: 8px; font-size: 16px; font-weight: 600;
+                                      outline: none; min-width: 200px;
+                                      transition: border-color .2s; }
+.editor .toolbar .note-title-input:focus { border-color: #667eea; }
+.editor .toolbar .btn-group { display: flex; gap: 6px; }
+.editor .toolbar button { padding: 6px 14px; border: 1px solid #ddd; border-radius: 6px;
+                           background: #fff; cursor: pointer; font-size: 12px;
+                           transition: all .2s; white-space: nowrap; }
+.editor .toolbar button:hover { background: #f5f5ff; border-color: #667eea; color: #667eea; }
+.editor .toolbar button.save-btn { background: #667eea; color: #fff; border-color: #667eea;
+                                    font-weight: 600; }
+.editor .toolbar button.save-btn:hover { background: #5a6fd6; }
+.editor .toolbar button.danger { color: #e74c3c; border-color: #e74c3c; }
+.editor .toolbar button.danger:hover { background: #fff5f5; }
+.editor .toolbar .upload-btn { color: #27ae60; border-color: #27ae60; }
+.editor .toolbar .upload-btn:hover { background: #f0fff4; }
+.editor .toolbar .sep { width: 1px; height: 24px; background: #ddd; margin: 0 4px; }
+
+.editor .content-area { flex: 1; display: flex; overflow: hidden; position: relative; }
+.editor .editor-div { width: 100%; height: 100%; padding: 20px; border: none; outline: none;
+                      overflow-y: auto; font-size: 15px; line-height: 1.8;
+                      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                      color: #333; background: #fff; }
+.editor .editor-div:empty:before {
+  content: attr(data-placeholder);
+  color: #ccc;
+  pointer-events: none;
+}
+.editor .editor-div img { max-width: 100%; border-radius: 8px; margin: 12px 0;
+                          box-shadow: 0 2px 12px rgba(0,0,0,0.1); display: block; }
+.editor .editor-div img[data-resizing] { outline: 2px dashed #667eea; user-select: none; }
+.editor .editor-div .img-resize-handle { position: absolute; right: -5px; bottom: -5px;
+                                          width: 12px; height: 12px; border-radius: 50%;
+                                          background: #667eea; border: 2px solid #fff;
+                                          box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+                                          cursor: nwse-resize; z-index: 10; display: none; }
+.editor .editor-div:hover .img-resize-handle { display: block; }
+.editor .editor-div h1 { font-size: 24px; margin: 16px 0 8px; border-bottom: 2px solid #667eea; padding-bottom: 6px; }
+.editor .editor-div h2 { font-size: 20px; margin: 14px 0 6px; }
+.editor .editor-div h3 { font-size: 17px; margin: 12px 0 4px; }
+.editor .editor-div p { margin: 6px 0; min-height: 1.2em; }
+.editor .editor-div ul, .editor .editor-div ol { padding-left: 24px; margin: 6px 0; }
+.editor .editor-div li { margin: 3px 0; }
+.editor .editor-div strong { font-weight: 700; }
+.editor .editor-div em { font-style: italic; }
+.editor .editor-div code { background: #f0f0f0; padding: 2px 6px; border-radius: 4px;
+                           font-size: 13px; font-family: Consolas, monospace; }
+.editor .editor-div blockquote { border-left: 4px solid #667eea; padding: 8px 16px;
+                                 margin: 10px 0; background: #f8f9ff; border-radius: 0 8px 8px 0; }
+.editor .editor-div a { color: #667eea; text-decoration: underline; }
+.editor .editor-div hr { border: none; border-top: 2px solid #eee; margin: 16px 0; }
+
+/* AI Result Panel */
+.ai-panel { width: 360px; background: #fafbff; border-left: 1px solid #e8e8e8;
+            display: none; flex-direction: column; overflow-y: auto; flex-shrink: 0; }
+.ai-panel.open { display: flex; }
+.ai-panel .ai-header { padding: 14px 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                       color: #fff; display: flex; align-items: center;
+                       justify-content: space-between; flex-shrink: 0; }
+.ai-panel .ai-header h3 { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+.ai-panel .ai-header .close-btn { background: none; border: none; color: rgba(255,255,255,0.8);
+                                   font-size: 20px; cursor: pointer; }
+.ai-panel .ai-body { padding: 16px; flex: 1; }
+.ai-panel .ai-body .section { margin-bottom: 18px; }
+.ai-panel .ai-body .section h4 { font-size: 13px; font-weight: 600; color: #667eea;
+                                  margin-bottom: 8px; padding-bottom: 4px;
+                                  border-bottom: 2px solid #eef0ff; }
+.ai-panel .ai-body .section .item { padding: 8px 10px; background: #fff; border-radius: 8px;
+                                     margin-bottom: 6px; font-size: 13px; line-height: 1.5;
+                                     border: 1px solid #f0f0f0; }
+.ai-panel .ai-body .section .item .label { font-weight: 600; color: #333; }
+.ai-panel .ai-body .section .item .desc { color: #666; margin-top: 2px; }
+.ai-panel .ai-body .section .item .original { color: #e74c3c; text-decoration: line-through;
+                                               font-size: 12px; }
+.ai-panel .ai-body .section .item .corrected { color: #27ae60; font-size: 12px; }
+.ai-panel .ai-body .summary-box { background: linear-gradient(135deg, #eef0ff, #f5f3ff);
+                                   padding: 12px 14px; border-radius: 10px; font-size: 13px;
+                                   line-height: 1.6; color: #444; margin-bottom: 18px; }
+.ai-panel .ai-body .loading { text-align: center; padding: 40px 0; color: #999; font-size: 14px; }
+.ai-panel .ai-body .loading .spinner { display: inline-block; width: 24px; height: 24px;
+                                        border: 3px solid #e0e0e0; border-top-color: #667eea;
+                                        border-radius: 50%; animation: spin .8s linear infinite;
+                                        margin-bottom: 10px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ★★★ Modal ★★★ */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+                 z-index: 10000; display: none; align-items: center; justify-content: center; }
+.modal-overlay.show { display: flex; }
+.modal-box { background: #fff; border-radius: 16px; padding: 28px 32px; max-width: 420px;
+             width: 90%; text-align: center; box-shadow: 0 12px 48px rgba(0,0,0,0.25);
+             animation: slideUp .3s ease; }
+@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+.modal-box .modal-icon { font-size: 48px; margin-bottom: 12px; }
+.modal-box h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+.modal-box p { font-size: 14px; color: #666; margin-bottom: 20px; line-height: 1.6; }
+.modal-box .modal-actions { display: flex; gap: 10px; justify-content: center; }
+.modal-box .modal-actions button { padding: 10px 24px; border: none; border-radius: 10px;
+                                    font-size: 14px; font-weight: 600; cursor: pointer;
+                                    transition: all .2s; }
+.modal-box .modal-actions .btn-confirm { background: #667eea; color: #fff; }
+.modal-box .modal-actions .btn-confirm:hover { background: #5a6fd6; }
+.modal-box .modal-actions .btn-reject { background: #f0f0f0; color: #666; }
+.modal-box .modal-actions .btn-reject:hover { background: #e0e0e0; }
+.modal-box .modal-actions .btn-cancel { background: #f5f5f5; color: #999; }
+.modal-box .modal-actions .btn-cancel:hover { background: #eee; }
+
+/* Toast */
+.toast { position: fixed; top: 20px; right: 20px; z-index: 20000;
+         padding: 12px 20px; border-radius: 10px; color: #fff; font-size: 14px;
+         font-weight: 500; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+         animation: toastIn .3s ease; display: none; }
+.toast.success { background: #2ecc71; }
+.toast.error { background: #e74c3c; }
+.toast.info { background: #3498db; }
+@keyframes toastIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+
+/* ★★★ AI 选中解释 ★★★ */
+.ai-explain-btn { position: fixed; z-index: 10000; background: #667eea; color: #fff;
+                  border: none; border-radius: 20px; padding: 6px 14px; font-size: 12px;
+                  font-weight: 600; cursor: pointer; box-shadow: 0 2px 12px rgba(102,126,234,0.4);
+                  display: none; align-items: center; gap: 4px; white-space: nowrap;
+                  transition: all .2s; }
+.ai-explain-btn:hover { background: #5a6fd6; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(102,126,234,0.5); }
+.ai-explain-popover { position: fixed; z-index: 10001; background: #fff; border-radius: 12px;
+                      box-shadow: 0 8px 32px rgba(0,0,0,0.15); border: 1px solid #e8e8e8;
+                      display: none; max-width: 420px; min-width: 260px; overflow: hidden; }
+.ai-explain-popover .pop-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                  color: #fff; padding: 10px 14px; font-size: 13px;
+                                  font-weight: 600; display: flex; align-items: center;
+                                  justify-content: space-between; }
+.ai-explain-popover .pop-header .close-btn { background: none; border: none; color: rgba(255,255,255,0.8);
+                                              font-size: 18px; cursor: pointer; padding: 0 4px; }
+.ai-explain-popover .pop-header .close-btn:hover { color: #fff; }
+.ai-explain-popover .pop-body { padding: 14px; font-size: 14px; line-height: 1.7;
+                                color: #333; max-height: 300px; overflow-y: auto; }
+.ai-explain-popover .pop-body .loading { text-align: center; padding: 20px 0; color: #999; font-size: 13px; }
+.ai-explain-popover .pop-body .loading .spinner { display: inline-block; width: 18px; height: 18px;
+                                                   border: 2px solid #e0e0e0; border-top-color: #667eea;
+                                                   border-radius: 50%; animation: spin .6s linear infinite;
+                                                   margin-right: 8px; vertical-align: middle; }
+.ai-explain-popover .pop-body .keywords { margin-top: 10px; display: flex; gap: 6px; flex-wrap: wrap; }
+.ai-explain-popover .pop-body .keyword { background: #eef0ff; color: #667eea; padding: 2px 10px;
+                                          border-radius: 12px; font-size: 11px; font-weight: 500; }
+
+/* ★★★ 生活案例按钮 ★★★ */
+.life-case-btn { position: fixed; z-index: 10000; background: #27ae60; color: #fff;
+                 border: none; border-radius: 20px; padding: 6px 14px; font-size: 12px;
+                 font-weight: 600; cursor: pointer; box-shadow: 0 2px 12px rgba(39,174,96,0.4);
+                 display: none; align-items: center; gap: 4px; white-space: nowrap;
+                 transition: all .2s; }
+.life-case-btn:hover { background: #219a52; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(39,174,96,0.5); }
+/* ★★★ 弹出框标签页 ★★★ */
+.ai-explain-popover .pop-tabs { display: flex; border-bottom: 1px solid #eee; background: #fafafa; }
+.ai-explain-popover .pop-tab { flex: 1; padding: 8px 0; text-align: center; font-size: 13px;
+                                font-weight: 500; cursor: pointer; color: #999; transition: all .2s;
+                                border-bottom: 2px solid transparent; }
+.ai-explain-popover .pop-tab:hover { color: #667eea; background: #f5f5ff; }
+.ai-explain-popover .pop-tab.active { color: #667eea; border-bottom-color: #667eea; background: #fff; }
+.ai-explain-popover .pop-panel { display: none; }
+.ai-explain-popover .pop-panel.active { display: block; }
+
+/* ★★★ 知识图谱弹窗 ★★★ */
+.graph-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+                  z-index: 30000; display: none; flex-direction: column;
+                  animation: fadeIn .2s ease; }
+.graph-overlay.show { display: flex; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.graph-header { background: #1a1a2e; color: #fff; padding: 12px 24px;
+                display: flex; align-items: center; justify-content: space-between;
+                flex-shrink: 0; }
+.graph-header h3 { font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.graph-header .graph-info { font-size: 12px; color: rgba(255,255,255,0.6); }
+.graph-header .graph-actions { display: flex; gap: 8px; }
+.graph-header .graph-actions button { padding: 6px 16px; border: none; border-radius: 6px;
+                                       background: rgba(255,255,255,0.15); color: #fff;
+                                       cursor: pointer; font-size: 12px; transition: all .2s; }
+.graph-header .graph-actions button:hover { background: rgba(255,255,255,0.3); }
+.graph-header .graph-actions button.close-btn { background: rgba(255,255,255,0.1);
+                                                  font-size: 20px; padding: 2px 12px; }
+.graph-body { flex: 1; background: #0f0f1a; position: relative; overflow: hidden; display: flex; }
+#graphContainer { flex: 1; height: 100%; }
+
+/* 图谱右侧详情面板 */
+.graph-detail-panel { width: 320px; background: #fff; border-left: 1px solid #e8e8e8;
+                       display: none; flex-direction: column; flex-shrink: 0;
+                       animation: slideInRight .25s ease; position: fixed; right: 20px; top: 80px; bottom: 20px; z-index: 1000; box-shadow: -4px 0 20px rgba(0,0,0,0.3); }
+.graph-detail-panel.open { display: flex; }
+@keyframes slideInRight { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+.graph-detail-header { padding: 16px 18px; border-bottom: 1px solid #f0f0f0;
+                       display: flex; align-items: center; justify-content: space-between;
+                       flex-shrink: 0; }
+.graph-detail-header .title { font-size: 15px; font-weight: 600; color: #1a1a2e; }
+.graph-detail-header .close-btn { background: none; border: none; color: #999;
+                                  font-size: 18px; cursor: pointer; padding: 0 4px; }
+.graph-detail-header .close-btn:hover { color: #666; }
+.graph-detail-content { flex: 1; overflow-y: auto; padding: 16px 18px; }
+.graph-detail-content .detail-section { margin-bottom: 20px; }
+.graph-detail-content .detail-section .section-label { font-size: 12px; font-weight: 600;
+                                                       color: #999; text-transform: uppercase;
+                                                       letter-spacing: 0.5px; margin-bottom: 8px; }
+.graph-detail-content .detail-section .section-value { font-size: 14px; line-height: 1.6; color: #333; }
+.graph-detail-content .detail-section .section-value p { margin: 4px 0; }
+.graph-detail-content .detail-section .kp-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.graph-detail-content .detail-section .kp-tag { padding: 3px 10px; border-radius: 12px;
+                                                font-size: 12px; background: #fef3e2; color: #d98c1a;
+                                                border: 1px solid #fde4b5; font-weight: 500; }
+.graph-detail-content .detail-section .kp-tag.ai { background: #eef0ff; color: #667eea; border-color: #d6dfff; }
+.graph-detail-content .progress-bar { height: 6px; background: #f0f0f0; border-radius: 3px; overflow: hidden; margin-bottom: 6px; }
+.graph-detail-content .progress-bar .progress-fill { height: 100%; background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); border-radius: 3px; transition: width .3s ease; }
+.graph-detail-content .progress-text { font-size: 12px; color: #666; text-align: right; }
+.graph-detail-content .related-kp-list { display: flex; flex-direction: column; gap: 6px; }
+.graph-detail-content .related-kp-item { padding: 8px 12px; background: #fafafa; border-radius: 8px;
+                                         border-left: 3px solid #667eea; cursor: pointer; transition: all .2s; }
+.graph-detail-content .related-kp-item:hover { background: #eef0ff; border-left-color: #764ba2; }
+.graph-detail-content .related-kp-item .kp-name { font-size: 13px; font-weight: 500; color: #333; }
+.graph-detail-content .related-kp-item .kp-rel { font-size: 11px; color: #999; margin-top: 2px; }
+.graph-detail-footer { padding: 12px 18px; border-top: 1px solid #f0f0f0; flex-shrink: 0; }
+.graph-detail-footer .view-btn { width: 100%; padding: 10px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                  color: #fff; border: none; border-radius: 10px; font-size: 14px; font-weight: 600;
+                                  cursor: pointer; transition: all .2s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+.graph-detail-footer .view-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(102,126,234,0.4); }
+.graph-detail-content .empty-state { text-align: center; padding: 60px 20px; color: #bbb; font-size: 14px; }
+.graph-detail-content .empty-state .icon { font-size: 36px; margin-bottom: 10px; opacity: 0.5; }
+
+/* ★★★ 知识宇宙 ★★★ */
+#universeCanvas { cursor: crosshair; }
+.universe-tooltip { position: absolute; pointer-events: none; z-index: 10;
+                    background: rgba(10,10,30,0.92); border: 1px solid rgba(138,43,226,0.5);
+                    border-radius: 10px; padding: 12px 16px; color: #e0e0ff;
+                    font-size: 13px; line-height: 1.6; backdrop-filter: blur(8px);
+                    box-shadow: 0 4px 24px rgba(138,43,226,0.3), inset 0 0 20px rgba(138,43,226,0.05);
+                    max-width: 220px; transition: opacity .15s; }
+.universe-tooltip .ut-name { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+.universe-tooltip .ut-level { font-size: 12px; margin-bottom: 2px; }
+.universe-tooltip .ut-hint { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 6px; }
+
+/* ★★★ [[ 提及自动补全下拉 ★★★ */
+.mention-dropdown { position: fixed; z-index: 25000; background: #fff;
+                    border: 1px solid #e0e0e0; border-radius: 10px;
+                    box-shadow: 0 6px 24px rgba(0,0,0,0.15);
+                    max-height: 220px; overflow-y: auto; display: none;
+                    min-width: 200px; max-width: 360px; padding: 4px; }
+.mention-dropdown .mention-item { padding: 8px 12px; cursor: pointer;
+                                   border-radius: 6px; font-size: 13px;
+                                   color: #333; display: flex;
+                                   align-items: center; gap: 8px;
+                                   transition: background .15s; }
+.mention-dropdown .mention-item:hover,
+.mention-dropdown .mention-item.active { background: #eef0ff; color: #667eea; }
+.mention-dropdown .mention-item .kp-dot { display: inline-block; width: 6px; height: 6px;
+                                           border-radius: 50%; background: #d98c1a;
+                                           flex-shrink: 0; }
+.mention-dropdown .mention-item .kp-dot.ai { background: #667eea; }
+.mention-dropdown .mention-empty { padding: 16px; text-align: center;
+                                    color: #bbb; font-size: 12px; }
+
+/* ★★★ AI 优化 Diff 模态框 ★★★ */
+.diff-modal-overlay { display: none; position: fixed; inset: 0; z-index: 30000;
+                      background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+                      align-items: center; justify-content: center; }
+.diff-modal-overlay.show { display: flex; }
+.diff-modal { background: #fff; border-radius: 16px; width: 90vw; max-width: 960px;
+              max-height: 85vh; display: flex; flex-direction: column;
+              box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden; }
+.diff-modal-header { padding: 16px 24px; border-bottom: 1px solid #eee;
+                     display: flex; align-items: center; justify-content: space-between; }
+.diff-modal-header h3 { font-size: 16px; display: flex; align-items: center; gap: 8px; }
+.diff-modal-header .diff-stats { font-size: 12px; color: #888; display: flex; gap: 12px; }
+.diff-modal-header .diff-stats .added { color: #27ae60; }
+.diff-modal-header .diff-stats .removed { color: #e74c3c; }
+.diff-modal-body { flex: 1; overflow-y: auto; padding: 0; display: flex; }
+.diff-pane { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.diff-pane-header { padding: 8px 16px; font-size: 11px; font-weight: 600;
+                    color: #888; text-transform: uppercase; letter-spacing: 0.5px;
+                    border-bottom: 1px solid #eee; background: #fafafa; }
+.diff-pane-content { flex: 1; padding: 12px 16px; font-family: Consolas, 'Courier New', monospace;
+                     font-size: 13px; line-height: 1.7; overflow-y: auto;
+                     white-space: pre-wrap; word-break: break-word; }
+.diff-pane-orig .diff-pane-content { background: #fef9f9; }
+.diff-pane-new .diff-pane-content { background: #f6fef9; }
+.diff-line { display: flex; min-height: 1.7em; padding: 0 8px; border-radius: 2px;
+             margin: 1px 0; align-items: flex-start; }
+.diff-line-num { min-width: 32px; text-align: right; color: #bbb; font-size: 11px;
+                 padding-right: 12px; user-select: none; flex-shrink: 0; }
+.diff-line-content { flex: 1; }
+.diff-line.same { color: #333; }
+.diff-line.added { background: #d4edda; color: #155724; }
+.diff-line.removed { background: #f8d7da; color: #721c24; }
+/* 统一视图（单列显示） */
+.diff-modal-body.unified .diff-pane-orig { display: none; }
+.diff-modal-body.unified .diff-pane { flex: 1; }
+.diff-modal-body.unified .diff-pane-content { padding: 12px 16px; }
+
+@media (max-width: 640px) {
+  .diff-modal-body { flex-direction: column; }
+  .diff-modal-body.split .diff-pane { flex: none; max-height: 40vh; }
+}
+
+/* ★★★ AI 优化摘要/结果区域 ★★★ */
+.diff-summary { padding: 12px 24px; background: #f0f4ff; border-top: 1px solid #e0e8ff;
+                font-size: 13px; color: #444; display: flex; align-items: flex-start; gap: 8px; }
+.diff-summary .summary-icon { font-size: 16px; flex-shrink: 0; }
+.diff-modal-footer { padding: 12px 24px; border-top: 1px solid #eee;
+                     display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
+.diff-modal-footer .btn { padding: 8px 24px; border: none; border-radius: 8px;
+                          font-size: 14px; cursor: pointer; font-weight: 600;
+                          transition: all .2s; }
+.diff-modal-footer .btn-accept { background: #27ae60; color: #fff; }
+.diff-modal-footer .btn-accept:hover { background: #219a52; }
+.diff-modal-footer .btn-reject { background: #e0e0e0; color: #666; }
+.diff-modal-footer .btn-reject:hover { background: #ccc; }
+.diff-modal-footer .btn-switch { background: none; color: #667eea; font-size: 12px;
+                                 font-weight: 400; margin-right: auto; cursor: pointer;
+                                 border: 1px solid #667eea; border-radius: 6px; padding: 4px 12px; }
+.diff-modal-footer .btn-switch:hover { background: #f0f2ff; }
+
+/* ★★★ 思维导图预览 ★★★ */
+.mindmap-overlay { display: none; position: fixed; inset: 0; z-index: 30000;
+                   background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+                   align-items: center; justify-content: center; }
+.mindmap-overlay.show { display: flex; }
+.mindmap-modal { background: #fff; border-radius: 16px; width: 90vw; max-width: 900px;
+                 max-height: 85vh; display: flex; flex-direction: column;
+                 box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden; }
+.mindmap-modal-header { padding: 16px 24px; border-bottom: 1px solid #eee;
+                        display: flex; align-items: center; justify-content: space-between; }
+.mindmap-modal-header h3 { font-size: 16px; display: flex; align-items: center; gap: 8px; }
+.mindmap-modal-body { flex: 1; overflow: auto; padding: 24px; background: #fafbfc; }
+.mindmap-container { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.mindmap-root { padding: 10px 24px; background: #667eea; color: #fff; border-radius: 10px;
+                font-size: 16px; font-weight: 700; text-align: center;
+                box-shadow: 0 4px 16px rgba(102,126,234,0.3); }
+.mindmap-level { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;
+                 padding: 8px 0; }
+.mindmap-level-1 .mindmap-node { background: #eef0ff; border: 1px solid #d0d5ff; color: #444; }
+.mindmap-level-2 .mindmap-node { background: #fff; border: 1px solid #e0e0e0; color: #666;
+                                 font-size: 12px; }
+.mindmap-node { padding: 8px 16px; border-radius: 8px; font-size: 13px;
+                cursor: pointer; transition: all .2s; min-width: 60px;
+                text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+                position: relative; }
+.mindmap-node:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+.mindmap-node.editing { outline: 2px solid #667eea; background: #fff !important; cursor: text; }
+.mindmap-node .collapse-toggle { position: absolute; top: -6px; right: -6px; width: 16px; height: 16px;
+                                  background: #667eea; color: #fff; border: 2px solid #fff;
+                                  border-radius: 50%; font-size: 10px; line-height: 12px;
+                                  text-align: center; cursor: pointer; display: none; }
+.mindmap-node.has-children .collapse-toggle { display: block; }
+.mindmap-node.collapsed + .mindmap-connector,
+.mindmap-node.collapsed ~ .mindmap-level { display: none; }
+.mindmap-node .node-edit-input { width: 100%; border: none; outline: none; background: transparent;
+                                 font-size: inherit; text-align: center; font-family: inherit; }
+.mindmap-connector { width: 2px; height: 16px; background: #d0d5ff; }
+.mindmap-level-wrapper { display: flex; flex-direction: column; align-items: center; }
+.mindmap-loading { padding: 40px; text-align: center; color: #999; }
+.mindmap-loading .spinner { margin: 0 auto 12px; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .sidebar { width: 200px; }
+  .ai-panel { width: 280px; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h2>📝 学习笔记</h2>
+  <div class="actions">
+    <button class="primary" onclick="newNote()">+ 新建笔记</button>
+    <button onclick="exportNote()">📥 导出</button>
+    <button onclick="openGraph()">🕸 图谱</button>
+  </div>
+</div>
+
+<div class="main">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="search-box">
+      <input id="searchInput" type="text" placeholder="搜索笔记..." oninput="filterNotes()">
+    </div>
+    <div class="note-list" id="noteList">
+      <div class="empty">暂无笔记，点击右上角新建</div>
+    </div>
+  </div>
+
+  <!-- Editor -->
+  <div class="editor" id="editor">
+    <div class="no-note" id="noNote">
+      <div class="icon">📄</div>
+      <div>选择一篇笔记或新建开始记录</div>
+    </div>
+    <div id="editorContent" style="display:none;flex-direction:column;height:100%;">
+      <div class="toolbar">
+        <input class="note-title-input" id="noteTitle" type="text" placeholder="输入笔记标题...">
+        <div class="btn-group">
+          <button class="save-btn" onclick="saveNote()">💾 保存</button>
+          <button onclick="previewOrganize()">🤖 AI整理</button>
+          <button onclick="showMindmap()" title="以思维导图查看">🧠 导图</button>
+          <button class="upload-btn" onclick="document.getElementById('fileInput').click()">🖼 插入图片</button>
+          <span class="sep"></span>
+          <button class="danger" onclick="deleteNote()">🗑 删除</button>
+        </div>
+        <input id="fileInput" type="file" accept="image/*,.doc,.docx,.pdf,.txt,.md" style="display:none" onchange="uploadAttachment(this)">
+      </div>
+      <div class="kp-bar" id="kpBar">
+         <span class="kp-label">📌 知识点：</span>
+         <input id="kpInput" type="text" placeholder="输入知识点，逗号分隔" style="border:1px solid #e0e0e0;border-radius:12px;padding:2px 10px;font-size:11px;outline:none;flex:1;min-width:120px;max-width:240px;" onkeydown="if(event.key==='Enter')saveKpTags()">
+         <button onclick="saveKpTags()" style="background:none;border:none;color:#667eea;font-size:11px;cursor:pointer;padding:2px 6px;">保存</button>
+       </div>
+      <div class="content-area">
+        <div class="editor-div" id="noteContent" contenteditable="true" data-placeholder="开始记录你的学习笔记...
+
+支持快捷键:
+- Ctrl+B 加粗  Ctrl+I 斜体
+- 拖拽图片到编辑区直接上传
+- 点击「🖼 插入图片」上传并显示图片"></div>
+        <div class="ai-panel" id="aiPanel">
+          <div class="ai-header">
+            <h3>🤖 AI 结构化整理</h3>
+            <button class="close-btn" onclick="closeAiPanel()">×</button>
+          </div>
+          <div class="ai-body" id="aiBody">
+            <div class="loading" id="aiLoading">
+              <div class="spinner"></div>
+              <div>AI 正在分析整理中...</div>
+            </div>
+            <div id="aiResult" style="display:none;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ★★★ 知识图谱弹窗 ★★★ -->
+<div class="graph-overlay" id="graphOverlay">
+  <div class="graph-header">
+    <div style="display:flex;align-items:center;gap:16px;">
+      <h3>🕸 知识图谱</h3>
+      <span class="graph-info" id="graphInfo">加载中...</span>
+    </div>
+    <div class="graph-actions">
+      <button onclick="fitGraph()" id="graphFitBtn">⊞ 适应</button>
+      <button onclick="toggleUniverseView()" id="universeToggleBtn" style="background:linear-gradient(135deg,rgba(138,43,226,0.4),rgba(30,144,255,0.4));border:1px solid rgba(255,255,255,0.2)">✨ 宇宙</button>
+      <button class="close-btn" onclick="closeGraph()">×</button>
+    </div>
+  </div>
+  <div class="graph-body" id="graphBody">
+    <div id="graphContainer"></div>
+    <canvas id="universeCanvas" style="display:none;position:absolute;inset:0;width:100%;height:100%;z-index:0;"></canvas>
+    <div class="graph-detail-panel" id="graphDetailPanel">
+      <div class="graph-detail-header">
+        <span class="title" id="detailTitle">笔记详情</span>
+        <button class="close-btn" onclick="closeDetailPanel()">×</button>
+      </div>
+      <div class="graph-detail-content" id="detailContent">
+        <div class="empty-state">
+          <div class="icon">📌</div>
+          <div>点击图谱中的节点查看详情</div>
+        </div>
+      </div>
+      <div class="graph-detail-footer">
+        <button class="view-btn" id="detailViewBtn" onclick="viewSelectedNote()">👁 点击查看</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- [[ 提及自动补全下拉 -->
+<div class="mention-dropdown" id="mentionDropdown">
+  <div class="mention-empty">加载中...</div>
+</div>
+
+<!-- AI Confirm Modal -->
+<div class="modal-overlay" id="aiConfirmModal">
+  <div class="modal-box">
+    <div class="modal-icon">🤖</div>
+    <h3>使用 AI 整理笔记？</h3>
+    <p>AI 将自动补充术语解释、标记易错点、纠正笔记中可能的错误，并重新组织结构。</p>
+    <div class="modal-actions">
+      <button class="btn-confirm" onclick="confirmAiSave()">✅ 确认整理</button>
+      <button class="btn-reject" onclick="rejectAiSave()">⏭ 直接保存</button>
+      <button class="btn-cancel" onclick="closeAiModal()">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- ★★★ AI 整理 Diff 对比模态框 ★★★ -->
+<div class="diff-modal-overlay" id="diffModal">
+  <div class="diff-modal">
+    <div class="diff-modal-header">
+      <h3>🤖 AI 整理对比</h3>
+      <div class="diff-stats">
+        <span class="added" id="diffAdded">+0</span>
+        <span class="removed" id="diffRemoved">-0</span>
+        <span style="color:#999;" id="diffTotal">共 0 行</span>
+      </div>
+    </div>
+    <div class="diff-modal-body split" id="diffBody">
+      <div class="diff-pane diff-pane-orig">
+        <div class="diff-pane-header">📄 原始内容</div>
+        <div class="diff-pane-content" id="diffOrigContent"></div>
+      </div>
+      <div class="diff-pane diff-pane-new">
+        <div class="diff-pane-header">✨ AI 整理后</div>
+        <div class="diff-pane-content" id="diffNewContent"></div>
+      </div>
+    </div>
+    <div class="diff-summary" id="diffSummary" style="display:none;">
+      <span class="summary-icon">📌</span>
+      <span id="diffSummaryText"></span>
+    </div>
+    <div class="diff-modal-footer">
+      <button class="btn-switch" onclick="toggleDiffView()">切换为统一视图</button>
+      <button class="btn btn-reject" onclick="rejectDiff()">✕ 拒绝</button>
+      <button class="btn btn-accept" onclick="acceptDiff()">✓ 一键接受</button>
+    </div>
+  </div>
+</div>
+
+<!-- ★★★ 思维导图模态框 ★★★ -->
+<div class="mindmap-overlay" id="mindmapOverlay">
+  <div class="mindmap-modal">
+    <div class="mindmap-modal-header">
+      <h3>🧠 笔记思维导图</h3>
+      <div style="display:flex;gap:8px;">
+        <button onclick="exportMindmapImage()" style="background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;border-radius:6px;padding:6px 14px;font-size:12px;cursor:pointer;font-weight:600;">💾 保存为图片</button>
+        <button class="close-btn" onclick="closeMindmap()">×</button>
+      </div>
+    </div>
+    <div class="mindmap-modal-body" id="mindmapBody">
+      <div class="mindmap-loading" id="mindmapLoading">
+        <div class="spinner"></div>
+        <div>AI 正在生成思维导图...</div>
+      </div>
+      <div class="mindmap-container" id="mindmapContainer" style="display:none;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ==================== State ====================
+let currentUserId = 'user_001';
+let notes = [];
+let currentNoteId = null;
+let pendingSave = null; // { title, content } - 待保存的数据（弹窗后决定是否 AI 整理）
+
+// ==================== User ID sync ====================
+window.addEventListener('message', function(e) {
+  if (e.data && e.data.type === 'setUserId') {
+    currentUserId = e.data.userId || 'user_001';
+    loadNotes();
+    reportContext('viewing', '笔记列表', '');
+  }
+});
+window.parent.postMessage({ type: 'getUserId' }, '*');
+
+// ==================== 上下文感知上报（智能球） ====================
+let _contextTimer = null;
+function reportContext(action, title, detail) {
+  // 用 parent 已有的 pageContext 协议上报
+  try {
+    window.parent.postMessage({
+      type: 'pageContext',
+      page: 'notebook',
+      title: title || '',
+      action: action || 'viewing',
+      detail: detail || '',
+    }, '*');
+  } catch (e) {}
+
+  // 同时也直接调用后端 API（兜底）
+  try {
+    fetch('/api/user/context/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id: currentUserId,
+        page: 'notebook',
+        title: title || '',
+        action: action || 'viewing',
+        detail: detail || '',
+      })
+    }).catch(() => {});
+  } catch (e) {}
+}
+
+// 用户停止输入 2 秒后上报编辑上下文（防抖）
+function debounceReportContext() {
+  if (_contextTimer) clearTimeout(_contextTimer);
+  _contextTimer = setTimeout(() => {
+    const title = document.getElementById('noteTitle').value.trim() || '未命名笔记';
+    const contentLen = getEditorContent().length;
+    reportContext('editing', title, `正在编辑笔记，内容约 ${contentLen} 字`);
+  }, 2000);
+}
+
+// ==================== Toast ====================
+function showToast(msg, type = 'info') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + type;
+  t.style.display = 'block';
+  setTimeout(() => { t.style.display = 'none'; }, 2500);
+}
+
+// ==================== API calls ====================
+async function api(url, method = 'GET', body = null) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(url, opts);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.detail || '请求失败');
+  return data;
+}
+
+// ==================== Notes CRUD ====================
+async function loadNotes() {
+  try {
+    const res = await api(`/notes/${currentUserId}`);
+    notes = res.notes || [];
+    renderNoteList();
+  } catch (e) {
+    console.error('加载笔记列表失败:', e);
+  }
+}
+
+function renderNoteList() {
+  const el = document.getElementById('noteList');
+  if (notes.length === 0) {
+    el.innerHTML = '<div class="empty">暂无笔记，点击右上角新建</div>';
+    return;
+  }
+  el.innerHTML = notes.map(n => {
+    const isActive = n.note_id === currentNoteId;
+    const badges = [];
+    if (n.has_ai_organized) badges.push('<span class="badge organized">AI整理</span>');
+    const kpTags = (n.knowledge_points || []).map(kp => `<span class="kp-tag">${kp}</span>`).join('');
+    return `<div class="note-item ${isActive ? 'active' : ''}" onclick="selectNote('${n.note_id}')">
+      <div class="title">${escapeHtml(n.title || '未命名笔记')}</div>
+      ${kpTags ? `<div class="kp-tags">${kpTags}</div>` : ''}
+      <div class="meta">
+        <span>${formatTime(n.updated_at || n.created_at)}</span>
+        ${badges.join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterNotes() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const items = document.querySelectorAll('.note-item');
+  items.forEach(item => {
+    const title = item.querySelector('.title').textContent.toLowerCase();
+    item.style.display = title.includes(q) ? '' : 'none';
+  });
+}
+
+function selectNote(noteId) {
+  currentNoteId = noteId;
+  loadNoteContent(noteId);
+  renderNoteList();
+}
+
+// ==================== Markdown <-> HTML 转换 ====================
+function markdownToHtml(md) {
+  if (!md) return '';
+
+  // 1. 先保护已有的 img 和 a 标签
+  const protectedTags = [];
+  md = md.replace(/<img[^>]*>/g, m => { protectedTags.push(m); return `\x00PROTECT_${protectedTags.length - 1}\x00`; });
+  md = md.replace(/<a[^>]*>[^<]*<\/a>/g, m => { protectedTags.push(m); return `\x00PROTECT_${protectedTags.length - 1}\x00`; });
+
+  let html = md
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+
+  // 恢复保护标签
+  html = html.replace(/\x00PROTECT_(\d+)\x00/g, (_, i) => protectedTags[parseInt(i)] || '');
+
+  // 2. 解析 markdown 语法
+  // 图片 ![](url) — 支持 =Wx 宽度语法
+  html = html.replace(/!\[([^\]]*)\]\(([^)]+?)\s*=\s*(\d+)x\s*\)/g, function(m, alt, url, w) {
+    let style = 'max-width:100%;border-radius:8px;margin:12px 0;box-shadow:0 2px 12px rgba(0,0,0,0.1)';
+    if (w) style = `width:${w}px;` + style;
+    return `<img src="${url}" alt="${alt}" loading="lazy" style="${style}">`;
+  });
+  html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" loading="lazy" style="max-width:100%;border-radius:8px;margin:12px 0;box-shadow:0 2px 12px rgba(0,0,0,0.1)">');
+  // 链接 [text](url)
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+  // 行内代码
+  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+  // 加粗
+  html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  // 斜体
+  html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+  // 分隔线
+  html = html.replace(/^---$/gm, '<hr>');
+  // 引用
+  html = html.replace(/^&gt;\s+(.*)$/gm, '<blockquote>$1</blockquote>');
+  // 标题
+  html = html.replace(/^######\s+(.*)$/gm, '<h6>$1</h6>');
+  html = html.replace(/^#####\s+(.*)$/gm, '<h5>$1</h5>');
+  html = html.replace(/^####\s+(.*)$/gm, '<h4>$1</h4>');
+  html = html.replace(/^###\s+(.*)$/gm, '<h3>$1</h3>');
+  html = html.replace(/^##\s+(.*)$/gm, '<h2>$1</h2>');
+  html = html.replace(/^#\s+(.*)$/gm, '<h1>$1</h1>');
+  // 列表
+  html = html.replace(/^[\s]*[-*]\s+(.*)$/gm, '<li>$1</li>');
+  html = html.replace(/^\d+\.\s+(.*)$/gm, '<li>$1</li>');
+  html = html.replace(/((?:<li>.*?<\/li>\n?)+)/g, '<ul>$1</ul>');
+
+  // 3. 段落包装：非标签行用 <p> 包裹
+  const lines = html.split('\n');
+  const out = [];
+  for (const line of lines) {
+    const t = line.trim();
+    if (!t) continue;
+    if (/^<(h[1-6]|ul|\/ul|li|blockquote|\/blockquote|hr|img|p|code|a)/.test(t)) {
+      out.push(t);
+    } else {
+      out.push('<p>' + t + '</p>');
+    }
+  }
+  html = out.join('\n');
+  html = html.replace(/<p><ul>/g, '<ul>');
+  html = html.replace(/<\/ul><\/p>/g, '</ul>');
+  html = html.replace(/<p><li>/g, '<li>');
+  html = html.replace(/<\/li><\/p>/g, '</li>');
+  return html;
+}
+
+// ==================== contenteditable HTML → Markdown ====================
+function htmlToMarkdown(html) {
+  if (!html) return '';
+
+  let md = html;
+
+  // 1. 展开 <div> — 转为 \n
+  md = md.replace(/<div[^>]*>/gi, '\n');
+  md = md.replace(/<\/div>/gi, '\n');
+
+  // 2. <p> → \n
+  md = md.replace(/<p[^>]*>/gi, '');
+  md = md.replace(/<\/p>/gi, '\n');
+
+  // 3. <br> → \n
+  md = md.replace(/<br\s*\/?>/gi, '\n');
+
+  // 4. <span> — 去掉标签保留内容
+  md = md.replace(/<span[^>]*>/gi, '');
+  md = md.replace(/<\/span>/gi, '');
+
+  // 5. 标题 h1-h6
+  md = md.replace(/<h1[^>]*>([\s\S]*?)<\/h1>/gi, '# $1\n');
+  md = md.replace(/<h2[^>]*>([\s\S]*?)<\/h2>/gi, '## $1\n');
+  md = md.replace(/<h3[^>]*>([\s\S]*?)<\/h3>/gi, '### $1\n');
+  md = md.replace(/<h4[^>]*>([\s\S]*?)<\/h4>/gi, '#### $1\n');
+  md = md.replace(/<h5[^>]*>([\s\S]*?)<\/h5>/gi, '##### $1\n');
+  md = md.replace(/<h6[^>]*>([\s\S]*?)<\/h6>/gi, '###### $1\n');
+
+  // 6. 图片 <img> — 保留自定义宽度
+  md = md.replace(/<img[^>]*src="([^"]*)"[^>]*style="([^"]*)"[^>]*alt="([^"]*)"[^>]*>/gi, function(m, src, style, alt) {
+    const wm = style.match(/width\s*:\s*(\d+)/i);
+    const suffix = wm ? ` =${wm[1]}x` : '';
+    return `![${alt}](${src}${suffix})`;
+  });
+  md = md.replace(/<img[^>]*src="([^"]*)"[^>]*style="([^"]*)"[^>]*>/gi, function(m, src, style) {
+    const wm = style.match(/width\s*:\s*(\d+)/i);
+    const suffix = wm ? ` =${wm[1]}x` : '';
+    return `![image](${src}${suffix})`;
+  });
+  md = md.replace(/<img[^>]*src="([^"]*)"[^>]*alt="([^"]*)"[^>]*>/gi, '![$2]($1)');
+  md = md.replace(/<img[^>]*src="([^"]*)"[^>]*>/gi, '![image]($1)');
+
+  // 7. 链接 <a>
+  md = md.replace(/<a[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a>/gi, '[$2]($1)');
+
+  // 8. 加粗 <strong> / <b>
+  md = md.replace(/<strong[^>]*>([\s\S]*?)<\/strong>/gi, '**$1**');
+  md = md.replace(/<b[^>]*>([\s\S]*?)<\/b>/gi, '**$1**');
+
+  // 9. 斜体 <em> / <i>
+  md = md.replace(/<em[^>]*>([\s\S]*?)<\/em>/gi, '*$1*');
+  md = md.replace(/<i[^>]*>([\s\S]*?)<\/i>/gi, '*$1*');
+
+  // 10. 行内代码
+  md = md.replace(/<code[^>]*>([\s\S]*?)<\/code>/gi, '`$1`');
+
+  // 11. 引用
+  md = md.replace(/<blockquote[^>]*>([\s\S]*?)<\/blockquote>/gi, '> $1\n');
+
+  // 12. 列表
+  md = md.replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, '- $1\n');
+
+  // 13. 水平线
+  md = md.replace(/<hr[^>]*\/?>/gi, '\n---\n');
+
+  // 14. 去掉剩余的 HTML 标签
+  md = md.replace(/<[^>]+>/g, '');
+
+  // 15. 移除零宽空格（图片缩放包裹层引入的 \u200b / &#8203;）
+  md = md.replace(/\u200b/g, '');
+  md = md.replace(/&#8203;/g, '');
+
+  // 16. 清理多余空行（保留最多两个连续换行）
+  md = md.replace(/\n{3,}/g, '\n\n');
+
+  // 17. 修整每行的首尾空格
+  md = md.split('\n').map(line => line.trim()).join('\n');
+
+  return md.trim();
+}
+
+function getEditorContent() {
+  const editor = document.getElementById('noteContent');
+  return htmlToMarkdown(editor.innerHTML);
+}
+
+function setEditorContent(markdown) {
+  const editor = document.getElementById('noteContent');
+  editor.innerHTML = markdownToHtml(markdown);
+  enableImageResize();
+}
+
+// ==================== 图片拖拽缩放 ====================
+function enableImageResize() {
+  const editor = document.getElementById('noteContent');
+  editor.querySelectorAll('img').forEach(img => {
+    if (img.parentNode.classList.contains('img-resize-wrap')) return;
+    const wrap = document.createElement('span');
+    wrap.className = 'img-resize-wrap';
+    wrap.style.cssText = 'display:inline-block;position:relative;';
+    img.parentNode.insertBefore(wrap, img);
+    wrap.appendChild(img);
+    const handle = document.createElement('span');
+    handle.className = 'img-resize-handle';
+    wrap.appendChild(handle);
+    // 图片后追加零宽空格，解决 contenteditable 在 inline-block 后无法定位光标的问题
+    const zws = document.createTextNode('\u200b');
+    wrap.parentNode.insertBefore(zws, wrap.nextSibling);
+
+    let startX, startY, startW, startH;
+    handle.addEventListener('mousedown', function(e) {
+      e.preventDefault(); e.stopPropagation();
+      img.setAttribute('data-resizing', '1');
+      const rect = img.getBoundingClientRect();
+      startX = e.clientX; startY = e.clientY;
+      startW = rect.width; startH = rect.height;
+      const onMove = function(ev) {
+        const dx = ev.clientX - startX;
+        const dy = ev.clientY - startY;
+        const newW = Math.max(50, startW + dx);
+        img.style.width = newW + 'px';
+        img.style.height = 'auto';
+      };
+      const onUp = function() {
+        img.removeAttribute('data-resizing');
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+      };
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    });
+  });
+}
+
+async function loadNoteContent(noteId) {
+  try {
+    const res = await api(`/notes/${currentUserId}/${noteId}`);
+    const note = res.note;
+    document.getElementById('noNote').style.display = 'none';
+    document.getElementById('editorContent').style.display = 'flex';
+    document.getElementById('noteTitle').value = note.title || '';
+    setEditorContent(note.content || '');
+    closeAiPanel();
+
+    // 显示绑定的知识点
+    renderKpBar(note.knowledge_points);
+
+    // 上报上下文：正在查看笔记
+    reportContext('viewing', note.title || '未命名笔记', `查看笔记内容`);
+
+    // 如果有 AI 整理结果，展示
+    if (note.ai_organization_result) {
+      renderAiResult(note.ai_organization_result);
+      document.getElementById('aiPanel').classList.add('open');
+    }
+  } catch (e) {
+    showToast('加载笔记失败: ' + e.message, 'error');
+  }
+}
+
+function newNote() {
+  currentNoteId = null;
+  document.getElementById('noNote').style.display = 'none';
+  document.getElementById('editorContent').style.display = 'flex';
+  document.getElementById('noteTitle').value = '';
+  document.getElementById('noteContent').innerHTML = '';
+  closeAiPanel();
+  renderKpBar([]);
+  reportContext('creating', '新建笔记', '正在创建新笔记');
+  renderNoteList();
+}
+
+// ==================== Save with AI option ====================
+function saveNote() {
+  const title = document.getElementById('noteTitle').value.trim() || '未命名笔记';
+  const content = getEditorContent();
+
+  if (!content.trim()) {
+    showToast('请输入笔记内容', 'error');
+    return;
+  }
+
+  pendingSave = { title, content };
+  document.getElementById('aiConfirmModal').classList.add('show');
+}
+
+async function confirmAiSave() {
+  closeAiModal();
+  const { title, content } = pendingSave;
+  pendingSave = null;
+  // 走新预览流程：先创建笔记，再预览 diff
+  if (!currentNoteId) {
+    const createRes = await api(`/notes/${currentUserId}`, 'POST', { title, content, use_ai: false });
+    currentNoteId = createRes.note.note_id;
+  }
+  await previewOrganizeContent(title, content);
+}
+
+async function rejectAiSave() {
+  closeAiModal();
+  const { title, content } = pendingSave;
+  pendingSave = null;
+  await doSaveNote(title, content, false);
+}
+
+async function doSaveNote(title, content, useAi) {
+  try {
+    if (currentNoteId) {
+      if (useAi) {
+        const res = await api(`/notes/${currentUserId}/${currentNoteId}/organize`, 'POST', { title, content });
+        showToast('AI 整理并保存成功！', 'success');
+        reportContext('ai_organized', title, 'AI 结构化整理完成');
+        if (res.note) {
+          document.getElementById('noteTitle').value = res.note.title || title;
+          setEditorContent(res.note.content || content);
+          currentNoteId = res.note.note_id;
+          renderKpBar(res.note.knowledge_points);
+          if (res.note.ai_organization_result) {
+            renderAiResult(res.note.ai_organization_result);
+            document.getElementById('aiPanel').classList.add('open');
+          }
+        }
+      } else {
+        const res = await api(`/notes/${currentUserId}/${currentNoteId}`, 'PUT', { title, content });
+        showToast('保存成功！', 'success');
+        reportContext('saved', title, '笔记已保存');
+        closeAiPanel();
+        // 更新知识点栏
+        if (res && res.note) {
+          renderKpBar(res.note.knowledge_points);
+        }
+      }
+    } else {
+      const res = await api(`/notes/${currentUserId}`, 'POST', { title, content, use_ai: useAi });
+      showToast(useAi ? 'AI 整理并创建成功！' : '创建成功！', 'success');
+      reportContext(useAi ? 'ai_organized' : 'saved', title, useAi ? 'AI 整理后创建' : '笔记已创建');
+      currentNoteId = res.note.note_id;
+      if (res.note && res.note.ai_organization_result) {
+        renderAiResult(res.note.ai_organization_result);
+        document.getElementById('aiPanel').classList.add('open');
+      }
+    }
+    await loadNotes();
+  } catch (e) {
+    showToast('保存失败: ' + e.message, 'error');
+  }
+}
+
+// ==================== AI Organize ====================
+async function organizeNote() {
+  const title = document.getElementById('noteTitle').value.trim() || '未命名笔记';
+  const content = getEditorContent();
+
+  if (!content.trim()) {
+    showToast('请先输入笔记内容', 'error');
+    return;
+  }
+
+  document.getElementById('aiPanel').classList.add('open');
+  document.getElementById('aiLoading').style.display = 'block';
+  document.getElementById('aiResult').style.display = 'none';
+
+  try {
+    let res;
+    if (currentNoteId) {
+      res = await api(`/notes/${currentUserId}/${currentNoteId}/organize`, 'POST', { title, content });
+    } else {
+      res = await api(`/notes/${currentUserId}`, 'POST', { title, content, use_ai: true });
+      currentNoteId = res.note.note_id;
+    }
+
+    const note = res.note;
+    document.getElementById('noteTitle').value = note.title || title;
+    setEditorContent(note.content || content);
+
+    if (note.ai_organization_result) {
+      renderAiResult(note.ai_organization_result);
+      document.getElementById('aiPanel').classList.add('open');
+    }
+    showToast('AI 整理完成！', 'success');
+    reportContext('ai_organized', note.title || title, 'AI 结构化整理完成');
+    await loadNotes();
+  } catch (e) {
+    showToast('AI 整理失败: ' + e.message, 'error');
+    document.getElementById('aiLoading').style.display = 'none';
+  }
+}
+
+function renderAiResult(result) {
+  document.getElementById('aiLoading').style.display = 'none';
+  const container = document.getElementById('aiResult');
+  container.style.display = 'block';
+
+  let html = '';
+
+  // Summary
+  if (result.summary) {
+    html += `<div class="summary-box">📌 ${escapeHtml(result.summary)}</div>`;
+  }
+
+  // Terms
+  if (result.terms && result.terms.length > 0) {
+    html += `<div class="section"><h4>📖 术语补充</h4>`;
+    result.terms.forEach(t => {
+      html += `<div class="item"><div class="label">${escapeHtml(t.term)}</div><div class="desc">${escapeHtml(t.explanation)}</div></div>`;
+    });
+    html += `</div>`;
+  }
+
+  // Error Prone Points
+  if (result.error_prone_points && result.error_prone_points.length > 0) {
+    html += `<div class="section"><h4>⚠️ 易错点</h4>`;
+    result.error_prone_points.forEach(e => {
+      html += `<div class="item"><div class="label">${escapeHtml(e.point)}</div><div class="desc">💡 ${escapeHtml(e.suggestion)}</div></div>`;
+    });
+    html += `</div>`;
+  }
+
+  // Corrections
+  if (result.corrections && result.corrections.length > 0) {
+    html += `<div class="section"><h4>✅ 错误纠正</h4>`;
+    result.corrections.forEach(c => {
+      html += `<div class="item">
+        <div class="original">✗ ${escapeHtml(c.original)}</div>
+        <div class="corrected">✓ ${escapeHtml(c.corrected)}</div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  container.innerHTML = html;
+}
+
+function closeAiPanel() {
+  document.getElementById('aiPanel').classList.remove('open');
+}
+
+// ==================== AI Organize Preview（Diff 对比 + 一键接受）====================
+let _previewData = null; // 存储预览数据，供 accept/reject 使用
+
+async function previewOrganize() {
+  const title = document.getElementById('noteTitle').value.trim() || '未命名笔记';
+  const content = getEditorContent();
+
+  if (!content.trim()) {
+    showToast('请先输入笔记内容', 'error');
+    return;
+  }
+
+  showToast('AI 正在分析整理...', 'info');
+
+  // 如果还没有 note_id，先创建
+  if (!currentNoteId) {
+    const createRes = await api(`/notes/${currentUserId}`, 'POST', { title, content, use_ai: false });
+    currentNoteId = createRes.note.note_id;
+  }
+
+  await previewOrganizeContent(title, content);
+}
+
+async function previewOrganizeContent(title, content) {
+  try {
+    const res = await api(`/notes/${currentUserId}/${currentNoteId}/organize-preview`, 'POST', { title, content });
+    const preview = res.preview;
+    _previewData = preview;
+
+    renderDiff(preview);
+    document.getElementById('diffModal').classList.add('show');
+  } catch (e) {
+    showToast('AI 整理失败: ' + e.message, 'error');
+  }
+}
+
+function renderDiff(preview) {
+  const diffLines = preview.diff_lines || [];
+  const stats = preview.diff_stats || {};
+
+  // 更新统计
+  document.getElementById('diffAdded').textContent = `+${stats.added || 0}`;
+  document.getElementById('diffRemoved').textContent = `-${stats.removed || 0}`;
+  document.getElementById('diffTotal').textContent = `共 ${stats.total_organized || 0} 行`;
+
+  // 原始内容 pane
+  let origHtml = '';
+  let newHtml = '';
+  let origLineNum = 0;
+  let newLineNum = 0;
+
+  diffLines.forEach(d => {
+    const line = escapeHtml(d.line);
+    if (d.type === 'same') {
+      origLineNum++;
+      newLineNum++;
+      const ohtml = `<div class="diff-line same"><span class="diff-line-num">${origLineNum}</span><span class="diff-line-content">${line}</span></div>`;
+      origHtml += ohtml;
+      newHtml += ohtml;
+    } else if (d.type === 'removed') {
+      origLineNum++;
+      origHtml += `<div class="diff-line removed"><span class="diff-line-num">${origLineNum}</span><span class="diff-line-content">${line}</span></div>`;
+      newHtml += `<div class="diff-line removed"><span class="diff-line-num">&nbsp;</span><span class="diff-line-content">&nbsp;</span></div>`;
+    } else if (d.type === 'added') {
+      newLineNum++;
+      origHtml += `<div class="diff-line added"><span class="diff-line-num">&nbsp;</span><span class="diff-line-content">&nbsp;</span></div>`;
+      newHtml += `<div class="diff-line added"><span class="diff-line-num">${newLineNum}</span><span class="diff-line-content">${line}</span></div>`;
+    }
+  });
+
+  document.getElementById('diffOrigContent').innerHTML = origHtml;
+  document.getElementById('diffNewContent').innerHTML = newHtml;
+
+  // summary
+  const summary = preview.ai_result && preview.ai_result.summary;
+  if (summary) {
+    document.getElementById('diffSummaryText').textContent = summary;
+    document.getElementById('diffSummary').style.display = 'flex';
+  } else {
+    document.getElementById('diffSummary').style.display = 'none';
+  }
+
+  // 重置为 split 视图
+  document.getElementById('diffBody').className = 'diff-modal-body split';
+}
+
+async function acceptDiff() {
+  if (!_previewData || !currentNoteId) return;
+
+  const title = _previewData.organized_title || document.getElementById('noteTitle').value.trim() || '未命名笔记';
+
+  try {
+    const res = await api(`/notes/${currentUserId}/${currentNoteId}/organize-preview/accept`, 'POST', {
+      title: title,
+      organized_content: _previewData.organized,
+      ai_result: _previewData.ai_result
+    });
+
+    const note = res.note;
+    document.getElementById('noteTitle').value = note.title || title;
+    setEditorContent(note.content || _previewData.organized);
+    renderKpBar(note.knowledge_points);
+
+    // 显示 AI 整理结果面板（术语、易错点等）
+    if (note.ai_organization_result) {
+      renderAiResult(note.ai_organization_result);
+      document.getElementById('aiPanel').classList.add('open');
+    }
+
+    closeDiffModal();
+    showToast('✓ 已接受 AI 整理结果！', 'success');
+    reportContext('ai_organized', title, 'AI 整理结果已接受');
+    await loadNotes();
+    _previewData = null;
+  } catch (e) {
+    showToast('保存失败: ' + e.message, 'error');
+  }
+}
+
+function rejectDiff() {
+  closeDiffModal();
+  _previewData = null;
+  showToast('已拒绝 AI 整理结果', 'info');
+}
+
+function closeDiffModal() {
+  document.getElementById('diffModal').classList.remove('show');
+}
+
+let _diffViewIsUnified = false;
+
+function toggleDiffView() {
+  const body = document.getElementById('diffBody');
+  const btn = document.querySelector('.btn-switch');
+  _diffViewIsUnified = !_diffViewIsUnified;
+  if (_diffViewIsUnified) {
+    body.className = 'diff-modal-body unified';
+    btn.textContent = '切换为左右对比';
+  } else {
+    body.className = 'diff-modal-body split';
+    btn.textContent = '切换为统一视图';
+  }
+}
+
+// 点击遮罩关闭 diff modal
+document.getElementById('diffModal').addEventListener('click', function(e) {
+  if (e.target === this) { rejectDiff(); }
+});
+
+// ==================== 思维导图（增强版）====================
+let _mindmapNoteContent = ''; // 保存当前笔记内容供跳转搜索
+
+async function showMindmap() {
+  const title = document.getElementById('noteTitle').value.trim() || '未命名笔记';
+  const content = getEditorContent();
+
+  if (!content.trim()) {
+    showToast('请先输入笔记内容', 'error');
+    return;
+  }
+
+  _mindmapNoteContent = content;
+
+  document.getElementById('mindmapOverlay').classList.add('show');
+  document.getElementById('mindmapLoading').style.display = 'block';
+  document.getElementById('mindmapContainer').style.display = 'none';
+  document.getElementById('mindmapContainer').innerHTML = '';
+
+  try {
+    const res = await api('/api/note/mindmap', 'POST', { title, content });
+    const mindmapData = res.mindmap;
+
+    document.getElementById('mindmapLoading').style.display = 'none';
+    document.getElementById('mindmapContainer').style.display = 'flex';
+
+    renderMindmap(mindmapData);
+  } catch (e) {
+    document.getElementById('mindmapLoading').style.display = 'none';
+    showToast('生成思维导图失败: ' + e.message, 'error');
+  }
+}
+
+function renderMindmap(data) {
+  const container = document.getElementById('mindmapContainer');
+  container.innerHTML = '';
+
+  if (!data || !data.name) {
+    container.innerHTML = '<div style="padding:40px;text-align:center;color:#999;">无法生成思维导图</div>';
+    return;
+  }
+
+  let html = `<div class="mindmap-level-wrapper">
+    <div class="mindmap-root" onclick="navigateToNode(this)" data-keywords='${escapeAttr(JSON.stringify(data.keywords || []))}'>${escapeHtml(data.name)}</div>`;
+
+  const children = data.children || [];
+  if (children.length > 0) {
+    html += `<div class="mindmap-connector"></div>`;
+    html += `<div class="mindmap-level mindmap-level-1">`;
+    children.forEach(child => {
+      html += renderMindmapNode(child, 1);
+    });
+    html += `</div>`;
+  }
+
+  html += `</div>`;
+  container.innerHTML = html;
+}
+
+function renderMindmapNode(node, level) {
+  if (!node) return '';
+  const name = escapeHtml(node.name || '');
+  const children = node.children || [];
+  const hasChildren = children.length > 0;
+  const keywords = JSON.stringify(node.keywords || []);
+  const cls = hasChildren ? 'mindmap-node has-children' : 'mindmap-node';
+
+  let html = `<div class="mindmap-level-wrapper">
+    <div class="${cls}" data-keywords='${escapeAttr(keywords)}'
+         onclick="navigateToNode(this)"
+         ondblclick="editNodeText(this)"
+         title="点击跳转笔记 | 双击编辑">
+      ${name}
+      ${hasChildren ? '<span class="collapse-toggle" onclick="event.stopPropagation();toggleCollapse(this.parentElement)" title="折叠/展开">−</span>' : ''}
+    </div>`;
+
+  if (hasChildren) {
+    html += `<div class="mindmap-connector"></div>`;
+    html += `<div class="mindmap-level mindmap-level-${Math.min(level + 1, 2)}">`;
+    children.forEach(child => {
+      html += renderMindmapNode(child, level + 1);
+    });
+    html += `</div>`;
+  }
+
+  html += `</div>`;
+  return html;
+}
+
+// --- 功能1: 点击跳转到笔记对应内容（带双击防抖）---
+let _clickTimer = null;
+
+function navigateToNode(el) {
+  if (el.classList.contains('editing')) return;
+
+  // 双击防抖：等待 280ms，如果期间没有第二次点击则执行跳转
+  if (_clickTimer) {
+    clearTimeout(_clickTimer);
+    _clickTimer = null;
+    return; // 第二次点击取消跳转，留给双击编辑
+  }
+
+  _clickTimer = setTimeout(() => {
+    _clickTimer = null;
+    _doNavigate(el);
+  }, 280);
+}
+
+function _doNavigate(el) {
+  const kw = el.getAttribute('data-keywords');
+  if (!kw) return;
+  let keywords;
+  try { keywords = JSON.parse(kw); } catch(e) { return; }
+  if (!keywords || keywords.length === 0) return;
+
+  // 在笔记内容中搜索第一个关键词
+  const content = _mindmapNoteContent || '';
+  let foundLine = -1;
+  const lines = content.split('\n');
+  for (let k of keywords) {
+    if (!k) continue;
+    const idx = lines.findIndex(l => l.toLowerCase().includes(k.toLowerCase()));
+    if (idx >= 0) { foundLine = idx; break; }
+  }
+
+  closeMindmap();
+
+  if (foundLine >= 0) {
+    // 构建匹配文本用于在编辑器中高亮定位
+    const matchLine = lines[foundLine].trim();
+    if (matchLine) {
+      scrollEditorToText(matchLine);
+    }
+  } else {
+    showToast('未找到对应内容位置', 'info');
+  }
+}
+
+function scrollEditorToText(text) {
+  const editor = document.getElementById('noteContent');
+  const html = editor.innerHTML;
+  // 在 innerHTML 中搜索文本（粗略匹配）
+  const idx = html.indexOf(escapeHtml(text.substring(0, 30)));
+  if (idx >= 0) {
+    // 创建一个临时标记
+    const range = document.createRange();
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+
+    // 在文本中查找
+    const treeWalker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT, null, false);
+    let node;
+    let searchText = text.substring(0, 30);
+    while (node = treeWalker.nextNode()) {
+      const pos = node.textContent.indexOf(searchText);
+      if (pos >= 0) {
+        range.setStart(node, pos);
+        range.setEnd(node, pos + searchText.length);
+        selection.addRange(range);
+        node.parentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // 3秒后清除选中
+        setTimeout(() => selection.removeAllRanges(), 3000);
+        return;
+      }
+    }
+  }
+  showToast('已关闭导图，可在编辑器中查看', 'info');
+}
+
+// --- 功能2: 折叠/展开 ---
+function toggleCollapse(nodeEl) {
+  const toggle = nodeEl.querySelector('.collapse-toggle');
+  if (!toggle) return;
+  const wrapper = nodeEl.parentElement;
+  const connector = wrapper.querySelector('.mindmap-connector');
+  const childrenLevel = wrapper.querySelector('.mindmap-level');
+
+  const isCollapsed = nodeEl.classList.toggle('collapsed');
+  toggle.textContent = isCollapsed ? '+' : '−';
+
+  if (connector) connector.style.display = isCollapsed ? 'none' : '';
+  if (childrenLevel) childrenLevel.style.display = isCollapsed ? 'none' : 'flex';
+}
+
+// --- 功能3: 双击编辑节点文字（同步更新笔记）---
+function applyNodeEditToNote(oldText, newText) {
+  // 在编辑器内容中搜索并替换
+  const editor = document.getElementById('noteContent');
+  const currentContent = _mindmapNoteContent;
+  if (!currentContent) return false;
+
+  // 逐行搜索，替换第一个匹配行中的 oldText 为 newText
+  const lines = currentContent.split('\n');
+  let replaced = false;
+  const updatedLines = lines.map(line => {
+    if (replaced) return line;
+    const idx = line.toLowerCase().indexOf(oldText.toLowerCase());
+    if (idx >= 0) {
+      // 保持原大小写敏感部分不变，只替换匹配到的部分
+      const before = line.substring(0, idx);
+      const after = line.substring(idx + oldText.length);
+      replaced = true;
+      return before + newText + after;
+    }
+    return line;
+  });
+
+  if (!replaced) return false;
+
+  const newContent = updatedLines.join('\n');
+  _mindmapNoteContent = newContent;
+  setEditorContent(newContent);
+  return true;
+}
+
+function editNodeText(el) {
+  if (el.classList.contains('editing')) return;
+
+  // 取消待处理的单击跳转
+  if (_clickTimer) {
+    clearTimeout(_clickTimer);
+    _clickTimer = null;
+  }
+
+  el.classList.add('editing');
+  const origText = el.childNodes[0]?.textContent?.trim() || '';
+
+  // 移除原有文本保留 toggle
+  const toggle = el.querySelector('.collapse-toggle');
+  el.innerHTML = '';
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'node-edit-input';
+  input.value = origText;
+  input.setAttribute('data-original', origText);
+  el.appendChild(input);
+  if (toggle) el.appendChild(toggle);
+
+  input.focus();
+  input.select();
+
+  const finishEdit = function(save) {
+    if (!el.classList.contains('editing')) return;
+    const val = input.value.trim();
+    const original = input.getAttribute('data-original') || '';
+    el.innerHTML = val || original;
+    if (toggle) el.appendChild(toggle);
+    el.classList.remove('editing');
+    if (save && val && val !== original) {
+      // 同步更新笔记内容
+      const changed = applyNodeEditToNote(original, val);
+      if (changed) {
+        showToast(`已同步更新笔记: "${original}" → "${val}"`, 'success');
+      } else {
+        showToast(`节点已更新，但笔记中未找到"${original}"`, 'info');
+      }
+    }
+  };
+
+  input.addEventListener('blur', () => finishEdit(true));
+  input.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') { e.preventDefault(); this.blur(); }
+    if (e.key === 'Escape') { e.preventDefault(); finishEdit(false); }
+  });
+}
+
+// --- 功能4: 导出为图片 ---
+async function exportMindmapImage() {
+  const container = document.getElementById('mindmapContainer');
+  const loading = document.getElementById('mindmapLoading');
+
+  if (container.style.display === 'none' || !container.innerHTML.trim()) {
+    showToast('请先生成思维导图', 'error');
+    return;
+  }
+
+  if (typeof html2canvas === 'undefined') {
+    showToast('图片导出库加载中，请稍后再试', 'error');
+    return;
+  }
+
+  try {
+    loading.style.display = 'block';
+    loading.innerHTML = '<div class="spinner"></div><div>正在生成图片...</div>';
+
+    const canvas = await html2canvas(container, {
+      backgroundColor: '#fafbfc',
+      scale: 2,
+      allowTaint: false,
+      useCORS: true,
+      logging: false,
+    });
+
+    loading.style.display = 'none';
+    loading.innerHTML = '<div class="spinner"></div><div>AI 正在生成思维导图...</div>';
+
+    // 下载图片
+    const link = document.createElement('a');
+    link.download = `思维导图_${new Date().toISOString().slice(0, 10)}.png`;
+    link.href = canvas.toDataURL('image/png');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    showToast('思维导图已保存为图片！', 'success');
+  } catch (e) {
+    loading.style.display = 'none';
+    loading.innerHTML = '<div class="spinner"></div><div>AI 正在生成思维导图...</div>';
+    showToast('导出失败: ' + e.message, 'error');
+  }
+}
+
+function escapeAttr(str) {
+  return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function closeMindmap() {
+  document.getElementById('mindmapOverlay').classList.remove('show');
+}
+
+document.getElementById('mindmapOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeMindmap();
+});
+
+// ==================== Delete ====================
+async function deleteNote() {
+  if (!currentNoteId) return;
+  if (!confirm('确定要删除这篇笔记吗？')) return;
+
+  try {
+    await api(`/notes/${currentUserId}/${currentNoteId}`, 'DELETE');
+    showToast('笔记已删除', 'success');
+    currentNoteId = null;
+    document.getElementById('noNote').style.display = 'flex';
+    document.getElementById('editorContent').style.display = 'none';
+    closeAiPanel();
+    await loadNotes();
+  } catch (e) {
+    showToast('删除失败: ' + e.message, 'error');
+  }
+}
+
+// ==================== Export ====================
+async function exportNote() {
+  if (!currentNoteId) {
+    showToast('请先选择一篇笔记', 'error');
+    return;
+  }
+  const fmt = confirm('导出为 PDF 格式？\n点击「确定」导出 PDF，点击「取消」导出 Word') ? 'pdf' : 'docx';
+  try {
+    const res = await fetch(`/notes/${currentUserId}/${currentNoteId}/export`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ note_id: currentNoteId, format: fmt })
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.detail || '导出失败');
+    }
+    // 触发下载
+    const blob = await res.blob();
+    const disposition = res.headers.get('Content-Disposition') || '';
+    const match = disposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+    let filename = match ? match[1].replace(/['"]/g, '') : `笔记.${fmt}`;
+    // UTF-8 encoded filename fallback
+    const utf8Match = disposition.match(/filename\*=UTF-8''([^;\n]*)/);
+    if (utf8Match) filename = decodeURIComponent(utf8Match[1]);
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast(`导出 ${fmt.toUpperCase()} 成功！`, 'success');
+  } catch (e) {
+    showToast('导出失败: ' + e.message, 'error');
+  }
+}
+
+// ==================== Modal ====================
+function closeAiModal() {
+  document.getElementById('aiConfirmModal').classList.remove('show');
+}
+
+// 点击遮罩关闭
+document.getElementById('aiConfirmModal').addEventListener('click', function(e) {
+  if (e.target === this) closeAiModal();
+});
+
+// ==================== Utils ====================
+function formatTime(iso) {
+  if (!iso) return '';
+  try {
+    const d = new Date(iso);
+    const pad = n => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  } catch { return iso; }
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// ==================== Upload Attachment (插入图片到 contenteditable) ====================
+async function uploadAttachment(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const res = await fetch(`/notes/upload/${currentUserId}`, {
+      method: 'POST',
+      body: formData
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || '上传失败');
+
+    showToast('上传成功！', 'success');
+
+    const editor = document.getElementById('noteContent');
+    const sel = window.getSelection();
+
+    // 在光标位置插入 <img> 或 <a>
+    const insertNode = (tag, url, alt) => {
+      if (tag === 'img') {
+        const img = document.createElement('img');
+        img.src = url;
+        img.alt = alt;
+        img.style.cssText = 'max-width:100%;border-radius:8px;margin:12px 0;box-shadow:0 2px 12px rgba(0,0,0,0.1)';
+        return img;
+      } else {
+        const a = document.createElement('a');
+        a.href = url;
+        a.target = '_blank';
+        a.rel = 'noopener';
+        a.textContent = alt;
+        return a;
+      }
+    };
+
+    if (sel.rangeCount > 0 && editor.contains(sel.anchorNode)) {
+      const range = sel.getRangeAt(0);
+      range.deleteContents();
+      const node = insertNode(data.is_image ? 'img' : 'a', data.url, data.file_name);
+      range.insertNode(node);
+      range.insertNode(document.createElement('br'));
+      range.collapse(false);
+      sel.removeAllRanges();
+      sel.addRange(range);
+      if (data.is_image) enableImageResize();
+    } else {
+      editor.appendChild(document.createElement('br'));
+      const node = insertNode(data.is_image ? 'img' : 'a', data.url, data.file_name);
+      editor.appendChild(node);
+      editor.appendChild(document.createElement('br'));
+      if (data.is_image) enableImageResize();
+    }
+
+    editor.dispatchEvent(new Event('input', { bubbles: true }));
+    input.value = '';
+  } catch (e) {
+    showToast('上传失败: ' + e.message, 'error');
+    input.value = '';
+  }
+}
+
+// ==================== Drag & Drop ====================
+const editorEl = document.getElementById('noteContent');
+editorEl.addEventListener('dragover', function(e) {
+  e.preventDefault(); e.stopPropagation();
+  this.style.outline = '2px solid #667eea';
+});
+editorEl.addEventListener('dragleave', function(e) {
+  e.preventDefault(); e.stopPropagation();
+  this.style.outline = '';
+});
+editorEl.addEventListener('drop', async function(e) {
+  e.preventDefault(); e.stopPropagation();
+  this.style.outline = '';
+  const files = e.dataTransfer.files;
+  if (files.length > 0) {
+    const fi = document.getElementById('fileInput');
+    const dt = new DataTransfer();
+    dt.items.add(files[0]);
+    fi.files = dt.files;
+    await uploadAttachment(fi);
+  }
+});
+
+// ==================== 键盘快捷键 & 上下文上报 ====================
+editorEl.addEventListener('keydown', function(e) {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'b') { e.preventDefault(); document.execCommand('bold'); }
+  if ((e.ctrlKey || e.metaKey) && e.key === 'i') { e.preventDefault(); document.execCommand('italic'); }
+  debounceReportContext();
+});
+
+// 内容编辑 → 防抖上报上下文
+editorEl.addEventListener('input', debounceReportContext);
+
+// 标题输入 → 防抖上报上下文
+document.getElementById('noteTitle').addEventListener('input', debounceReportContext);
+
+// Keyboard shortcut: Ctrl+S to save
+document.addEventListener('keydown', function(e) {
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+    e.preventDefault();
+    saveNote();
+  }
+});
+
+// ==================== 知识点手动编辑 ====================
+function renderKpBar(kps) {
+  const kpBar = document.getElementById('kpBar');
+  const tags = (kps || []).map(kp => `<span class="kp-tag">${kp}</span>`).join('');
+  kpBar.innerHTML = '<span class="kp-label">📌 知识点：</span>' +
+    tags +
+    '<input id="kpInput" type="text" placeholder="新增，逗号分隔" style="border:1px solid #e0e0e0;border-radius:12px;padding:2px 10px;font-size:11px;outline:none;flex:1;min-width:120px;max-width:200px;" onkeydown="if(event.key===\'Enter\')saveKpTags()">' +
+    '<button onclick="saveKpTags()" style="background:none;border:none;color:#667eea;font-size:11px;cursor:pointer;padding:2px 6px;">添加</button>';
+}
+function saveKpTags() {
+  const input = document.getElementById('kpInput');
+  if (!input || !currentNoteId) return;
+  const raw = input.value.trim();
+  if (!raw) return;
+  const newKps = raw.split(/[,，、]/).map(s => s.trim()).filter(Boolean);
+  if (!newKps.length) return;
+  input.value = '';
+  api(`/notes/${currentUserId}/${currentNoteId}`).then(res => {
+    const existing = res.note.knowledge_points || [];
+    const merged = [...new Set([...existing, ...newKps])];
+    api(`/notes/${currentUserId}/${currentNoteId}`, 'PUT', { knowledge_points: merged }).then(() => {
+      showToast('知识点已更新', 'success');
+      renderKpBar(merged);
+      loadNotes();
+    }).catch(e => showToast('保存失败: ' + e.message, 'error'));
+  }).catch(e => showToast('获取笔记失败: ' + e.message, 'error'));
+}
+
+// ==================== AI 选中文本解释 + 生活案例 ====================
+// 浮动按钮（AI解释 + 生活案例）+ 标签页弹出框
+(function() {
+  const btnExplain = document.createElement('button');
+  btnExplain.className = 'ai-explain-btn';
+  btnExplain.innerHTML = '🤖 AI 解释';
+  btnExplain.id = 'aiExplainBtn';
+
+  const btnCase = document.createElement('button');
+  btnCase.className = 'life-case-btn';
+  btnCase.innerHTML = '📖 生活案例';
+  btnCase.id = 'lifeCaseBtn';
+
+  const popover = document.createElement('div');
+  popover.className = 'ai-explain-popover';
+  popover.id = 'aiExplainPopover';
+  popover.innerHTML = '<div class="pop-header"><span id="popoverTitle">🤖 AI 解释</span><button class="close-btn" onclick="document.getElementById(\'aiExplainPopover\').style.display=\'none\'">×</button></div>'
+    + '<div class="pop-tabs">'
+    + '<div class="pop-tab active" data-tab="explain" onclick="switchExplainTab(\'explain\')">🤖 AI 解释</div>'
+    + '<div class="pop-tab" data-tab="case" onclick="switchExplainTab(\'case\')">📖 生活案例</div>'
+    + '</div>'
+    + '<div class="pop-body" id="aiExplainBody"><div class="pop-panel active" id="explainPanel"></div><div class="pop-panel" id="casePanel"></div></div>';
+
+  document.body.appendChild(btnExplain);
+  document.body.appendChild(btnCase);
+  document.body.appendChild(popover);
+
+  // 存储当前选中的文本和位置
+  let _selectedText = '';
+  let _selectionRect = null;
+
+  // 切换标签页（自动加载未加载的内容）
+  window.switchExplainTab = function(tab) {
+    document.querySelectorAll('.pop-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.pop-panel').forEach(p => p.classList.remove('active'));
+    document.querySelector(`.pop-tab[data-tab="${tab}"]`).classList.add('active');
+    const panelId = tab === 'explain' ? 'explainPanel' : 'casePanel';
+    document.getElementById(panelId).classList.add('active');
+    document.getElementById('popoverTitle').textContent = tab === 'explain' ? '🤖 AI 解释' : '📖 生活案例';
+
+    // 如果面板为空且当前有选中文本，自动触发加载
+    const panel = document.getElementById(panelId);
+    if (_selectedText && panel.children.length === 0) {
+      const url = tab === 'explain'
+        ? `/notes/${currentUserId}/${currentNoteId}/explain-selection`
+        : `/notes/${currentUserId}/${currentNoteId}/life-case`;
+      const loadingText = tab === 'explain' ? 'AI 思考中...' : '正在联想生活案例...';
+      const emptyText = tab === 'explain' ? '当前选中内容暂无相关解释' : '当前选中情况似乎没有显示案例情况';
+      streamToPanel(url, { selected_text: _selectedText }, panelId, loadingText, emptyText);
+    }
+  };
+
+  // 通用 SSE 流式读取函数
+  async function streamToPanel(url, body, panelId, loadingText, emptyText) {
+    const panel = document.getElementById(panelId);
+    panel.innerHTML = '<div class="loading"><span class="spinner"></span>' + loadingText + '</div>';
+    popover.style.display = 'block';
+    popover.style.left = Math.max(4, Math.min(_selectionRect.left, window.innerWidth - 420)) + 'px';
+    popover.style.top = (_selectionRect.top - 10) + 'px';
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      if (!res.ok) throw new Error('请求失败');
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let hasContent = false;
+      // 用 textContainer 包裹文本内容，避免 insertBefore 操作
+      panel.innerHTML = '';
+      const textContainer = document.createElement('div');
+      panel.appendChild(textContainer);
+      const kwContainer = document.createElement('div');
+      kwContainer.className = 'keywords';
+      panel.appendChild(kwContainer);
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const parts = buffer.split('\n');
+        buffer = parts.pop() || '';
+        for (const line of parts) {
+          if (line.startsWith('data: ')) {
+            let data;
+            try { data = JSON.parse(line.slice(6)); } catch { continue; }
+            if (data.type === 'chunk') {
+              hasContent = true;
+              const loadingEl = panel.querySelector('.loading');
+              if (loadingEl) loadingEl.remove();
+              textContainer.appendChild(document.createTextNode(data.text));
+              panel.scrollTop = panel.scrollHeight;
+            } else if (data.type === 'done') {
+              if (data.text) {
+                const loadingEl = panel.querySelector('.loading');
+                if (loadingEl) loadingEl.remove();
+                textContainer.textContent = data.text;
+                // 确保 kwContainer 在 panel 中（末尾）
+                if (kwContainer.parentNode !== panel) {
+                  panel.appendChild(kwContainer);
+                }
+                hasContent = true;
+              } else if (!hasContent) {
+                panel.innerHTML = '<span style="color:#999">' + emptyText + '</span>';
+              }
+              if (data.keywords && data.keywords.length) {
+                kwContainer.innerHTML = data.keywords.map(k => '<span class="keyword">' + k + '</span>').join('');
+              }
+            } else if (data.type === 'error') {
+              panel.innerHTML = '<span style="color:#e74c3c">' + data.text + '</span>';
+              hasContent = true;
+            }
+          }
+        }
+      }
+      if (!hasContent) {
+        panel.innerHTML = '<span style="color:#999">' + emptyText + '</span>';
+      }
+    } catch (e) {
+      panel.innerHTML = '<span style="color:#e74c3c">请求失败: ' + e.message + '</span>';
+    }
+  }
+
+  // 选中文本后显示浮动按钮
+  document.getElementById('noteContent').addEventListener('mouseup', function(e) {
+    const sel = window.getSelection();
+    const text = sel.toString().trim();
+    if (!text || text.length < 2) {
+      btnExplain.style.display = 'none';
+      btnCase.style.display = 'none';
+      popover.style.display = 'none';
+      return;
+    }
+    _selectedText = text;
+    const range = sel.getRangeAt(0);
+    _selectionRect = range.getBoundingClientRect();
+
+    // 定位 AI 解释按钮
+    btnExplain.style.display = 'flex';
+    const totalWidth = btnExplain.offsetWidth + btnCase.offsetWidth + 6;
+    const startLeft = _selectionRect.left + _selectionRect.width / 2 - totalWidth / 2;
+    btnExplain.style.left = Math.max(4, Math.min(startLeft, window.innerWidth - totalWidth - 4)) + 'px';
+    btnExplain.style.top = (_selectionRect.top - 36) + 'px';
+
+    // 定位生活案例按钮（在 AI 解释按钮右侧）
+    btnCase.style.display = 'flex';
+    btnCase.style.left = (btnExplain.offsetLeft + btnExplain.offsetWidth + 6) + 'px';
+    btnCase.style.top = (_selectionRect.top - 36) + 'px';
+
+    // AI 解释按钮点击
+    btnExplain.onclick = function() {
+      btnExplain.style.display = 'none';
+      btnCase.style.display = 'none';
+      switchExplainTab('explain');
+      streamToPanel(
+        `/notes/${currentUserId}/${currentNoteId}/explain-selection`,
+        { selected_text: _selectedText },
+        'explainPanel',
+        'AI 思考中...',
+        '当前选中内容暂无相关解释'
+      );
+    };
+
+    // 生活案例按钮点击
+    btnCase.onclick = function() {
+      btnExplain.style.display = 'none';
+      btnCase.style.display = 'none';
+      switchExplainTab('case');
+      streamToPanel(
+        `/notes/${currentUserId}/${currentNoteId}/life-case`,
+        { selected_text: _selectedText },
+        'casePanel',
+        '正在联想生活案例...',
+        '当前选中情况似乎没有显示案例情况'
+      );
+    };
+  });
+
+  // 点击其他区域隐藏
+  document.addEventListener('mousedown', function(e) {
+    if (!btnExplain.contains(e.target) && !btnCase.contains(e.target) && !popover.contains(e.target)) {
+      btnExplain.style.display = 'none';
+      btnCase.style.display = 'none';
+      popover.style.display = 'none';
+    }
+  });
+})();
+
+// ==================== [[ 提及自动补全 ====================
+const mentionState = { active: false, startNode: null, startOffset: 0, query: '', selectedIndex: -1 };
+const mentionDropdown = document.getElementById('mentionDropdown');
+let mentionResults = [];
+
+function hideMention() {
+  mentionState.active = false;
+  mentionDropdown.style.display = 'none';
+  mentionDropdown.innerHTML = '<div class="mention-empty">加载中...</div>';
+}
+
+function positionMentionDropdown(range) {
+  const rect = range.getBoundingClientRect();
+  const top = rect.bottom + 4;
+  const left = Math.max(4, Math.min(rect.left, window.innerWidth - mentionDropdown.offsetWidth - 4));
+  mentionDropdown.style.left = left + 'px';
+  mentionDropdown.style.top = top + 'px';
+}
+
+async function fetchAndShowMention(query) {
+  try {
+    const res = await api(`/notes/${currentUserId}/search?q=${encodeURIComponent(query)}`);
+    mentionResults = res.notes || [];
+    renderMentionDropdown();
+  } catch {
+    mentionResults = [];
+    renderMentionDropdown();
+  }
+}
+
+function renderMentionDropdown() {
+  if (!mentionState.active) return;
+  mentionState.selectedIndex = -1;
+
+  if (mentionResults.length === 0) {
+    mentionDropdown.innerHTML = mentionState.query
+      ? '<div class="mention-empty">没有匹配的笔记</div>'
+      : '<div class="mention-empty">还没有其他笔记，快去新建吧 ✍️</div>';
+    mentionDropdown.style.display = 'block';
+    return;
+  }
+
+  mentionDropdown.innerHTML = mentionResults.map((n, i) =>
+    `<div class="mention-item" data-index="${i}" onclick="selectMention(${i})"
+        onmouseenter="mentionState.selectedIndex=${i};document.querySelectorAll('.mention-item').forEach((e,j)=>e.classList.toggle('active',j===${i}))">
+      <span class="kp-dot ${n.has_ai_organized ? 'ai' : ''}"></span>
+      <span>${escapeHtml(n.title || '未命名')}</span>
+    </div>`
+  ).join('');
+  mentionDropdown.style.display = 'block';
+}
+
+function selectMention(index) {
+  if (index < 0 || index >= mentionResults.length) return;
+  const title = mentionResults[index].title;
+  if (!mentionState.active || !mentionState.startNode) return;
+
+  const node = mentionState.startNode;
+  const startOffset = mentionState.startOffset;
+  const fullText = node.textContent;
+
+  // 获取当前光标位置
+  const sel = window.getSelection();
+  const endOffset = (sel.rangeCount && sel.getRangeAt(0).startContainer === node)
+    ? sel.getRangeAt(0).startOffset : fullText.length;
+
+  // 替换 [[query → [[title]]
+  const newText = fullText.substring(0, startOffset) + '[[' + title + ']]' + fullText.substring(endOffset);
+  node.textContent = newText;
+
+  // 将光标移到 ]] 后面
+  const newPos = startOffset + title.length + 4;
+  const newRange = document.createRange();
+  newRange.setStart(node, Math.min(newPos, newText.length));
+  newRange.collapse(true);
+  sel.removeAllRanges();
+  sel.addRange(newRange);
+
+  // 触发 editor 的 input 事件，让笔记内容检测到变化
+  document.getElementById('noteContent').dispatchEvent(new Event('input', { bubbles: true }));
+
+  hideMention();
+}
+
+// 监听编辑器输入检测 [[
+document.getElementById('noteContent').addEventListener('input', function() {
+  detectMention();
+});
+
+function detectMention() {
+  const sel = window.getSelection();
+  if (!sel.rangeCount) { hideMention(); return; }
+
+  const range = sel.getRangeAt(0);
+  const node = range.startContainer;
+
+  // 只在文本节点中检测
+  if (node.nodeType !== Node.TEXT_NODE) { hideMention(); return; }
+
+  const text = node.textContent;
+  const pos = range.startOffset;
+  const before = text.substring(0, pos);
+
+  const match = before.match(/\[\[([^\]]*)$/);
+  if (match) {
+    const newQuery = match[1];
+    const wasInactive = !mentionState.active;
+    const changed = newQuery !== mentionState.query;
+    mentionState.active = true;
+    mentionState.startNode = node;
+    mentionState.startOffset = pos - match[0].length;
+    mentionState.query = newQuery;
+
+    positionMentionDropdown(range);
+
+    // 刚激活（刚输入 [[）或者 query 变了，都触发请求
+    if (wasInactive || changed) fetchAndShowMention(mentionState.query);
+  } else {
+    hideMention();
+  }
+}
+
+// 键盘导航：上下选择，Enter 确认，Esc 关闭
+document.getElementById('noteContent').addEventListener('keydown', function(e) {
+  if (!mentionState.active || mentionDropdown.style.display !== 'block') return;
+
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    const items = mentionDropdown.querySelectorAll('.mention-item');
+    if (!items.length) return;
+    mentionState.selectedIndex = Math.min(mentionState.selectedIndex + 1, items.length - 1);
+    items.forEach((el, i) => el.classList.toggle('active', i === mentionState.selectedIndex));
+    // 滚动到可见
+    items[mentionState.selectedIndex]?.scrollIntoView({ block: 'nearest' });
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    const items = mentionDropdown.querySelectorAll('.mention-item');
+    if (!items.length) return;
+    mentionState.selectedIndex = Math.max(mentionState.selectedIndex - 1, 0);
+    items.forEach((el, i) => el.classList.toggle('active', i === mentionState.selectedIndex));
+    items[mentionState.selectedIndex]?.scrollIntoView({ block: 'nearest' });
+  } else if (e.key === 'Enter' && mentionState.selectedIndex >= 0) {
+    e.preventDefault();
+    selectMention(mentionState.selectedIndex);
+  } else if (e.key === 'Escape') {
+    hideMention();
+  }
+});
+
+// 点击其它区域关闭
+document.addEventListener('mousedown', function(e) {
+  if (mentionDropdown.style.display === 'block' && !mentionDropdown.contains(e.target)) {
+    hideMention();
+  }
+});
+
+// ==================== 知识图谱 ====================
+let graphNetwork = null;
+
+function openGraph() {
+  document.getElementById('graphOverlay').classList.add('show');
+  document.getElementById('graphInfo').textContent = '加载中...';
+
+  // 动态加载 vis-network CSS（按需加载，不阻塞页面）
+  if (!document.getElementById('visCss')) {
+    const link = document.createElement('link');
+    link.id = 'visCss';
+    link.rel = 'stylesheet';
+    link.href = 'https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.9/dist/vis-network.min.css';
+    document.head.appendChild(link);
+  }
+
+  // 动态加载 vis-network JS（按需加载，不阻塞页面）
+  if (typeof vis === 'undefined' && typeof visNetwork === 'undefined') {
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.9/dist/vis-network.min.js';
+    script.onload = loadGraph;
+    script.onerror = function() {
+      document.getElementById('graphInfo').textContent = '图谱库加载失败，请检查网络';
+      document.getElementById('graphContainer').innerHTML =
+        '<div style="color:#e74c3c;text-align:center;padding:80px 20px;font-size:16px;">图谱脚本加载失败，请刷新重试</div>';
+    };
+    document.body.appendChild(script);
+  } else {
+    loadGraph();
+  }
+}
+
+function closeGraph() {
+  document.getElementById('graphOverlay').classList.remove('show');
+  // 关闭时清理宇宙视图（如果激活中）
+  if (_universeViewActive) {
+    const canvas = document.getElementById('universeCanvas');
+    const graph = document.getElementById('graphContainer');
+    const btn = document.getElementById('universeToggleBtn');
+    if (_universeInstance) _universeInstance.destroy();
+    graph.style.display = '';
+    canvas.style.display = 'none';
+    btn.textContent = '✨ 宇宙';
+    _universeViewActive = false;
+  }
+}
+
+
+
+function fitGraph() {
+  if (graphNetwork) graphNetwork.fit({ animation: true });
+}
+
+async function loadGraph() {
+  try {
+    const res = await api(`/notes/${currentUserId}/graph-data`);
+    const data = res.data;
+    const nodes = data.nodes || [];
+    const edges = data.edges || [];
+
+    document.getElementById('graphInfo').textContent = `${nodes.length} 篇笔记 · ${edges.length} 条链接`;
+
+    if (nodes.length === 0) {
+      document.getElementById('graphContainer').innerHTML = '<div style="color:rgba(255,255,255,0.4);text-align:center;padding:80px 20px;font-size:16px;">暂无笔记，快去创建吧 ✍️</div>';
+      return;
+    }
+
+    // 计算每个节点的连接数（用于调节大小）
+    const linkCount = {};
+    nodes.forEach(n => linkCount[n.id] = 0);
+    edges.forEach(e => {
+      linkCount[e.source] = (linkCount[e.source] || 0) + 1;
+      linkCount[e.target] = (linkCount[e.target] || 0) + 1;
+    });
+    const maxLinks = Math.max(1, ...Object.values(linkCount));
+
+    // 构建 vis.js 节点
+    const visNodes = nodes.map(n => {
+      const count = linkCount[n.id] || 0;
+      const size = 12 + (count / maxLinks) * 20;
+      return {
+        id: n.id,
+        label: n.title || '未命名',
+        title: `${n.title || '未命名'}\n📌 ${(n.knowledge_points || []).join(', ') || '无标签'}\n🔗 ${count} 条连接`,
+        size: Math.max(14, Math.min(40, size)),
+        color: n.has_ai_organized ? { background: '#667eea', border: '#8b9cf7', highlight: { background: '#764ba2', border: '#9b6fc0' } }
+                                  : { background: '#2d2d4a', border: '#4a4a7a', highlight: { background: '#667eea', border: '#8b9cf7' } },
+        font: { color: '#e0e0e0', size: 12, strokeWidth: 2, strokeColor: '#0f0f1a' },
+        borderWidth: 2,
+        shape: 'dot',
+      };
+    });
+
+    // 构建 vis.js 边
+    const visEdges = edges.map(e => ({
+      from: e.source,
+      to: e.target,
+      color: { color: 'rgba(102,126,234,0.35)', hover: 'rgba(102,126,234,0.8)', highlight: 'rgba(102,126,234,0.8)' },
+      width: 1.5,
+      hoverWidth: 3,
+      smooth: { type: 'continuous' },
+    }));
+
+    const container = document.getElementById('graphContainer');
+    // 清除旧内容
+    container.innerHTML = '';
+
+    const options = {
+      nodes: {
+        scaling: { min: 14, max: 40 },
+      },
+      edges: {
+        arrows: { to: { enabled: false } },
+      },
+      physics: {
+        solver: 'forceAtlas2Based',
+        forceAtlas2Based: {
+          gravitationalConstant: -40,
+          centralGravity: 0.005,
+          springLength: 200,
+          springConstant: 0.04,
+          damping: 0.5,
+        },
+        stabilization: { iterations: 100 },
+      },
+      interaction: {
+        hover: true,
+        tooltipDelay: 200,
+        navigationButtons: false,
+        zoomView: true,
+        dragView: true,
+      },
+      layout: {
+        improvedLayout: true,
+      },
+    };
+
+    graphNetwork = new vis.Network(container, { nodes: new vis.DataSet(visNodes), edges: new vis.DataSet(visEdges) }, options);
+
+    // 点击节点显示详情面板
+    graphNetwork.on('click', function(params) {
+      // 如果宇宙视图激活，不处理图谱点击
+      const canvas = document.getElementById('universeCanvas');
+      if (canvas && canvas.style.display !== 'none') return;
+      
+      if (params.nodes.length > 0) {
+        const noteId = params.nodes[0];
+        openDetailPanel(noteId);
+      } else {
+        closeDetailPanel();
+      }
+    });
+
+    // 双击节点放大
+    graphNetwork.on('doubleClick', function(params) {
+      if (params.nodes.length > 0) {
+        graphNetwork.focus(params.nodes[0], { scale: 1.5, animation: true });
+      }
+    });
+  } catch (e) {
+    document.getElementById('graphInfo').textContent = '加载失败';
+    document.getElementById('graphContainer').innerHTML = `<div style="color:#e74c3c;text-align:center;padding:80px 20px;font-size:16px;">图谱加载失败: ${e.message}</div>`;
+  }
+}
+
+// 点击遮罩关闭
+document.getElementById('graphOverlay').addEventListener('click', function(e) {
+  if (e.target === this || e.target.id === 'graphBody') closeGraph();
+});
+
+// 键盘 ESC 关闭图谱
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape' && document.getElementById('graphOverlay').classList.contains('show')) {
+    closeGraph();
+  }
+});
+
+// ==================== 图谱详情面板 ====================
+let currentSelectedNoteId = null;
+
+function closeDetailPanel() {
+  document.getElementById('graphDetailPanel').classList.remove('open');
+  currentSelectedNoteId = null;
+  if (graphNetwork && typeof graphNetwork.clearSelection === 'function') {
+    graphNetwork.clearSelection();
+  }
+  // 重置宇宙视图相机
+  if (_universeInstance) {
+    _universeInstance.clickedStar = null;
+    _universeInstance.camTarget = { x: 0, y: 0, z: 300 };
+    _universeInstance.autoRotate = true;
+    _universeInstance.userInteracting = false;
+  }
+}
+
+async function openDetailPanel(noteId) {
+  currentSelectedNoteId = noteId;
+  const panel = document.getElementById('graphDetailPanel');
+  panel.classList.add('open');
+  
+  const content = document.getElementById('detailContent');
+  content.innerHTML = '<div class="loading"><span class="spinner"></span>加载中...</div>';
+  
+  try {
+    const noteRes = await api(`/notes/${currentUserId}/${noteId}`);
+    renderDetailPanel(noteRes.note);
+  } catch (e) {
+    content.innerHTML = `<div class="empty-state"><div class="icon">⚠️</div><div>加载失败: ${e.message}</div></div>`;
+  }
+}
+
+function renderDetailPanel(note) {
+  const content = document.getElementById('detailContent');
+  const titleEl = document.getElementById('detailTitle');
+  const viewBtn = document.getElementById('detailViewBtn');
+  viewBtn.style.display = '';
+  currentSelectedNoteId = note.note_id;
+  
+  titleEl.textContent = note.title || '未命名笔记';
+  
+  const kps = note.knowledge_points || [];
+  const hasAi = note.has_ai_organized || false;
+  const contentLen = (note.content || '').trim().length;
+  
+  // 掌握进度 = 知识点数量分(50%) + 内容充实度分(50%)
+  const KP_TARGET = 5;
+  const CONTENT_TARGET = 500;
+  
+  const kpScore = Math.min((kps.length / KP_TARGET) * 100, 100);
+  const contentScore = Math.min((contentLen / CONTENT_TARGET) * 100, 100);
+  const progress = Math.round((kpScore + contentScore) / 2);
+  
+  let html = '';
+  
+  if (note.content && note.content.length > 0) {
+    const preview = note.content.length > 150 ? note.content.substring(0, 150) + '...' : note.content;
+    html += `<div class="detail-section">
+      <div class="section-label">📄 内容预览</div>
+      <div class="section-value">${escapeHtml(preview)}</div>
+    </div>`;
+  }
+  
+  if (kps.length > 0) {
+    html += `<div class="detail-section">
+      <div class="section-label">📌 知识点</div>
+      <div class="kp-tags">${kps.map(kp => `<span class="kp-tag${hasAi ? ' ai' : ''}">${escapeHtml(kp)}</span>`).join('')}</div>
+    </div>`;
+  }
+  
+  html += `<div class="detail-section">
+    <div class="section-label">📊 掌握进度</div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${progress}%"></div></div>
+    <div class="progress-text">${progress}%</div>
+  </div>`;
+  
+  if (kps.length > 0) {
+    html += `<div class="detail-section">
+      <div class="section-label">🔗 关联知识点</div>
+      <div class="related-kp-list">
+        ${kps.map(kp => `<div class="related-kp-item" onclick="searchKpInGraph('${escapeHtml(kp)}')">
+          <div class="kp-name">${escapeHtml(kp)}</div>
+          <div class="kp-rel">相关笔记</div>
+        </div>`).join('')}
+      </div>
+    </div>`;
+  }
+  
+  html += `<div class="detail-section">
+    <div class="section-label">📅 更新时间</div>
+    <div class="section-value">${formatTime(note.updated_at || note.created_at)}</div>
+  </div>`;
+  
+  if (hasAi) {
+    html += `<div class="detail-section">
+      <div class="section-label">🤖 AI 整理</div>
+      <div class="section-value">✓ 已通过 AI 结构化整理</div>
+    </div>`;
+  }
+  
+  content.innerHTML = html;
+}
+
+function searchKpInGraph(kpName) {
+  if (graphNetwork) {
+    const nodes = graphNetwork.body.nodes;
+    for (const [id, node] of nodes) {
+      if (node.options.label && node.options.label.includes(kpName)) {
+        graphNetwork.focus(id, { scale: 1.5, animation: true });
+        graphNetwork.selectNodes([id]);
+        break;
+      }
+    }
+  }
+}
+
+function viewSelectedNote() {
+  if (currentSelectedNoteId) {
+    closeGraph();
+    selectNote(currentSelectedNoteId);
+  }
+}
+
+// ==================== 知识宇宙（3D立体版） ====================
+let _universeInstance = null;
+let _universeViewActive = false;
+
+function toggleUniverseView() {
+  const canvas = document.getElementById('universeCanvas');
+  const graph = document.getElementById('graphContainer');
+  const btn = document.getElementById('universeToggleBtn');
+
+  if (_universeViewActive) {
+    // 切回图谱时关闭面板
+    closeDetailPanel();
+    graph.style.display = '';
+    canvas.style.display = 'none';
+    btn.textContent = '\u2728 \u5b87\u5b99';
+    _universeViewActive = false;
+    if (_universeInstance) _universeInstance.destroy();
+    return;
+  }
+
+  // 进入宇宙时关闭图谱面板
+  closeDetailPanel();
+
+  graph.style.display = 'none';
+  canvas.style.display = 'block';
+  btn.textContent = '\ud83d\udd78 \u56fe\u8c31';
+  _universeViewActive = true;
+
+  if (!_universeInstance) {
+    _universeInstance = new KnowledgeUniverse(canvas);
+  }
+  _universeInstance.init(currentUserId);
+}
+
+class KnowledgeUniverse {
+  constructor(canvas) {
+    this.canvas = canvas;
+    this.ctx = canvas.getContext('2d');
+    this.stars = [];
+    this.starMap = {};
+    this.edges = [];
+    this.animId = null;
+    this.startTime = 0;
+    this.resizeObserver = null;
+    this.dpr = window.devicePixelRatio || 1;
+    this.W = 0;
+    this.H = 0;
+
+    // 3D相机
+    this.cam = { x: 0, y: 0, z: 300 };
+    this.camTarget = { x: 0, y: 0, z: 300 };
+    this.rotX = 0.3;
+    this.rotY = 0;
+    this.rotXTarget = 0.3;
+    this.rotYTarget = 0;
+
+    // 自动旋转
+    this.autoRotate = true;
+    this.autoRotateSpeed = 0.0008;
+
+    // 拖拽旋转
+    this.dragging = false;
+    this.dragStart = { x: 0, y: 0 };
+    this.dragRotStart = { x: 0.3, y: 0 };
+    this.hasDragged = false;
+
+    // 拖拽节点
+    this.draggingStar = null;
+    this.dragStarOffset = { x: 0, y: 0, z: 0 };
+
+    // 悬停/点击
+    this.hoveredStar = null;
+    this.clickedStar = null;
+    this.userInteracting = false;
+
+    // 背景星（3D分布）
+    this.bgStars = [];
+
+    // 透视参数
+    this.focalLength = 300;
+
+    // 离屏画布 (背景缓存)
+    this._bgCanvas = null;
+    this._bgDirty = true;
+
+    // hover节流
+    this._lastHoverTime = 0;
+    this._hoverThrottleMs = 30;
+
+    // 缓存颜色解析
+    this._colorCache = {};
+
+    // 掌握度颜色
+    this.masteryColors = {
+      0: { core: 'rgb(136,136,153)', glow: 'rgb(85,85,102)', label: '\u672a\u63a5\u89e6' },
+      1: { core: 'rgb(74,222,128)', glow: 'rgb(34,197,94)', label: '\u5df2\u4e86\u89e3' },
+      2: { core: 'rgb(96,165,250)', glow: 'rgb(59,130,246)', label: '\u5df2\u7406\u89e3' },
+      3: { core: 'rgb(251,146,60)', glow: 'rgb(249,115,22)', label: '\u5df2\u5e94\u7528' },
+      4: { core: 'rgb(244,114,182)', glow: 'rgb(236,72,153)', label: '\u5df2\u638c\u63e1' },
+    };
+
+    // 星级类型配置 [level]
+    this._starTypeConfig = [
+      { name: 'dwarf',       baseMul: 0.7,  glowMul: 1.0, coronaMul: 1.2, lightOff: 0.25 },
+      { name: 'mainseq',     baseMul: 0.85, glowMul: 1.3, coronaMul: 1.5, lightOff: 0.3  },
+      { name: 'bluewhite',   baseMul: 1.0,  glowMul: 1.6, coronaMul: 2.0, lightOff: 0.3  },
+      { name: 'giant',       baseMul: 1.15, glowMul: 2.0, coronaMul: 2.5, lightOff: 0.35 },
+      { name: 'supergiant',  baseMul: 1.3,  glowMul: 2.5, coronaMul: 3.2, lightOff: 0.35 },
+    ];
+
+    // 掌握等级图标
+    this._masteryIcons = ['\u26aa', '\ud83d\udfe2', '\ud83d\udd35', '\ud83d\udfe0', '\ud83d\udfe3'];
+
+    this._createTooltip();
+    this._setupResize();
+    this._resizeCanvas();
+  }
+
+  async init(userId) {
+    this.startTime = performance.now();
+    try {
+      const res = await api('/knowledge-universe/' + userId);
+      const data = res.data || res;
+      if (!data.success && !data.stars) return;
+
+      this._buildData(data.stars || [], data.dependencies || []);
+      this._generateBgStars();
+      this._buildBgCanvas();
+      this._bindEvents();
+      this._startAnimation();
+    } catch (e) {
+      console.error('\u77e5\u8bc6\u5b87\u5b99\u521d\u59cb\u5316\u5931\u8d25:', e);
+    }
+  }
+
+  destroy() {
+    if (this.animId) { cancelAnimationFrame(this.animId); this.animId = null; }
+    this._unbindEvents();
+    if (this.tooltip) this.tooltip.style.opacity = '0';
+    this._bgCanvas = null;
+  }
+
+  _setupResize() {
+    this.resizeObserver = new ResizeObserver(() => this._resizeCanvas());
+    this.resizeObserver.observe(this.canvas.parentElement);
+  }
+
+  _resizeCanvas() {
+    const parent = this.canvas.parentElement;
+    const w = parent.clientWidth;
+    const h = parent.clientHeight;
+    this.canvas.width = w * this.dpr;
+    this.canvas.height = h * this.dpr;
+    this.canvas.style.width = w + 'px';
+    this.canvas.style.height = h + 'px';
+    this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+    this.W = w;
+    this.H = h;
+    this._bgDirty = true;
+  }
+
+  _buildData(rawStars, deps) {
+    const accentColors = [
+      'rgb(168,85,247)', 'rgb(59,130,246)', 'rgb(6,182,212)',
+      'rgb(16,185,129)', 'rgb(245,158,11)', 'rgb(239,68,68)',
+      'rgb(236,72,153)', 'rgb(132,204,22)', 'rgb(139,92,246)',
+      'rgb(249,115,22)', 'rgb(20,184,166)', 'rgb(244,63,94)',
+      'rgb(99,102,241)', 'rgb(168,162,158)', 'rgb(34,197,94)',
+    ];
+
+    this.stars = rawStars.map((s, i) => {
+      const level = Math.min(4, Math.max(0, s.mastery_level || 0));
+      const points = s.mastery_points || 0;
+      const size = 4 + points * 1.5 + level * 1.5;
+      const star = {
+        id: i,
+        name: s.name,
+        level: level,
+        points: points,
+        label: s.mastery_label || this.masteryColors[level].label,
+        baseSize: Math.min(14, size),
+        color: this.masteryColors[level],
+        accent: accentColors[i % accentColors.length],
+        x: 0, y: 0, z: 0,
+        sx: 0, sy: 0, sScale: 1, sDepth: 0,
+        pulsePhase: Math.random() * Math.PI * 2,
+        connections: [],
+        // 表面纹理随机点 (预生成)
+        surfaceSpots: this._generateSurfaceSpots(),
+        // 拖拽标记
+        isBeingDragged: false,
+      };
+      this.starMap[s.name] = star;
+      return star;
+    });
+
+    deps.forEach(d => {
+      const a = this.starMap[d.knowledge_point];
+      const b = this.starMap[d.prerequisite];
+      if (a && b && a !== b) {
+        if (!a.connections.includes(b)) a.connections.push(b);
+        if (!b.connections.includes(a)) b.connections.push(a);
+        this.edges.push({ from: a, to: b, edgePhase: Math.random() * Math.PI * 2 });
+      }
+    });
+
+    this._forceLayout3D();
+  }
+
+  _generateSurfaceSpots() {
+    const spots = [];
+    const count = 5 + Math.floor(Math.random() * 6);
+    for (let i = 0; i < count; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const dist = Math.random() * 0.7;
+      spots.push({
+        angle: angle,
+        dist: dist,
+        r: 0.08 + Math.random() * 0.15,
+        alpha: 0.05 + Math.random() * 0.15,
+      });
+    }
+    return spots;
+  }
+
+  _forceLayout3D() {
+    const n = this.stars.length;
+    if (n === 0) return;
+
+    const spread = 150;
+
+    this.stars.forEach(s => {
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos(2 * Math.random() - 1);
+      const r = spread * Math.cbrt(Math.random());
+      s.x = r * Math.sin(phi) * Math.cos(theta);
+      s.y = r * Math.sin(phi) * Math.sin(theta);
+      s.z = r * Math.cos(phi) * 0.6;
+    });
+
+    for (let iter = 0; iter < 100; iter++) {
+      const alpha = 0.4 * (1 - iter / 100);
+
+      for (let i = 0; i < n; i++) {
+        for (let j = i + 1; j < n; j++) {
+          const dx = this.stars[j].x - this.stars[i].x;
+          const dy = this.stars[j].y - this.stars[i].y;
+          const dz = this.stars[j].z - this.stars[i].z;
+          const dist = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1;
+          const minDist = 100;
+          if (dist < minDist * 2.5) {
+            const force = (minDist * minDist) / (dist * dist) * alpha * 0.3;
+            const fx = (dx / dist) * force;
+            const fy = (dy / dist) * force;
+            const fz = (dz / dist) * force;
+            this.stars[i].x -= fx; this.stars[i].y -= fy; this.stars[i].z -= fz;
+            this.stars[j].x += fx; this.stars[j].y += fy; this.stars[j].z += fz;
+          }
+        }
+      }
+
+      this.edges.forEach(e => {
+        const dx = e.to.x - e.from.x;
+        const dy = e.to.y - e.from.y;
+        const dz = e.to.z - e.from.z;
+        const dist = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1;
+        const idealDist = 180;
+        const force = (dist - idealDist) / dist * alpha * 0.015;
+        e.from.x += dx * force; e.from.y += dy * force; e.from.z += dz * force;
+        e.to.x -= dx * force; e.to.y -= dy * force; e.to.z -= dz * force;
+      });
+
+      this.stars.forEach(s => {
+        s.x *= (1 - alpha * 0.01);
+        s.y *= (1 - alpha * 0.01);
+        s.z *= (1 - alpha * 0.015);
+      });
+    }
+  }
+
+  _generateBgStars() {
+    this.bgStars = [];
+    const bgColors = [
+      'rgb(180,200,255)',  // 蓝色
+      'rgb(255,255,240)',  // 白色
+      'rgb(255,240,200)',  // 黄色
+      'rgb(255,200,180)',  // 红色
+      'rgb(200,210,255)',  // 蓝白
+    ];
+    for (let i = 0; i < 500; i++) {
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos(2 * Math.random() - 1);
+      const r = 800 + Math.random() * 1500;
+      this.bgStars.push({
+        x: r * Math.sin(phi) * Math.cos(theta),
+        y: r * Math.sin(phi) * Math.sin(theta),
+        z: r * Math.cos(phi),
+        r: 0.3 + Math.random() * 1.2,
+        alpha: 0.15 + Math.random() * 0.5,
+        speed: 0.3 + Math.random() * 1.5,
+        phase: Math.random() * Math.PI * 2,
+        color: bgColors[Math.floor(Math.random() * bgColors.length)],
+      });
+    }
+  }
+
+  // ============ 离屏背景画布 (星云+背景) ============
+  _buildBgCanvas() {
+    const w = this.W;
+    const h = this.H;
+    if (w === 0 || h === 0) return;
+    this._bgCanvas = document.createElement('canvas');
+    this._bgCanvas.width = w * this.dpr;
+    this._bgCanvas.height = h * this.dpr;
+    const bctx = this._bgCanvas.getContext('2d');
+    bctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+
+    // 深紫蓝径向渐变背景
+    const bg = bctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, Math.max(w, h) * 0.7);
+    bg.addColorStop(0, '#0e0e24');
+    bg.addColorStop(0.3, '#0a0a1e');
+    bg.addColorStop(0.6, '#0d0b28');
+    bg.addColorStop(1, '#08061a');
+    bctx.fillStyle = bg;
+    bctx.fillRect(0, 0, w, h);
+
+    // 星云云朵 (2-3个大范围柔和渐变)
+    const nebulaConfigs = [
+      { cx: w * 0.25, cy: h * 0.35, rx: w * 0.4, ry: h * 0.35, color: [80, 40, 140], alpha: 0.06 },
+      { cx: w * 0.72, cy: h * 0.6,  rx: w * 0.35, ry: h * 0.3, color: [30, 60, 130], alpha: 0.05 },
+      { cx: w * 0.5,  cy: h * 0.15, rx: w * 0.3,  ry: h * 0.25, color: [120, 30, 80], alpha: 0.04 },
+    ];
+    nebulaConfigs.forEach(nb => {
+      bctx.save();
+      bctx.translate(nb.cx, nb.cy);
+      bctx.scale(nb.rx / Math.max(nb.rx, nb.ry), nb.ry / Math.max(nb.rx, nb.ry));
+      const g = bctx.createRadialGradient(0, 0, 0, 0, 0, Math.max(nb.rx, nb.ry));
+      g.addColorStop(0, 'rgba(' + nb.color[0] + ',' + nb.color[1] + ',' + nb.color[2] + ',' + nb.alpha + ')');
+      g.addColorStop(0.5, 'rgba(' + nb.color[0] + ',' + nb.color[1] + ',' + nb.color[2] + ',' + (nb.alpha * 0.4) + ')');
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      bctx.fillStyle = g;
+      bctx.beginPath();
+      bctx.arc(0, 0, Math.max(nb.rx, nb.ry), 0, Math.PI * 2);
+      bctx.fill();
+      bctx.restore();
+    });
+
+    this._bgDirty = false;
+  }
+
+  // ============ Tooltip ============
+  _createTooltip() {
+    this.tooltip = document.createElement('div');
+    this.tooltip.style.cssText =
+      'position:fixed;pointer-events:none;z-index:10000;' +
+      'background:rgba(10,10,30,0.92);color:#e2e8f0;' +
+      'border:1px solid rgba(139,92,246,0.4);border-radius:10px;' +
+      'padding:10px 14px;font-size:13px;line-height:1.6;' +
+      'box-shadow:0 4px 24px rgba(0,0,0,0.6),0 0 15px rgba(139,92,246,0.15);backdrop-filter:blur(10px);' +
+      'opacity:0;transition:opacity 0.2s ease, transform 0.2s ease;' +
+      'transform:translateY(4px);max-width:220px;';
+    document.body.appendChild(this.tooltip);
+  }
+
+  _showTooltip(html, mx, my) {
+    this.tooltip.innerHTML = html;
+    this.tooltip.style.opacity = '1';
+    this.tooltip.style.transform = 'translateY(0)';
+    this.tooltip.style.left = (mx + 15) + 'px';
+    this.tooltip.style.top = (my - 10) + 'px';
+  }
+
+  _hideTooltip() {
+    if (this.tooltip) {
+      this.tooltip.style.opacity = '0';
+      this.tooltip.style.transform = 'translateY(4px)';
+    }
+  }
+
+  // ============ 3D旋转 & 投影 ============
+  _rotate3D(x, y, z) {
+    let cosY = Math.cos(this.rotY), sinY = Math.sin(this.rotY);
+    let x1 = x * cosY - z * sinY;
+    let z1 = x * sinY + z * cosY;
+    let cosX = Math.cos(this.rotX), sinX = Math.sin(this.rotX);
+    let y1 = y * cosX - z1 * sinX;
+    let z2 = y * sinX + z1 * cosX;
+    return { x: x1, y: y1, z: z2 };
+  }
+
+  _project(x, y, z) {
+    const fov = this.focalLength;
+    const dist = this.cam.z - z;
+    if (dist < 10) return { sx: 0, sy: 0, scale: 0, depth: 0 };
+    const scale = fov / dist;
+    return {
+      sx: x * scale + this.W / 2 - this.cam.x * scale,
+      sy: y * scale + this.H / 2 - this.cam.y * scale,
+      scale: scale,
+      depth: dist,
+    };
+  }
+
+  // ============ 事件绑定 ============
+  _bindEvents() {
+    this._unbindEvents();
+
+    this._onMouseDown = (e) => {
+      const rect = this.canvas.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+      const hit = this._hitTest(mx, my);
+
+      if (hit) {
+        // 开始拖拽节点
+        this.draggingStar = hit;
+        hit.isBeingDragged = true;
+        this.hasDragged = false;
+        this.dragStart = { x: e.clientX, y: e.clientY };
+        this.dragStarOrigin = { x: hit.x, y: hit.y, z: hit.z };
+        this.clickedStar = null; // 拖拽时清除相机追踪
+        this.userInteracting = true;
+        this.autoRotate = false;
+        this.canvas.style.cursor = 'grabbing';
+        return;
+      }
+
+      // 普通旋转拖拽
+      this.dragging = true;
+      this.hasDragged = false;
+      this.dragStart = { x: e.clientX, y: e.clientY };
+      this.dragRotStart = { x: this.rotXTarget, y: this.rotYTarget };
+      this.userInteracting = true;
+      this.autoRotate = false;
+    };
+
+    this._onMouseMove = (e) => {
+      const now = performance.now();
+      const rect = this.canvas.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+
+      // 拖拽节点
+      if (this.draggingStar) {
+        const dx = e.clientX - this.dragStart.x;
+        const dy = e.clientY - this.dragStart.y;
+        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) this.hasDragged = true;
+        // 将总偏移投影到3D空间，加到原始位置上
+        const cosY = Math.cos(-this.rotY), sinY = Math.sin(-this.rotY);
+        const cosX = Math.cos(-this.rotX), sinX = Math.sin(-this.rotX);
+        const scale = this.draggingStar.sScale || 1;
+        const worldDx = dx * 0.5 / scale;
+        const worldDy = dy * 0.5 / scale;
+        // 逆旋转 Y
+        const wx = worldDx * cosY;
+        const wz = worldDx * sinY;
+        // 逆旋转 X
+        const wy = worldDy * cosX - wz * sinX;
+        this.draggingStar.x = this.dragStarOrigin.x + wx;
+        this.draggingStar.y = this.dragStarOrigin.y + wy;
+        this.draggingStar.z = this.dragStarOrigin.z + worldDy * sinX + wz * cosX;
+        return;
+      }
+
+      // 旋转拖拽
+      if (this.dragging) {
+        const dx = e.clientX - this.dragStart.x;
+        const dy = e.clientY - this.dragStart.y;
+        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) this.hasDragged = true;
+        this.rotYTarget = this.dragRotStart.y + dx * 0.005;
+        this.rotXTarget = this.dragRotStart.x + dy * 0.005;
+        this.rotXTarget = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.rotXTarget));
+        return;
+      }
+
+      // hover 节流
+      if (now - this._lastHoverTime < this._hoverThrottleMs) return;
+      this._lastHoverTime = now;
+
+      const hit = this._hitTest(mx, my);
+      if (hit) {
+        this.canvas.style.cursor = 'pointer';
+        this.hoveredStar = hit;
+        const c = hit.color;
+        const icon = this._masteryIcons[hit.level] || '\u26aa';
+        const connCount = hit.connections.length;
+        const html = '<div style="margin-bottom:4px"><strong style="color:' + c.core + ';font-size:14px">' + hit.name + '</strong></div>' +
+          '<div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">' +
+          '<span style="font-size:16px">' + icon + '</span>' +
+          '<span style="color:' + c.core + '">' + hit.label + '</span></div>' +
+          '<div style="opacity:0.7">\u79ef\u5206\uff1a' + hit.points.toFixed(1) + '</div>' +
+          '<div style="opacity:0.5;font-size:11px">\u5173\u8054\uff1a' + connCount + ' \u4e2a\u77e5\u8bc6\u70b9</div>';
+        this._showTooltip(html, e.clientX, e.clientY);
+      } else {
+        this.canvas.style.cursor = 'grab';
+        this.hoveredStar = null;
+        this._hideTooltip();
+      }
+    };
+
+    this._onMouseUp = (e) => {
+      // 结束节点拖拽
+      if (this.draggingStar) {
+        this.draggingStar.isBeingDragged = false;
+        if (!this.hasDragged) {
+          // 没有拖动 -> 视为点击
+          this._onStarClick(this.draggingStar);
+        }
+        this.draggingStar = null;
+        this.userInteracting = false;
+        return;
+      }
+
+      if (this.dragging && !this.hasDragged) {
+        const rect = this.canvas.getBoundingClientRect();
+        const mx = e.clientX - rect.left;
+        const my = e.clientY - rect.top;
+        const hit = this._hitTest(mx, my);
+        if (hit) {
+          this._onStarClick(hit);
+        } else {
+          closeDetailPanel();
+          this.clickedStar = null;
+          this.userInteracting = false;
+          this.autoRotate = true;
+        }
+      }
+      this.dragging = false;
+      this.userInteracting = false;
+      // 延迟恢复自动旋转
+      if (!this.clickedStar) {
+        setTimeout(() => {
+          if (!this.userInteracting && !this.clickedStar) this.autoRotate = true;
+        }, 3000);
+      }
+    };
+
+    this._onDblClick = (e) => {
+      const rect = this.canvas.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+      const hit = this._hitTest(mx, my);
+      if (hit) {
+          this.clickedStar = hit;
+          this.autoRotate = false;
+          this._showStarDetail(hit);
+        }
+    };
+
+    this._onWheel = (e) => {
+      e.preventDefault();
+      const factor = e.deltaY > 0 ? 1.1 : 0.9;
+      this.camTarget.z = Math.max(50, Math.min(800, this.camTarget.z * factor));
+      this.userInteracting = true;
+      this.autoRotate = false;
+      clearTimeout(this._autoRotateTimer);
+      this._autoRotateTimer = setTimeout(() => {
+        if (!this.clickedStar) this.autoRotate = true;
+        this.userInteracting = false;
+      }, 3000);
+    };
+
+    this._onKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        // 重置相机到概览
+        this.camTarget = { x: 0, y: 0, z: 300 };
+        this.clickedStar = null;
+        this.autoRotate = true;
+        this.userInteracting = false;
+        closeDetailPanel();
+      }
+    };
+
+    this.canvas.addEventListener('mousedown', this._onMouseDown);
+    this.canvas.addEventListener('mousemove', this._onMouseMove);
+    this.canvas.addEventListener('mouseup', this._onMouseUp);
+    this.canvas.addEventListener('mouseleave', this._onMouseLeave = () => {
+      this.dragging = false;
+      if (this.draggingStar) {
+        this.draggingStar.isBeingDragged = false;
+        this.draggingStar = null;
+      }
+      this._hideTooltip();
+    });
+    this.canvas.addEventListener('wheel', this._onWheel, { passive: false });
+    this.canvas.addEventListener('dblclick', this._onDblClick);
+    document.addEventListener('keydown', this._onKeyDown);
+  }
+
+  _unbindEvents() {
+    if (this._onMouseDown) this.canvas.removeEventListener('mousedown', this._onMouseDown);
+    if (this._onMouseMove) this.canvas.removeEventListener('mousemove', this._onMouseMove);
+    if (this._onMouseUp) this.canvas.removeEventListener('mouseup', this._onMouseUp);
+    if (this._onMouseLeave) this.canvas.removeEventListener('mouseleave', this._onMouseLeave);
+    if (this._onWheel) this.canvas.removeEventListener('wheel', this._onWheel);
+    if (this._onDblClick) this.canvas.removeEventListener('dblclick', this._onDblClick);
+    if (this._onKeyDown) document.removeEventListener('keydown', this._onKeyDown);
+  }
+
+  _hitTest(mx, my) {
+    const sorted = this.stars.slice().sort((a, b) => b.sDepth - a.sDepth);
+    for (const s of sorted) {
+      const dx = mx - s.sx;
+      const dy = my - s.sy;
+      const hitR = s.baseSize * s.sScale + 15;
+      if (dx * dx + dy * dy < hitR * hitR) return s;
+    }
+    return null;
+  }
+
+  _onStarClick(star) {
+    this.clickedStar = star;
+    this.autoRotate = false;
+    this.userInteracting = true;
+    // 不在此处计算camTarget，由动画循环每帧动态追踪
+
+    this._showStarDetail(star);
+  }
+
+  // ============ 知识点详情面板 (含关联笔记) ============
+  _showStarDetail(star) {
+    const panel = document.getElementById('graphDetailPanel');
+    const titleEl = document.getElementById('detailTitle');
+    const contentEl = document.getElementById('detailContent');
+    const viewBtn = document.getElementById('detailViewBtn');
+
+    panel.classList.add('open');
+    titleEl.textContent = star.name;
+    viewBtn.style.display = 'none';
+
+    const KP_TARGET = 5;
+    const progress = Math.min(100, Math.round((star.points / KP_TARGET) * 100));
+    const levelColors = [
+      'rgba(136,136,153,0.8)', 'rgba(74,222,128,0.9)',
+      'rgba(96,165,250,0.9)', 'rgba(251,146,60,0.9)', 'rgba(244,114,182,0.9)',
+    ];
+    const levelColor = levelColors[star.level] || levelColors[0];
+
+    let html = '';
+
+    // 掌握等级
+    html += '<div class="detail-section">';
+    html += '<div class="section-label">\ud83d\udcca \u638c\u63e1\u7b49\u7ea7</div>';
+    html += '<div class="section-value" style="color:' + levelColor + ';font-weight:bold;font-size:1.1em">' + star.label + ' (' + star.points.toFixed(1) + ' \u79ef\u5206)</div>';
+    html += '</div>';
+
+    // 掌握进度条
+    html += '<div class="detail-section">';
+    html += '<div class="section-label">\ud83d\udcc8 \u638c\u63e1\u8fdb\u5ea6</div>';
+    html += '<div class="progress-bar"><div class="progress-fill" style="width:' + progress + '%;background:linear-gradient(90deg,' + levelColor + ',rgba(255,255,255,0.6))"></div></div>';
+    html += '<div class="progress-text">' + progress + '%</div>';
+    html += '</div>';
+
+    // 关联知识点
+    if (star.connections.length > 0) {
+      html += '<div class="detail-section">';
+      html += '<div class="section-label">\ud83d\udd17 \u5173\u8054\u77e5\u8bc6\u70b9 (' + star.connections.length + ')</div>';
+      html += '<div class="related-kp-list">';
+      star.connections.forEach(conn => {
+        const connColor = levelColors[conn.level] || levelColors[0];
+        html += '<div class="related-kp-item" style="cursor:pointer" data-star-id="' + conn.id + '">';
+        html += '<div class="kp-name" style="color:' + connColor + '">' + conn.name + '</div>';
+        html += '<div class="kp-rel">' + conn.label + ' \u00b7 ' + conn.points.toFixed(1) + '\u5206</div>';
+        html += '</div>';
+      });
+      html += '</div>';
+      html += '</div>';
+    } else {
+      html += '<div class="detail-section">';
+      html += '<div class="section-label">\ud83d\udd17 \u5173\u8054\u77e5\u8bc6\u70b9</div>';
+      html += '<div class="section-value" style="opacity:0.5">\u65e0</div>';
+      html += '</div>';
+    }
+
+    // 关联笔记
+    html += '<div class="detail-section">';
+    html += '<div class="section-label">\ud83d\udcdd \u5173\u8054\u7b14\u8bb0</div>';
+    html += '<div id="relatedNotesContainer" style="min-height:20px">';
+    html += '<div style="opacity:0.4;font-size:12px">\u52a0\u8f7d\u4e2d...</div>';
+    html += '</div>';
+    html += '</div>';
+
+    contentEl.innerHTML = html;
+
+    // 绑定关联知识点点击
+    const self = this;
+    contentEl.querySelectorAll('.related-kp-item[data-star-id]').forEach(item => {
+      item.addEventListener('click', () => {
+        const targetId = parseInt(item.getAttribute('data-star-id'));
+        const targetStar = self.stars.find(s => s.id === targetId);
+        if (targetStar) self._onStarClick(targetStar);
+      });
+    });
+
+    // 加载关联笔记（直接用已有接口获取全部笔记，前端筛选）
+    this._loadRelatedNotes(star);
+  }
+
+  async _loadRelatedNotes(star) {
+    const container = document.getElementById('relatedNotesContainer');
+    if (!container) return;
+    try {
+      const res = await api('/notes/' + currentUserId);
+      const allNotes = (res.notes || []);
+      const matched = allNotes.filter(n => {
+        const kps = n.knowledge_points || [];
+        return kps.includes(star.name);
+      });
+
+      if (matched.length === 0) {
+        container.innerHTML = '<div style="opacity:0.4;font-size:12px">\u6682\u65e0\u5173\u8054\u7b14\u8bb0</div>';
+        return;
+      }
+
+      let html = '';
+      matched.forEach(note => {
+        const title = note.title || '\u65e0\u6807\u9898';
+        const summary = note.summary || '';
+        const preview = summary.length > 50 ? summary.slice(0, 50) + '...' : summary;
+        const time = note.updated_at ? new Date(note.updated_at).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' }) : '';
+        html += '<div class="note-card-item" data-note-id="' + note.note_id + '" ' +
+          'style="cursor:pointer;padding:8px 10px;border-radius:8px;background:rgba(139,92,246,0.08);' +
+          'border:1px solid rgba(139,92,246,0.15);margin-bottom:6px;transition:background 0.2s">';
+        html += '<div style="font-size:13px;font-weight:500;color:#e2e8f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + title + '</div>';
+        if (preview) {
+          html += '<div style="font-size:11px;opacity:0.5;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + preview + '</div>';
+        }
+        if (time) {
+          html += '<div style="font-size:10px;opacity:0.3;margin-top:2px">' + time + '</div>';
+        }
+        html += '</div>';
+      });
+      container.innerHTML = html;
+
+      container.querySelectorAll('.note-card-item[data-note-id]').forEach(card => {
+        card.addEventListener('click', () => {
+          const noteId = card.getAttribute('data-note-id');
+          if (noteId) {
+            closeDetailPanel();
+            closeGraph();
+            selectNote(noteId);
+          }
+        });
+        card.addEventListener('mouseenter', () => { card.style.background = 'rgba(139,92,246,0.18)'; });
+        card.addEventListener('mouseleave', () => { card.style.background = 'rgba(139,92,246,0.08)'; });
+      });
+    } catch (err) {
+      container.innerHTML = '<div style="opacity:0.4;font-size:12px">\u52a0\u8f7d\u5931\u8d25</div>';
+    }
+  }
+
+  // ============ 动画循环 ============
+  _startAnimation() {
+    if (this.animId) cancelAnimationFrame(this.animId);
+    const loop = (now) => {
+      this.animId = requestAnimationFrame(loop);
+
+      // 动态追踪点击的星点（每帧更新camTarget，确保始终居中）
+      if (this.clickedStar) {
+        const cr = this._rotate3D(this.clickedStar.x, this.clickedStar.y, this.clickedStar.z);
+        this.camTarget.x = cr.x;
+        this.camTarget.y = cr.y;
+        this.camTarget.z = 150;
+      }
+
+      // 相机平滑（有选中星点时加速居中）
+      const lerpSpeed = this.clickedStar ? 0.15 : 0.08;
+      this.cam.x += (this.camTarget.x - this.cam.x) * lerpSpeed;
+      this.cam.y += (this.camTarget.y - this.cam.y) * lerpSpeed;
+      this.cam.z += (this.camTarget.z - this.cam.z) * lerpSpeed;
+
+      // 旋转平滑
+      this.rotX += (this.rotXTarget - this.rotX) * lerpSpeed;
+      this.rotY += (this.rotYTarget - this.rotY) * lerpSpeed;
+
+      // 自动旋转 (用户交互时暂停)
+      if (this.autoRotate && !this.userInteracting && !this.clickedStar) {
+        this.rotYTarget += this.autoRotateSpeed;
+      }
+
+      // 投影所有星点
+      this.stars.forEach(s => {
+        const r = this._rotate3D(s.x, s.y, s.z);
+        const p = this._project(r.x, r.y, r.z);
+        s.sx = p.sx;
+        s.sy = p.sy;
+        s.sScale = p.scale;
+        s.sDepth = p.depth;
+      });
+
+      this._render(now);
+    };
+    this.animId = requestAnimationFrame(loop);
+  }
+
+  // ============ 渲染 ============
+  _render(now) {
+    const ctx = this.ctx;
+    const w = this.W;
+    const h = this.H;
+    const elapsed = (now - this.startTime) / 1000;
+
+    ctx.clearRect(0, 0, w, h);
+
+    // 缓存背景 (星云+底色)
+    if (this._bgDirty || !this._bgCanvas) {
+      this._buildBgCanvas();
+    }
+    if (this._bgCanvas) {
+      ctx.drawImage(this._bgCanvas, 0, 0, w, h);
+    }
+
+    // 背景星 (3D投影, 带色彩)
+    this.bgStars.forEach(s => {
+      const r = this._rotate3D(s.x, s.y, s.z);
+      const p = this._project(r.x, r.y, r.z);
+      if (p.scale < 0.05) return;
+      const twinkle = 0.5 + 0.5 * Math.sin(elapsed * s.speed + s.phase);
+      ctx.globalAlpha = s.alpha * twinkle * p.scale;
+      ctx.fillStyle = s.color;
+      ctx.beginPath();
+      ctx.arc(p.sx, p.sy, s.r * p.scale, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+
+    // 按深度排序
+    const sortedStars = this.stars.slice().sort((a, b) => b.sDepth - a.sDepth);
+    const sortedEdges = this.edges.slice().sort((a, b) => {
+      const avgA = (a.from.sDepth + a.to.sDepth) / 2;
+      const avgB = (b.from.sDepth + b.to.sDepth) / 2;
+      return avgB - avgA;
+    });
+
+    // 计算hover/click高亮集合
+    const focusStar = this.hoveredStar || this.clickedStar;
+    const connectedSet = new Set();
+    if (focusStar) {
+      connectedSet.add(focusStar);
+      focusStar.connections.forEach(c => connectedSet.add(c));
+    }
+
+    // 绘制连接线
+    sortedEdges.forEach(e => this._drawEdge3D(ctx, e, elapsed, focusStar, connectedSet));
+
+    // 绘制星点
+    sortedStars.forEach(s => this._drawStar3D(ctx, s, elapsed, now, focusStar, connectedSet));
+
+    // 底部提示
+    ctx.save();
+    ctx.textAlign = 'center';
+    ctx.font = '12px "Microsoft YaHei", sans-serif';
+    ctx.fillStyle = 'rgba(160,160,200,0.4)';
+    ctx.fillText('\u62d6\u62fd\u65cb\u8f6c \u00b7 \u6eda\u8f6e\u7f29\u653e \u00b7 \u70b9\u51fb\u661f\u70b9\u67e5\u770b \u00b7 \u53cc\u51fb\u7279\u5199 \u00b7 ESC\u590d\u4f4d \u00b7 \u62d6\u52a8\u661f\u70b9', w / 2, h - 16);
+    ctx.restore();
+  }
+
+  // ============ 边渲染：光束射线 ============
+  _drawEdge3D(ctx, e, elapsed, focusStar, connectedSet) {
+    const f = e.from, t = e.to;
+    const mx3d = (f.x + t.x) / 2;
+    const my3d = (f.y + t.y) / 2;
+    const mz3d = (f.z + t.z) / 2;
+
+    const dx = t.x - f.x, dy = t.y - f.y, dz = t.z - f.z;
+    // 轻微弯曲让线条更自然
+    const perpX = -dy * 0.08;
+    const perpY = dx * 0.08;
+    const perpZ = dz * 0.04;
+
+    const cpx = mx3d + perpX;
+    const cpy = my3d + perpY;
+    const cpz = mz3d + perpZ;
+
+    const rF = this._rotate3D(f.x, f.y, f.z);
+    const pF = this._project(rF.x, rF.y, rF.z);
+    const rT = this._rotate3D(t.x, t.y, t.z);
+    const pT = this._project(rT.x, rT.y, rT.z);
+    const rC = this._rotate3D(cpx, cpy, cpz);
+    const pC = this._project(rC.x, rC.y, rC.z);
+
+    // 跳过在相机背后的边
+    if (pF.scale < 0.05 && pT.scale < 0.05) return;
+
+    const avgDepth = (f.sDepth + t.sDepth) / 2;
+    const depthFade = Math.max(0.15, Math.min(1, 300 / avgDepth));
+    const avgScale = (pF.scale + pT.scale) / 2;
+
+    const isHighlighted = focusStar && (focusStar === f || focusStar === t);
+    const isDimmed = focusStar && !isHighlighted;
+
+    const cFrgb = this._parseRgb(f.color.core);
+    const cTrgb = this._parseRgb(t.color.core);
+
+    // 呼吸闪烁效果
+    const breathPhase = elapsed * 2.0 + e.edgePhase * Math.PI * 2;
+    const breathAlpha = 0.7 + 0.3 * Math.sin(breathPhase);
+
+    ctx.save();
+
+    // ---- 第1层: 外层光晕 (柔和扩散) ----
+    {
+      ctx.globalCompositeOperation = 'lighter';
+      const glowAlpha = (isDimmed ? 0.03 : (isHighlighted ? 0.18 : 0.05)) * depthFade * breathAlpha;
+      const glowWidth = isDimmed ? 3 : (isHighlighted ? 10 : 4);
+      const gGrad = ctx.createLinearGradient(pF.sx, pF.sy, pT.sx, pT.sy);
+      gGrad.addColorStop(0, 'rgba(' + cFrgb.r + ',' + cFrgb.g + ',' + cFrgb.b + ',' + glowAlpha + ')');
+      gGrad.addColorStop(1, 'rgba(' + cTrgb.r + ',' + cTrgb.g + ',' + cTrgb.b + ',' + glowAlpha + ')');
+      ctx.beginPath();
+      ctx.moveTo(pF.sx, pF.sy);
+      ctx.quadraticCurveTo(pC.sx, pC.sy, pT.sx, pT.sy);
+      ctx.strokeStyle = gGrad;
+      ctx.lineWidth = Math.max(2, glowWidth * avgScale * depthFade);
+      ctx.stroke();
+    }
+
+    // ---- 第2层: 光束主体 (明亮细线) ----
+    {
+      ctx.globalCompositeOperation = 'lighter';
+      const beamAlpha = (isDimmed ? 0.15 : (isHighlighted ? 0.7 : 0.25)) * depthFade * breathAlpha;
+      const beamWidth = isDimmed ? 0.8 : (isHighlighted ? 2.0 : 1.2);
+      const bGrad = ctx.createLinearGradient(pF.sx, pF.sy, pT.sx, pT.sy);
+      // 两端用节点颜色，中间用白色
+      bGrad.addColorStop(0, 'rgba(' + cFrgb.r + ',' + cFrgb.g + ',' + cFrgb.b + ',' + beamAlpha + ')');
+      bGrad.addColorStop(0.5, 'rgba(255,255,255,' + (beamAlpha * 0.9) + ')');
+      bGrad.addColorStop(1, 'rgba(' + cTrgb.r + ',' + cTrgb.g + ',' + cTrgb.b + ',' + beamAlpha + ')');
+      ctx.beginPath();
+      ctx.moveTo(pF.sx, pF.sy);
+      ctx.quadraticCurveTo(pC.sx, pC.sy, pT.sx, pT.sy);
+      ctx.strokeStyle = bGrad;
+      ctx.lineWidth = Math.max(0.5, beamWidth * avgScale * depthFade);
+      ctx.stroke();
+    }
+
+    // ---- 第3层: 核心亮点 (高亮时添加) ----
+    if (isHighlighted && !isDimmed) {
+      ctx.globalCompositeOperation = 'lighter';
+      const coreAlpha = 0.4 * depthFade * breathAlpha;
+      const coreWidth = 0.6;
+      ctx.beginPath();
+      ctx.moveTo(pF.sx, pF.sy);
+      ctx.quadraticCurveTo(pC.sx, pC.sy, pT.sx, pT.sy);
+      ctx.strokeStyle = 'rgba(255,255,255,' + coreAlpha + ')';
+      ctx.lineWidth = Math.max(0.3, coreWidth * avgScale * depthFade);
+      ctx.stroke();
+    }
+
+    // ---- 第4层: 流动光点 (仅高亮时) ----
+    if (isHighlighted && !isDimmed) {
+      ctx.globalCompositeOperation = 'lighter';
+      const pulseCount = 2;
+      const baseSpeed = 0.4;
+      for (let i = 0; i < pulseCount; i++) {
+        const speed = baseSpeed * (0.8 + i * 0.3);
+        const t01 = ((elapsed * speed + i / pulseCount + e.edgePhase) % 1);
+        const mt = 1 - t01;
+
+        const px = mt * mt * pF.sx + 2 * mt * t01 * pC.sx + t01 * t01 * pT.sx;
+        const py = mt * mt * pF.sy + 2 * mt * t01 * pC.sy + t01 * t01 * pT.sy;
+
+        const pAlpha = 0.8 * depthFade * Math.sin(t01 * Math.PI);
+
+        // 光点核心
+        const dotR = 3 * avgScale * depthFade;
+        const dotGrad = ctx.createRadialGradient(px, py, 0, px, py, dotR);
+        dotGrad.addColorStop(0, 'rgba(255,255,255,' + pAlpha + ')');
+        const mr = Math.round(cFrgb.r * (1 - t01) + cTrgb.r * t01);
+        const mg = Math.round(cFrgb.g * (1 - t01) + cTrgb.g * t01);
+        const mb = Math.round(cFrgb.b * (1 - t01) + cTrgb.b * t01);
+        dotGrad.addColorStop(0.3, 'rgba(' + mr + ',' + mg + ',' + mb + ',' + (pAlpha * 0.7) + ')');
+        dotGrad.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.beginPath();
+        ctx.arc(px, py, dotR, 0, Math.PI * 2);
+        ctx.fillStyle = dotGrad;
+        ctx.fill();
+      }
+    }
+
+    ctx.restore();
+  }
+
+  // ============ 星点渲染：3D球体 + 光照 ============
+  _drawStar3D(ctx, s, elapsed, now, focusStar, connectedSet) {
+    const x = s.sx;
+    const y = s.sy;
+    const scale = s.sScale;
+    const baseR = s.baseSize * scale;
+    const c = s.color;
+    const accent = s.accent || c.core;
+    const level = s.level;
+    const cfg = this._starTypeConfig[level];
+
+    // 深度衰减 (大气雾)
+    const depthFade = Math.max(0.15, Math.min(1, 400 / s.sDepth));
+
+    // hover/click 亮度调节
+    let brightMul = 1.0;
+    if (focusStar) {
+      brightMul = connectedSet.has(s) ? 1.3 : 0.3;
+    }
+
+    const pr = baseR * cfg.baseMul * (1 + 0.1 * Math.sin(elapsed * 1.5 + s.pulsePhase));
+
+    // 拖拽中的星体稍大
+    const dragMul = s.isBeingDragged ? 1.3 : 1.0;
+    const finalR = pr * dragMul;
+
+    const accentRgb = this._parseRgb(accent);
+    const coreRgb = this._parseRgb(c.core);
+
+    ctx.save();
+
+    // === 大气辉光环 (最外层) ===
+    ctx.globalCompositeOperation = 'lighter';
+    const atmR = finalR * cfg.coronaMul;
+    const atmGrad = ctx.createRadialGradient(x, y, finalR * 0.8, x, y, atmR);
+    const atmAlpha = (0.04 + level * 0.02) * depthFade * brightMul;
+    atmGrad.addColorStop(0, 'rgba(' + accentRgb.r + ',' + accentRgb.g + ',' + accentRgb.b + ',' + (atmAlpha * 0.6) + ')');
+    atmGrad.addColorStop(0.5, 'rgba(' + accentRgb.r + ',' + accentRgb.g + ',' + accentRgb.b + ',' + (atmAlpha * 0.2) + ')');
+    atmGrad.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.beginPath();
+    ctx.arc(x, y, atmR, 0, Math.PI * 2);
+    ctx.fillStyle = atmGrad;
+    ctx.fill();
+
+    // === 外层辉光 (日冕) ===
+    const coronaR = finalR * cfg.glowMul;
+    const coronaGrad = ctx.createRadialGradient(x, y, 0, x, y, coronaR);
+    const coronaAlpha = (0.06 + level * 0.03) * depthFade * brightMul;
+    coronaGrad.addColorStop(0, 'rgba(' + coreRgb.r + ',' + coreRgb.g + ',' + coreRgb.b + ',' + coronaAlpha + ')');
+    coronaGrad.addColorStop(0.4, 'rgba(' + accentRgb.r + ',' + accentRgb.g + ',' + accentRgb.b + ',' + (coronaAlpha * 0.4) + ')');
+    coronaGrad.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.beginPath();
+    ctx.arc(x, y, coronaR, 0, Math.PI * 2);
+    ctx.fillStyle = coronaGrad;
+    ctx.fill();
+
+    // === Level 4: 第二色环 (supergiant dramatic corona) ===
+    if (level >= 4) {
+      const ring2R = finalR * 2.8;
+      const ringGrad = ctx.createRadialGradient(x, y, finalR * 1.5, x, y, ring2R);
+      const ringAlpha = 0.06 * depthFade * brightMul;
+      ringGrad.addColorStop(0, 'rgba(255,100,150,' + ringAlpha + ')');
+      ringGrad.addColorStop(0.5, 'rgba(255,50,100,' + (ringAlpha * 0.3) + ')');
+      ringGrad.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.beginPath();
+      ctx.arc(x, y, ring2R, 0, Math.PI * 2);
+      ctx.fillStyle = ringGrad;
+      ctx.fill();
+    }
+
+    // === 3D球体核心 (偏移光源: 左上方) ===
+    ctx.globalCompositeOperation = 'source-over';
+    const lightOffX = -finalR * cfg.lightOff;
+    const lightOffY = -finalR * cfg.lightOff;
+    const sphereGrad = ctx.createRadialGradient(
+      x + lightOffX, y + lightOffY, finalR * 0.05,
+      x, y, finalR
+    );
+
+    const sphereAlpha = depthFade * brightMul;
+    // 球体核心使用accent色（每个节点独特颜色）+ 掌握度色混合
+    // 混合比例: accent 70% + mastery 30%
+    const mixR = Math.round(accentRgb.r * 0.7 + coreRgb.r * 0.3);
+    const mixG = Math.round(accentRgb.g * 0.7 + coreRgb.g * 0.3);
+    const mixB = Math.round(accentRgb.b * 0.7 + coreRgb.b * 0.3);
+    // 高光 -> 本色 -> 暗边
+    sphereGrad.addColorStop(0, 'rgba(255,255,255,' + (0.95 * sphereAlpha) + ')');
+    sphereGrad.addColorStop(0.15, 'rgba(' + Math.min(255, mixR + 60) + ',' + Math.min(255, mixG + 60) + ',' + Math.min(255, mixB + 60) + ',' + (0.9 * sphereAlpha) + ')');
+    sphereGrad.addColorStop(0.5, 'rgba(' + mixR + ',' + mixG + ',' + mixB + ',' + (0.85 * sphereAlpha) + ')');
+    sphereGrad.addColorStop(0.85, 'rgba(' + Math.round(mixR * 0.4) + ',' + Math.round(mixG * 0.4) + ',' + Math.round(mixB * 0.4) + ',' + (0.7 * sphereAlpha) + ')');
+    sphereGrad.addColorStop(1, 'rgba(' + Math.round(mixR * 0.15) + ',' + Math.round(mixG * 0.15) + ',' + Math.round(mixB * 0.15) + ',' + (0.4 * sphereAlpha) + ')');
+
+    ctx.beginPath();
+    ctx.arc(x, y, finalR, 0, Math.PI * 2);
+    ctx.fillStyle = sphereGrad;
+    ctx.fill();
+
+    // === 表面纹理 (小随机斑点) ===
+    if (finalR > 3) {
+      ctx.globalCompositeOperation = 'source-over';
+      s.surfaceSpots.forEach(spot => {
+        const sx2 = x + Math.cos(spot.angle) * spot.dist * finalR;
+        const sy2 = y + Math.sin(spot.angle) * spot.dist * finalR;
+        const spotR = spot.r * finalR;
+        ctx.beginPath();
+        ctx.arc(sx2, sy2, spotR, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0,0,0,' + (spot.alpha * sphereAlpha * 0.5) + ')';
+        ctx.fill();
+      });
+    }
+
+    // === 球体边缘大气折射光晕 ===
+    ctx.globalCompositeOperation = 'lighter';
+    const edgeGrad = ctx.createRadialGradient(x, y, finalR * 0.85, x, y, finalR * 1.1);
+    const edgeAlpha = 0.15 * depthFade * brightMul;
+    edgeGrad.addColorStop(0, 'rgba(0,0,0,0)');
+    edgeGrad.addColorStop(0.5, 'rgba(' + accentRgb.r + ',' + accentRgb.g + ',' + accentRgb.b + ',' + edgeAlpha + ')');
+    edgeGrad.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.beginPath();
+    ctx.arc(x, y, finalR * 1.1, 0, Math.PI * 2);
+    ctx.fillStyle = edgeGrad;
+    ctx.fill();
+
+    // === Level 3+: 十字镜头光晕 ===
+    if (level >= 3 && brightMul > 0.5) {
+      const flareLen = finalR * (2.5 + level * 0.5);
+      const flareAlpha = (0.08 + (level - 3) * 0.04) * depthFade * brightMul;
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.strokeStyle = 'rgba(' + accentRgb.r + ',' + accentRgb.g + ',' + accentRgb.b + ',' + flareAlpha + ')';
+      ctx.lineWidth = Math.max(0.5, 0.8 * scale);
+      // 水平光晕
+      ctx.beginPath();
+      ctx.moveTo(x - flareLen, y);
+      ctx.lineTo(x + flareLen, y);
+      ctx.stroke();
+      // 垂直光晕
+      ctx.beginPath();
+      ctx.moveTo(x, y - flareLen);
+      ctx.lineTo(x, y + flareLen);
+      ctx.stroke();
+      // 对角线 (更淡)
+      const diagLen = flareLen * 0.6;
+      ctx.strokeStyle = 'rgba(' + accentRgb.r + ',' + accentRgb.g + ',' + accentRgb.b + ',' + (flareAlpha * 0.4) + ')';
+      ctx.beginPath();
+      ctx.moveTo(x - diagLen, y - diagLen);
+      ctx.lineTo(x + diagLen, y + diagLen);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x + diagLen, y - diagLen);
+      ctx.lineTo(x - diagLen, y + diagLen);
+      ctx.stroke();
+    }
+
+    ctx.restore();
+
+    // === 标签 ===
+    if (depthFade > 0.35 && brightMul > 0.4) {
+      ctx.save();
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const labelAlpha = (0.5 + level * 0.15) * depthFade * brightMul;
+      const fontSize = Math.max(9, Math.min(14, (10 + level * 1) * scale));
+      ctx.font = fontSize + 'px "Microsoft YaHei", sans-serif';
+
+      ctx.strokeStyle = 'rgba(5,5,20,0.9)';
+      ctx.lineWidth = 3;
+      ctx.lineJoin = 'round';
+      ctx.strokeText(s.name, x, y + finalR + 14);
+
+      ctx.fillStyle = 'rgba(' + accentRgb.r + ',' + accentRgb.g + ',' + accentRgb.b + ',' + labelAlpha + ')';
+      ctx.fillText(s.name, x, y + finalR + 14);
+      ctx.restore();
+    }
+  }
+
+  // ============ 工具方法 ============
+  _parseRgb(color) {
+    if (this._colorCache[color]) return this._colorCache[color];
+    let r = 128, g = 128, b = 128;
+    if (color.startsWith('rgb(') || color.startsWith('rgba(')) {
+      const m = color.match(/(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
+      if (m) { r = +m[1]; g = +m[2]; b = +m[3]; }
+    } else if (color.startsWith('#')) {
+      r = parseInt(color.slice(1, 3), 16);
+      g = parseInt(color.slice(3, 5), 16);
+      b = parseInt(color.slice(5, 7), 16);
+    }
+    const result = { r: r, g: g, b: b };
+    this._colorCache[color] = result;
+    return result;
+  }
+
+  _hexToRgba(color, alpha) {
+    if (color.startsWith('rgb(')) {
+      return color.replace('rgb(', 'rgba(').replace(')', ',' + alpha + ')');
+    }
+    if (color.startsWith('rgba(')) {
+      return color.replace(/,\s*[\d.]+\)$/, ',' + alpha + ')');
+    }
+    const rgb = this._parseRgb(color);
+    return 'rgba(' + rgb.r + ',' + rgb.g + ',' + rgb.b + ',' + alpha + ')';
+  }
+}
+
+</script>
+</body>
+</html>

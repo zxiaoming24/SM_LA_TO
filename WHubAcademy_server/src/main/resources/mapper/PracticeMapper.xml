@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.dhi.wha.mapper.PracticeMapper">
+
+    <resultMap id="PracticeResultMap" type="com.dhi.wha.entity.Practice">
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="text" column="text"/>
+        <result property="status" column="status"/>
+        <result property="createTime" column="create_time"/>
+        <result property="title" column="title"/>
+        <result property="difficulty" column="difficulty"/>
+        <result property="description" column="description"/>
+        <result property="inputFormat" column="input_format"/>
+        <result property="outputFormat" column="output_format"/>
+        <result property="problemId" column="problem_id"/>
+        <result property="hints" column="hints" typeHandler="com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler"/>
+        <result property="knowledgePoints" column="knowledge_points" typeHandler="com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler"/>
+    </resultMap>
+
+    <select id="selectPracticeWithDetails" resultMap="PracticeResultMap">
+        select
+            id,user_id,text,status,create_time,title,difficulty,description,
+            input_format,output_format,hints,knowledge_points,problem_id,session_id,suggestion_warning
+        from practice where id = #{id}
+    </select>
+
+    <select id="getById" resultMap="PracticeResultMap">
+        select
+            id,user_id,text,status,create_time,title,difficulty,description,
+            input_format,output_format,hints,knowledge_points,problem_id
+        from practice where id = #{practiceId}
+    </select>
+
+    <select id="getByProblemId" resultMap="PracticeResultMap">
+        select
+            id,user_id,text,status,create_time,title,difficulty,description,
+            input_format,output_format,hints,knowledge_points,problem_id
+        from practice where problem_id = #{problemId} LIMIT 1
+    </select>
+
+</mapper>

@@ -1,0 +1,422 @@
+data: {
+    "type": "node_status",
+    "node": "task",
+    "status": "start",
+    "detail": "task_type=video, user_id=2",
+    "timestamp": 1782209173.9418232
+}
+
+data: {
+    "type": "node_status",
+    "node": "router",
+    "status": "complete",
+    "detail": "→video",
+    "timestamp": 1782209173.9439325
+}
+
+data: {
+    "type": "node_status",
+    "node": "video",
+    "status": "start",
+    "detail": "task_type=video",
+    "timestamp": 1782209173.9456494
+}
+
+data: {
+    "type": "node_status",
+    "node": "video",
+    "status": "complete",
+    "detail": "",
+    "timestamp": 1782209177.4889786
+}
+
+data: {
+    "type": "node_status",
+    "node": "integrator",
+    "status": "complete",
+    "detail": "task_type=video, status=success",
+    "timestamp": 1782209177.5523658
+}
+
+data: {
+    "type": "node_status",
+    "node": "task",
+    "status": "complete",
+    "detail": "status=success",
+    "timestamp": 1782209177.5569487
+}
+
+data: {
+    "type": "task_result",
+    "result": {
+        "status": "success",
+        "layer": "conduct",
+        "task_type": "video",
+        "document": null,
+        "practice": null,
+        "question": null,
+        "extension": null,
+        "video": [
+            {
+                "rank": 1,
+                "title": "黑马程序员Java零基础视频教程_上部(Java入门，含斯坦福大学练习题+力扣算法题和大厂java面试题） - Java入门-01-Java学习介绍",
+                "url": "https://www.bilibili.com/video/BV17F411T7Ao?p=1",
+                "thumbnail": "//i2.hdslb.com/bfs/archive/3ea248b484f595fcf33c7a96b7b9ad753c7b745d.jpg",
+                "duration": "",
+                "author": "黑马程序员",
+                "play_count": "2686.7万",
+                "quality_score": 1.0,
+                "description": "Java入门-01-Java学习介绍",
+                "platform": "bilibili",
+                "collection": true,
+                "page": 1,
+                "collection_title": "黑马程序员Java零基础视频教程_上部(Java入门，含斯坦福大学练习题+力扣算法题和大厂java面试题）",
+                "total_pages": 200,
+                "collapsed": false
+            }
+        ],
+        "mindmap": null,
+        "animation": null,
+        "study_plan": null,
+        "ppt": null,
+        "student_features": {
+            "academic_background": {
+                "major_preference": "",
+                "knowledge_level": "基础薄弱",
+                "ability_tendency": "需要加强",
+                "foundation_level": "较低",
+                "score": 0,
+                "change_reason": "academic_background权重为0，练题任务不影响此维度，保持原值",
+                "confidence": 100
+            },
+            "learning_behavior": {
+                "learning_style": "动手型（每天练习代码）",
+                "learning_pace": "稳定学习者（每日10小时）",
+                "interaction_level": "信息不足",
+                "resource_preference": "实践（代码练习）",
+                "score": 0,
+                "change_reason": "学生在社区中创建了帖子，表现出一定的互动意愿，但整体学习行为特征未发生显著变化。",
+                "confidence": 85
+            },
+            "goal_motivation": {
+                "short_term_goals": "进入DeepSeek学习",
+                "long_term_career": "",
+                "motivation_strength": "内在动机（目标明确指向DeepSeek）",
+                "achievement_expectation": "高（目标进入DeepSeek）",
+                "score": 0,
+                "change_reason": "goal_motivation权重为0，练题任务不影响此维度，保持原值",
+                "confidence": 100
+            },
+            "cognitive_abilities": {
+                "logical_thinking": "逻辑思维能力较弱",
+                "creative_thinking": "创造性思维未体现",
+                "problem_solving": "问题解决能力不足",
+                "metacognition": "",
+                "score": 0,
+                "change_reason": "cognitive_abilities权重为0，练题任务不影响此维度，保持原值",
+                "confidence": 70
+            },
+            "emotional_state": {
+                "interest_level": "高（对神经网络兴趣浓厚，每天10小时）",
+                "frustration_tolerance": "信息不足",
+                "anxiety_level": "信息不足",
+                "confidence_level": "信息不足",
+                "score": 74,
+                "change_reason": "学生主动参与社区讨论并分享自己的学习经历，显示出较高的学习兴趣。",
+                "confidence": 90
+            },
+            "social_interaction": {
+                "collaboration_tendency": "信息不足",
+                "help_seeking_pattern": "积极求助",
+                "knowledge_sharing_willingness": "愿意分享知识",
+                "peer_influence": "",
+                "score": 65,
+                "change_reason": "通过发布帖子寻求帮助和分享知识的行为表明学生具有较强的社交互动倾向。",
+                "confidence": 95
+            },
+            "time_management": {
+                "learning_regularity": "规律（每天练习代码10小时）",
+                "priority_judgment": "信息不足",
+                "procrastination_tendency": "信息不足",
+                "time_allocation_efficiency": "信息不足",
+                "score": 70,
+                "change_reason": "time_management权重为0，练题任务不影响此维度，保持原值",
+                "confidence": 80
+            },
+            "creativity_innovation": {
+                "divergent_thinking": "",
+                "cross_domain_association": "",
+                "experimental_exploration": "",
+                "original_expression": "",
+                "score": 12,
+                "change_reason": "creativity_innovation权重为0，练题任务不影响此维度，保持原值",
+                "confidence": 60
+            },
+            "summary_scores": {
+                "dimension_scores": [
+                    0,
+                    0,
+                    0,
+                    0,
+                    74,
+                    65,
+                    70,
+                    12
+                ],
+                "overall_score": 27,
+                "trend": "稳定"
+            }
+        },
+        "metadata": {
+            "agents_used": [
+                "router",
+                "video"
+            ],
+            "raw_results": {
+                "doc_result": null,
+                "practice_result": null,
+                "question_result": null,
+                "extension_result": null,
+                "video_result": {
+                    "query": "帮我搜索一份关于Java基础的视频",
+                    "refined_title": "Java基础教程视频推荐",
+                    "total_results": 1,
+                    "videos": [
+                        {
+                            "rank": 1,
+                            "title": "黑马程序员Java零基础视频教程_上部(Java入门，含斯坦福大学练习题+力扣算法题和大厂java面试题） - Java入门-01-Java学习介绍",
+                            "url": "https://www.bilibili.com/video/BV17F411T7Ao?p=1",
+                            "thumbnail": "//i2.hdslb.com/bfs/archive/3ea248b484f595fcf33c7a96b7b9ad753c7b745d.jpg",
+                            "duration": "",
+                            "author": "黑马程序员",
+                            "play_count": "2686.7万",
+                            "quality_score": 1.0,
+                            "description": "Java入门-01-Java学习介绍",
+                            "platform": "bilibili",
+                            "collection": true,
+                            "page": 1,
+                            "collection_title": "黑马程序员Java零基础视频教程_上部(Java入门，含斯坦福大学练习题+力扣算法题和大厂java面试题）",
+                            "total_pages": 200,
+                            "collapsed": false
+                        }
+                    ],
+                    "summary": "为您找到关于「帮我搜索一份关于Java基础的视频」的1个相关教学视频（来源: B站），已按相关性和质量排序。",
+                    "metadata": {
+                        "search_keywords": [
+                            "帮我搜索一份关于Java基础的视频"
+                        ],
+                        "ranking_criteria": [
+                            "相关性",
+                            "播放量",
+                            "时效性",
+                            "互动度"
+                        ],
+                        "timestamp": "2026-06-23 18:06:16",
+                        "source_platforms": [
+                            "bilibili"
+                        ]
+                    },
+                    "_student_features": {
+                        "academic_background": {
+                            "major_preference": "",
+                            "knowledge_level": "基础薄弱",
+                            "ability_tendency": "需要加强",
+                            "foundation_level": "较低",
+                            "score": 0,
+                            "change_reason": "academic_background权重为0，练题任务不影响此维度，保持原值",
+                            "confidence": 100
+                        },
+                        "learning_behavior": {
+                            "learning_style": "动手型（每天练习代码）",
+                            "learning_pace": "稳定学习者（每日10小时）",
+                            "interaction_level": "信息不足",
+                            "resource_preference": "实践（代码练习）",
+                            "score": 0,
+                            "change_reason": "学生在社区中创建了帖子，表现出一定的互动意愿，但整体学习行为特征未发生显著变化。",
+                            "confidence": 85
+                        },
+                        "goal_motivation": {
+                            "short_term_goals": "进入DeepSeek学习",
+                            "long_term_career": "",
+                            "motivation_strength": "内在动机（目标明确指向DeepSeek）",
+                            "achievement_expectation": "高（目标进入DeepSeek）",
+                            "score": 0,
+                            "change_reason": "goal_motivation权重为0，练题任务不影响此维度，保持原值",
+                            "confidence": 100
+                        },
+                        "cognitive_abilities": {
+                            "logical_thinking": "逻辑思维能力较弱",
+                            "creative_thinking": "创造性思维未体现",
+                            "problem_solving": "问题解决能力不足",
+                            "metacognition": "",
+                            "score": 0,
+                            "change_reason": "cognitive_abilities权重为0，练题任务不影响此维度，保持原值",
+                            "confidence": 70
+                        },
+                        "emotional_state": {
+                            "interest_level": "高（对神经网络兴趣浓厚，每天10小时）",
+                            "frustration_tolerance": "信息不足",
+                            "anxiety_level": "信息不足",
+                            "confidence_level": "信息不足",
+                            "score": 74,
+                            "change_reason": "学生主动参与社区讨论并分享自己的学习经历，显示出较高的学习兴趣。",
+                            "confidence": 90
+                        },
+                        "social_interaction": {
+                            "collaboration_tendency": "信息不足",
+                            "help_seeking_pattern": "积极求助",
+                            "knowledge_sharing_willingness": "愿意分享知识",
+                            "peer_influence": "",
+                            "score": 65,
+                            "change_reason": "通过发布帖子寻求帮助和分享知识的行为表明学生具有较强的社交互动倾向。",
+                            "confidence": 95
+                        },
+                        "time_management": {
+                            "learning_regularity": "规律（每天练习代码10小时）",
+                            "priority_judgment": "信息不足",
+                            "procrastination_tendency": "信息不足",
+                            "time_allocation_efficiency": "信息不足",
+                            "score": 70,
+                            "change_reason": "time_management权重为0，练题任务不影响此维度，保持原值",
+                            "confidence": 80
+                        },
+                        "creativity_innovation": {
+                            "divergent_thinking": "",
+                            "cross_domain_association": "",
+                            "experimental_exploration": "",
+                            "original_expression": "",
+                            "score": 12,
+                            "change_reason": "creativity_innovation权重为0，练题任务不影响此维度，保持原值",
+                            "confidence": 60
+                        },
+                        "summary_scores": {
+                            "dimension_scores": [
+                                0,
+                                0,
+                                0,
+                                0,
+                                74,
+                                65,
+                                70,
+                                12
+                            ],
+                            "overall_score": 27,
+                            "trend": "稳定"
+                        }
+                    },
+                    "_student_profile": "【学生画像 - 请据此调整学习资源的深度与风格】\n  - score: 0\n  - knowledge_level: 基础薄弱\n  - foundation_level: 较低\n  - score: 0\n  - learning_style: 动手型（每天练习代码）\n  - resource_preference: 实践（代码练习）\n  - score: 0\n  - motivation_strength: 内在动机（目标明确指向DeepSeek）\n  - short_term_goals: 进入DeepSeek学习\n  - score: 0\n  - logical_thinking: 逻辑思维能力较弱\n  - problem_solving: 问题解决能力不足\n  - score: 74\n  - interest_level: 高（对神经网络兴趣浓厚，每天10小时）\n  - confidence_level: 信息不足\n  - frustration_tolerance: 信息不足\n  - anxiety_level: 信息不足\n  - score: 65\n  - collaboration_tendency: 信息不足\n  - help_seeking_pattern: 积极求助\n  - score: 70\n  - learning_regularity: 规律（每天练习代码10小时）\n  - time_allocation_efficiency: 信息不足\n  - score: 12\n  - divergent_thinking: \n  - experimental_exploration: ",
+                    "type": "search_video",
+                    "student_features": {
+                        "academic_background": {
+                            "major_preference": "",
+                            "knowledge_level": "基础薄弱",
+                            "ability_tendency": "需要加强",
+                            "foundation_level": "较低",
+                            "score": 0,
+                            "change_reason": "academic_background权重为0，练题任务不影响此维度，保持原值",
+                            "confidence": 100
+                        },
+                        "learning_behavior": {
+                            "learning_style": "动手型（每天练习代码）",
+                            "learning_pace": "稳定学习者（每日10小时）",
+                            "interaction_level": "信息不足",
+                            "resource_preference": "实践（代码练习）",
+                            "score": 0,
+                            "change_reason": "学生在社区中创建了帖子，表现出一定的互动意愿，但整体学习行为特征未发生显著变化。",
+                            "confidence": 85
+                        },
+                        "goal_motivation": {
+                            "short_term_goals": "进入DeepSeek学习",
+                            "long_term_career": "",
+                            "motivation_strength": "内在动机（目标明确指向DeepSeek）",
+                            "achievement_expectation": "高（目标进入DeepSeek）",
+                            "score": 0,
+                            "change_reason": "goal_motivation权重为0，练题任务不影响此维度，保持原值",
+                            "confidence": 100
+                        },
+                        "cognitive_abilities": {
+                            "logical_thinking": "逻辑思维能力较弱",
+                            "creative_thinking": "创造性思维未体现",
+                            "problem_solving": "问题解决能力不足",
+                            "metacognition": "",
+                            "score": 0,
+                            "change_reason": "cognitive_abilities权重为0，练题任务不影响此维度，保持原值",
+                            "confidence": 70
+                        },
+                        "emotional_state": {
+                            "interest_level": "高（对神经网络兴趣浓厚，每天10小时）",
+                            "frustration_tolerance": "信息不足",
+                            "anxiety_level": "信息不足",
+                            "confidence_level": "信息不足",
+                            "score": 74,
+                            "change_reason": "学生主动参与社区讨论并分享自己的学习经历，显示出较高的学习兴趣。",
+                            "confidence": 90
+                        },
+                        "social_interaction": {
+                            "collaboration_tendency": "信息不足",
+                            "help_seeking_pattern": "积极求助",
+                            "knowledge_sharing_willingness": "愿意分享知识",
+                            "peer_influence": "",
+                            "score": 65,
+                            "change_reason": "通过发布帖子寻求帮助和分享知识的行为表明学生具有较强的社交互动倾向。",
+                            "confidence": 95
+                        },
+                        "time_management": {
+                            "learning_regularity": "规律（每天练习代码10小时）",
+                            "priority_judgment": "信息不足",
+                            "procrastination_tendency": "信息不足",
+                            "time_allocation_efficiency": "信息不足",
+                            "score": 70,
+                            "change_reason": "time_management权重为0，练题任务不影响此维度，保持原值",
+                            "confidence": 80
+                        },
+                        "creativity_innovation": {
+                            "divergent_thinking": "",
+                            "cross_domain_association": "",
+                            "experimental_exploration": "",
+                            "original_expression": "",
+                            "score": 12,
+                            "change_reason": "creativity_innovation权重为0，练题任务不影响此维度，保持原值",
+                            "confidence": 60
+                        },
+                        "summary_scores": {
+                            "dimension_scores": [
+                                0,
+                                0,
+                                0,
+                                0,
+                                74,
+                                65,
+                                70,
+                                12
+                            ],
+                            "overall_score": 27,
+                            "trend": "稳定"
+                        }
+                    },
+                    "yolo_monitoring": {
+                        "enable": true,
+                        "mode": "emotion_tracking",
+                        "message": "观看视频时开启摄像头实时监测学习状态",
+                        "webrtc_port": 8080
+                    },
+                    "resource_id": "video_d78a6d807d13",
+                    "_saved_at": "2026-06-23T18:06:17.550821",
+                    "_content_type": "video",
+                    "_content_id": "video_d78a6d807d13",
+                    "_user_id": "2"
+                },
+                "mindmap_result": null,
+                "animation_result": null,
+                "study_plan_result": null,
+                "ppt_result": null
+            }
+        },
+        "resource_id": "video_d78a6d807d13"
+    },
+    "timestamp": 1782209177.5569656
+}
+
+data: {
+    "type": "done"
+}

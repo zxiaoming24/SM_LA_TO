@@ -1,0 +1,39 @@
+# IDEA 缓存
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+target/
+
+# Maven 构建文件
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# 日志
+logs/
+*.log
+
+# 本地配置（防止上传数据库密钥、OSS密钥）
+src/main/resources/application-dev.yml
+src/main/resources/application-local.yml
+*.env
+
+# 系统垃圾文件
+.DS_Store
+Thumbs.db
+
+# 临时txt草稿（如果你不想上传这些1.txt、接口文档txt，打开下面两行注释；想保留就不动）
+# *.txt
+# !README.txt
+
+# 其他
+.apt_generated
+.springBeans
+.sts-cache

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.dhi.wha.mapper.PaperMapper">
+    <select id="getPaperInfoByUserIdAndTaskId" resultType="com.dhi.wha.vo.ChatResourceVO">
+        select
+            id,
+            status,
+            create_time,
+            paper_name text
+        from paper
+        where id = #{taskId}
+    </select>
+</mapper>

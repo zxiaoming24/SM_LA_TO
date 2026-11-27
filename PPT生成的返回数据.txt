@@ -1,0 +1,350 @@
+data: {"type": "node_status", "timestamp": 1784982036.3101459, "node": "intent_recognition", "status": "start", "detail": "task_type="}
+
+data: {"type": "thinking", "timestamp": 1784982036.3102162, "node": "intent_recognition", "content": "🚀 intent_recognition 节点开始执行"}
+
+data: {"type": "node_status", "timestamp": 1784982036.3127403, "node": "intent_recognition", "status": "complete", "detail": ""}
+
+data: {"type": "thinking", "timestamp": 1784982036.312754, "node": "intent_recognition", "content": "✅ intent_recognition 节点执行完成"}
+
+data: {"type": "node_status", "timestamp": 1784982036.3237622, "node": "conduct_layer", "status": "start", "detail": "task_type=ppt"}
+
+data: {"type": "thinking", "timestamp": 1784982036.3237798, "node": "conduct_layer", "content": "🚀 conduct_layer 节点开始执行"}
+
+data: {"type": "node_status", "timestamp": 1784982036.324095, "node": "conduct_layer", "status": "complete", "detail": "delegated to internal nodes"}
+
+data: {"type": "node_status", "node": "task", "status": "start", "detail": "task_type=ppt, user_id=user_001", "timestamp": 1784982036.340944}
+
+data: {"type": "thinking", "node": "task", "content": "🚀 任务开始: task_type=ppt, user_id=user_001", "timestamp": 1784982036.3409653}
+
+data: {"type": "thinking", "node": "router", "content": "开始路由决策，当前任务类型: ppt", "timestamp": 1784982036.3447213}
+
+data: {"type": "thinking", "node": "router", "content": "任务类型 ppt → 路由到 ppt 节点", "timestamp": 1784982036.3481896}
+
+data: {"type": "node_status", "node": "router", "status": "complete", "detail": "→ppt", "timestamp": 1784982036.348209}
+
+data: {"type": "node_status", "node": "ppt", "status": "start", "detail": "task_type=ppt", "timestamp": 1784982036.3512962}
+
+data: {"type": "thinking", "node": "ppt", "content": "正在为用户 user_001 生成主题为「[用户选择了'Java后端开发进阶路线'学习方案（侧重Java后端开发与微服务架构能力，风格Java、Spring Boot、MySQL、Redis、微服务、JVM，难度medium）]\n帮我生成关于Java基础的PPT」的PPT", "timestamp": 1784982036.3604872}
+
+data: {"type": "thinking", "node": "ppt", "content": "正在调用PPT生成流水线（大纲→配色→图片→视频→合成）", "timestamp": 1784982036.3617845}
+
+data: {"type": "thinking", "node": "ppt", "content": "[LLM 开始推理]\n输入:\n\n严格规则：只输出纯JSON，不能加任何注释、说明、前言后语！\n输出固定结构：{\"title\":\"PPT总标题\",\"pages\":[]}\n页面类型仅四种：cover/content/code/summary\n【cover封面页】\ntype:\"cover\",title,subtitle(英文副标题),sections:[3个{\"title\":\"\",\"content\":\"\"}],key_points:[],detail_content:[]\n【content内容页】\ntype:\"content\",title,key_points[3项],detail_content[3项]一一对应,layout(...", "timestamp": 1784982037.4667368}
+
+data: {"type": "thinking", "node": "ppt", "content": "{\n  \"title\": \"Java后端开发进阶路线\",\n  \"pages\": [\n    {\n      \"", "timestamp": 1784982039.222883}
+
+data: {"type": "thinking", "node": "ppt", "content": "type\": \"cover\",\n      \"title\": \"Java后端开发进阶路线\",\n      \"", "timestamp": 1784982039.385517}
+
+data: {"type": "thinking", "node": "ppt", "content": "subtitle\": \"Advanced Java Backend Development Road", "timestamp": 1784982039.524713}
+
+data: {"type": "thinking", "node": "ppt", "content": "map\",\n      \"sections\": [\n        {\n          \"title\":", "timestamp": 1784982039.628274}
+
+data: {"type": "thinking", "node": "ppt", "content": " \"核心基础夯实\",\n          \"content\": \"深入JVM原理与并发编程，构建高性能应用", "timestamp": 1784982039.9045222}
+
+data: {"type": "thinking", "node": "ppt", "content": "基石\"\n        },\n        {\n          \"title\": \"微服务架构演进\",", "timestamp": 1784982040.147357}
+
+data: {"type": "thinking", "node": "ppt", "content": "\n          \"content\": \"Spring Cloud生态整合，实现高可用分布式系统\"", "timestamp": 1784982040.3672843}
+
+data: {"type": "thinking", "node": "ppt", "content": "\n        },\n        {\n          \"title\": \"工程化实践落地\",\n", "timestamp": 1784982040.6339872}
+
+data: {"type": "thinking", "node": "ppt", "content": "          \"content\": \"DevOps与云原生技术融合，提升交付效率与质量\"\n        }\n     ", "timestamp": 1784982041.0112276}
+
+data: {"type": "thinking", "node": "ppt", "content": " ],\n      \"key_points\": [],\n      \"detail_content\": []\n", "timestamp": 1784982041.187634}
+
+data: {"type": "thinking", "node": "ppt", "content": "    },\n    {\n      \"type\": \"content\",\n      \"title\": \"Java", "timestamp": 1784982041.366527}
+
+data: {"type": "thinking", "node": "ppt", "content": "核心基础进阶要点\",\n      \"key_points\": [\n        \"JVM内存模型与", "timestamp": 1784982041.6534188}
+
+data: {"type": "thinking", "node": "ppt", "content": "垃圾回收机制深度解析\",\n        \"多线程并发编程与锁优化实战\",\n        \"集合框架源码分析与性能", "timestamp": 1784982042.090499}
+
+data: {"type": "thinking", "node": "ppt", "content": "调优\"\n      ],\n      \"detail_content\": [\n        \"掌握堆", "timestamp": 1784982042.2625213}
+
+data: {"type": "thinking", "node": "ppt", "content": "栈方法区结构，理解G1/ZGC回收器适用场景及调优参数配置\",\n        \"熟练运用ConcurrentHashMap、A", "timestamp": 1784982042.8511324}
+
+data: {"type": "thinking", "node": "ppt", "content": "QS框架，避免死锁并提升吞吐量\",\n        \"剖析HashMap红黑树转换逻辑，合理选择数据结构", "timestamp": 1784982043.3344178}
+
+data: {"type": "thinking", "node": "ppt", "content": "降低时间复杂度\"\n      ],\n      \"layout\": \"right_content\"\n   ", "timestamp": 1784982043.6401558}
+
+data: {"type": "thinking", "node": "ppt", "content": " },\n    {\n      \"type\": \"content\",\n      \"title\": \"Spring Boot", "timestamp": 1784982043.8183107}
+
+data: {"type": "thinking", "node": "ppt", "content": "核心机制\",\n      \"key_points\": [\n        \"自动装配原理与条件注解应用", "timestamp": 1784982044.133282}
+
+data: {"type": "thinking", "node": "ppt", "content": "\",\n        \"Starter组件自定义开发规范\",\n        \"Actuator监控", "timestamp": 1784982044.388282}
+
+data: {"type": "thinking", "node": "ppt", "content": "与健康检查集成\"\n      ],\n      \"detail_content\": [\n        \"理解@Enable", "timestamp": 1784982044.6942353}
+
+data: {"type": "thinking", "node": "ppt", "content": "AutoConfiguration加载流程，灵活扩展第三方库配置\",\n        \"遵循spring.f", "timestamp": 1784982044.971732}
+
+data: {"type": "thinking", "node": "ppt", "content": "actories约定，封装可复用业务模块为独立Starter\",\n        \"暴露关键指标端点", "timestamp": 1784982045.3200932}
+
+data: {"type": "thinking", "node": "ppt", "content": "，结合Prometheus实现运行时状态可视化\"\n      ],\n      \"layout\": \"top", "timestamp": 1784982045.6290271}
+
+data: {"type": "thinking", "node": "ppt", "content": "_banner\"\n    },\n    {\n      \"type\": \"code\",\n      \"", "timestamp": 1784982045.9042287}
+
+data: {"type": "thinking", "node": "ppt", "content": "title\": \"自定义Spring Boot Starter示例\",\n      \"code_snippet", "timestamp": 1784982046.1313224}
+
+data: {"type": "thinking", "node": "ppt", "content": "\": \"@Configuration\\n@ConditionalOnClass(MyService.class)\\", "timestamp": 1784982046.32105}
+
+data: {"type": "thinking", "node": "ppt", "content": "n@EnableConfigurationProperties(MyProperties.class)\\npublic", "timestamp": 1784982046.5561056}
+
+data: {"type": "thinking", "node": "ppt", "content": " class MyAutoConfiguration {\\n    @Bean\\n    @ConditionalOnMissing", "timestamp": 1784982046.7469323}
+
+data: {"type": "thinking", "node": "ppt", "content": "Bean\\n    public MyService myService(MyProperties props)", "timestamp": 1784982046.953442}
+
+data: {"type": "thinking", "node": "ppt", "content": " {\\n        return new MyService(props.getEndpoint());\\", "timestamp": 1784982047.0521579}
+
+data: {"type": "thinking", "node": "ppt", "content": "n    }\\n}\"\n    },\n    {\n      \"type\": \"content\",\n      \"title\":", "timestamp": 1784982047.3485413}
+
+data: {"type": "thinking", "node": "ppt", "content": " \"MySQL高级优化策略\",\n      \"key_points\": [\n        \"索引设计原则与", "timestamp": 1784982047.6440716}
+
+data: {"type": "thinking", "node": "ppt", "content": "执行计划分析\",\n        \"事务隔离级别与MVCC实现机制\",\n        \"分库分表方案与数据迁移", "timestamp": 1784982048.0290432}
+
+data: {"type": "thinking", "node": "ppt", "content": "实践\"\n      ],\n      \"detail_content\": [\n        \"遵循", "timestamp": 1784982048.2359786}
+
+data: {"type": "thinking", "node": "ppt", "content": "最左前缀法则，通过EXPLAIN识别全表扫描与文件排序问题\",\n        \"理解Read View", "timestamp": 1784982048.651308}
+
+data: {"type": "thinking", "node": "ppt", "content": "生成时机，避免幻读并平衡一致性与并发性能\",\n        \"采用ShardingSphere中间", "timestamp": 1784982048.9879014}
+
+data: {"type": "thinking", "node": "ppt", "content": "件，按业务维度水平拆分并保障跨库查询\"\n      ],\n      \"layout\": \"center_focus", "timestamp": 1784982049.4399142}
+
+data: {"type": "thinking", "node": "ppt", "content": "\"\n    },\n    {\n      \"type\": \"content\",\n      \"title\":", "timestamp": 1784982049.621828}
+
+data: {"type": "thinking", "node": "ppt", "content": " \"Redis缓存架构设计\",\n      \"key_points\": [\n        \"缓存穿透/击穿", "timestamp": 1784982049.8755956}
+
+data: {"type": "thinking", "node": "ppt", "content": "/雪崩解决方案\",\n        \"分布式锁实现与Redisson应用\",\n        \"集群模式选型与", "timestamp": 1784982050.2295227}
+
+data: {"type": "thinking", "node": "ppt", "content": "数据一致性保障\"\n      ],\n      \"detail_content\": [\n        \"", "timestamp": 1784982050.4291532}
+
+data: {"type": "thinking", "node": "ppt", "content": "布隆过滤器防穿透，互斥锁防击穿，随机过期时间防雪崩\",\n        \"基于SETNX+Lua脚本", "timestamp": 1784982050.871872}
+
+data: {"type": "thinking", "node": "ppt", "content": "保证原子性，设置合理超时避免死锁\",\n        \"根据读写比选择哨兵或Cluster模式，采用", "timestamp": 1784982051.3222897}
+
+data: {"type": "thinking", "node": "ppt", "content": "延迟双删策略同步DB\"\n      ],\n      \"layout\": \"grid_cards\"\n", "timestamp": 1784982051.5983734}
+
+data: {"type": "thinking", "node": "ppt", "content": "    },\n    {\n      \"type\": \"code\",\n      \"title\": \"Redis", "timestamp": 1784982051.7817252}
+
+data: {"type": "thinking", "node": "ppt", "content": "分布式锁Lua脚本\",\n      \"code_snippet\": \"local key = KEYS[1", "timestamp": 1784982052.0783947}
+
+data: {"type": "thinking", "node": "ppt", "content": "]\\nlocal val = ARGV[1]\\nlocal exp = ARGV[2]\\nif redis.call('set", "timestamp": 1784982052.3336148}
+
+data: {"type": "thinking", "node": "ppt", "content": "nx', key, val) == 1 then\\n    redis.call('expire', key, exp", "timestamp": 1784982052.6088312}
+
+data: {"type": "thinking", "node": "ppt", "content": ")\\n    return 1\\nelse\\n    return 0\\nend\"\n    },\n    {\n     ", "timestamp": 1784982052.8406568}
+
+data: {"type": "thinking", "node": "ppt", "content": " \"type\": \"content\",\n      \"title\": \"微服务治理核心能力\",\n      \"", "timestamp": 1784982053.0969179}
+
+data: {"type": "thinking", "node": "ppt", "content": "key_points\": [\n        \"服务注册发现与负载均衡策略\",\n        \"熔断降级与限", "timestamp": 1784982053.4056115}
+
+data: {"type": "thinking", "node": "ppt", "content": "流防护机制\",\n        \"链路追踪与日志聚合体系\"\n      ],\n      \"detail", "timestamp": 1784982053.668361}
+
+data: {"type": "thinking", "node": "ppt", "content": "_content\": [\n        \"Nacos作为注册中心，结合Ribbon实现权重路由与故障", "timestamp": 1784982054.0236845}
+
+data: {"type": "thinking", "node": "ppt", "content": "剔除\",\n        \"Sentinel定义资源规则，配置QPS阈值与降级fallback方法\",\n       ", "timestamp": 1784982054.4738975}
+
+data: {"type": "thinking", "node": "ppt", "content": " \"SkyWalking注入TraceId，ELK统一采集分析全链路调用日志\"\n      ],\n      \"layout\":", "timestamp": 1784982054.9603255}
+
+data: {"type": "thinking", "node": "ppt", "content": " \"timeline\"\n    },\n    {\n      \"type\": \"content\",\n      \"", "timestamp": 1784982055.2045631}
+
+data: {"type": "thinking", "node": "ppt", "content": "title\": \"传统单体vs微服务架构对比\",\n      \"key_points\": [\n        \"部署", "timestamp": 1784982055.4332306}
+
+data: {"type": "thinking", "node": "ppt", "content": "复杂度与运维成本差异\",\n        \"团队协作效率与技术栈灵活性\",\n        \"系统容错性与", "timestamp": 1784982055.7805684}
+
+data: {"type": "thinking", "node": "ppt", "content": "扩展能力边界\"\n      ],\n      \"detail_content\": [\n        \"", "timestamp": 1784982055.9529128}
+
+data: {"type": "thinking", "node": "ppt", "content": "单体一键部署简单但耦合高，微服务容器化编排增加初期运维负担\",\n        \"单体团队沟通成本低但技术", "timestamp": 1784982056.5848825}
+
+data: {"type": "thinking", "node": "ppt", "content": "受限，微服务支持异构语言与小团队自治\",\n        \"单体单点故障影响全局，微服务隔离故障域但需", "timestamp": 1784982057.0483973}
+
+data: {"type": "thinking", "node": "ppt", "content": "完善治理基础设施\"\n      ],\n      \"layout\": \"comparison\"\n    },", "timestamp": 1784982057.3705697}
+
+data: {"type": "thinking", "node": "ppt", "content": "\n    {\n      \"type\": \"content\",\n      \"title\": \"后端性能关键", "timestamp": 1784982057.5801885}
+
+data: {"type": "thinking", "node": "ppt", "content": "指标\",\n      \"key_points\": [\n        \"接口P99响应时间低于200ms", "timestamp": 1784982057.932529}
+
+data: {"type": "thinking", "node": "ppt", "content": "\",\n        \"系统QPS支撑万级并发请求\",\n        \"服务可用性达到99.95%以上\"\n", "timestamp": 1784982058.3028355}
+
+data: {"type": "thinking", "node": "ppt", "content": "      ],\n      \"detail_content\": [\n        \"通过JMeter压", "timestamp": 1784982058.4999785}
+
+data: {"type": "thinking", "node": "ppt", "content": "测定位瓶颈，优化SQL与缓存减少RT波动\",\n        \"水平扩展实例数+异步化处理，突破单机", "timestamp": 1784982059.1566584}
+
+data: {"type": "thinking", "node": "ppt", "content": "CPU与IO限制\",\n        \"多活部署+自动故障转移，确保SLA达标并快速恢复\"\n     ", "timestamp": 1784982059.632502}
+
+data: {"type": "thinking", "node": "ppt", "content": " ],\n      \"layout\": \"big_number\"\n    },\n    {\n     ", "timestamp": 1784982059.8278925}
+
+data: {"type": "thinking", "node": "ppt", "content": " \"type\": \"code\",\n      \"title\": \"CompletableFuture异步编排", "timestamp": 1784982060.0702572}
+
+data: {"type": "thinking", "node": "ppt", "content": "示例\",\n      \"code_snippet\": \"CompletableFuture<String> f", "timestamp": 1784982060.2337573}
+
+data: {"type": "thinking", "node": "ppt", "content": "1 = CompletableFuture.supplyAsync(() -> queryUser(id));", "timestamp": 1784982060.4665618}
+
+data: {"type": "thinking", "node": "ppt", "content": "\\nCompletableFuture<String> f2 = CompletableFuture.sup", "timestamp": 1784982060.6159413}
+
+data: {"type": "thinking", "node": "ppt", "content": "plyAsync(() -> queryOrder(id));\\nCompletableFuture", "timestamp": 1784982060.7324424}
+
+data: {"type": "thinking", "node": "ppt", "content": ".allOf(f1, f2).join();\\nString user = f1.get();\\nString", "timestamp": 1784982061.0362422}
+
+data: {"type": "thinking", "node": "ppt", "content": " order = f2.get();\"\n    },\n    {\n      \"type\": \"content\",\n     ", "timestamp": 1784982061.324119}
+
+data: {"type": "thinking", "node": "ppt", "content": " \"title\": \"云原生技术栈核心组件\",\n      \"key_points\": [\n        \"D", "timestamp": 1784982061.607498}
+
+data: {"type": "thinking", "node": "ppt", "content": "ocker容器化与镜像构建规范\",\n        \"Kubernetes编排与服务网格集成\",\n        \"", "timestamp": 1784982061.9107533}
+
+data: {"type": "thinking", "node": "ppt", "content": "CI/CD流水线与GitOps实践\"\n      ],\n      \"detail_content\": [\n", "timestamp": 1784982062.264874}
+
+data: {"type": "thinking", "node": "ppt", "content": "        \"多阶段构建减小镜像体积，非root用户运行提升安全性\",\n        \"Deployment管理", "timestamp": 1784982062.5970285}
+
+data: {"type": "thinking", "node": "ppt", "content": "副本集，Istio实现流量灰度与安全通信\",\n        \"Jenkins/GitLab CI触发构建", "timestamp": 1784982062.9903138}
+
+data: {"type": "thinking", "node": "ppt", "content": "，ArgoCD同步Git仓库至集群\"\n      ],\n      \"layout\": \"icon_row\"", "timestamp": 1784982063.3636649}
+
+data: {"type": "thinking", "node": "ppt", "content": "\n    },\n    {\n      \"type\": \"content\",\n      \"title\": \"", "timestamp": 1784982063.6062746}
+
+data: {"type": "thinking", "node": "ppt", "content": "后端工程师成长心法\",\n      \"key_points\": [\n        \"技术深度决定问题解决上限", "timestamp": 1784982063.9513974}
+
+data: {"type": "thinking", "node": "ppt", "content": "\",\n        \"架构思维源于持续业务抽象\",\n        \"工程素养体现在细节与规范\"\n     ", "timestamp": 1784982064.375363}
+
+data: {"type": "thinking", "node": "ppt", "content": " ],\n      \"detail_content\": [\n        \"不满足于API调用，深入源码", "timestamp": 1784982064.5344806}
+
+data: {"type": "thinking", "node": "ppt", "content": "理解设计意图与边界条件\",\n        \"从需求中提炼通用模型，避免重复造轮子与过度设计\",\n        \"代码可读", "timestamp": 1784982064.9109693}
+
+data: {"type": "thinking", "node": "ppt", "content": "性优先，单元测试覆盖核心逻辑，文档及时更新\"\n      ],\n      \"layout\": \"quote_focus", "timestamp": 1784982065.2772806}
+
+data: {"type": "thinking", "node": "ppt", "content": "\"\n    },\n    {\n      \"type\": \"content\",\n      \"title\":", "timestamp": 1784982065.601538}
+
+data: {"type": "thinking", "node": "ppt", "content": " \"进阶学习路径检查清单\",\n      \"key_points\": [\n        \"完成JVM调", "timestamp": 1784982065.8010201}
+
+data: {"type": "thinking", "node": "ppt", "content": "优与GC日志分析实战\",\n        \"搭建完整微服务脚手架并压测验证\",\n        \"主导至少一个生产", "timestamp": 1784982066.373212}
+
+data: {"type": "thinking", "node": "ppt", "content": "级系统重构项目\"\n      ],\n      \"detail_content\": [\n        \"使用Ar", "timestamp": 1784982066.5616739}
+
+data: {"type": "thinking", "node": "ppt", "content": "thas诊断线上问题，输出调优报告与效果对比数据\",\n        \"包含网关、配置中心、消息队列等组件，", "timestamp": 1784982067.1042547}
+
+data: {"type": "thinking", "node": "ppt", "content": "通过混沌工程验证韧性\",\n        \"制定迁移方案与回滚预案，量化性能提升与成本节约成果\"\n      ],", "timestamp": 1784982067.633701}
+
+data: {"type": "thinking", "node": "ppt", "content": "\n      \"layout\": \"list_check\"\n    },\n    {\n      \"type\":", "timestamp": 1784982067.8979008}
+
+data: {"type": "thinking", "node": "ppt", "content": " \"code\",\n      \"title\": \"JVM启动参数调优示例\",\n      \"code_sn", "timestamp": 1784982068.1524951}
+
+data: {"type": "thinking", "node": "ppt", "content": "ippet\": \"-Xms4g -Xmx4g\\n-XX:+UseG1GC\\n-XX:MaxGCPauseMillis=", "timestamp": 1784982068.4739468}
+
+data: {"type": "thinking", "node": "ppt", "content": "200\\n-XX:+ParallelRefProcEnabled\\n-XX:+HeapDumpOnOutOfMemoryError\\n", "timestamp": 1784982068.7242002}
+
+data: {"type": "thinking", "node": "ppt", "content": "-XX:HeapDumpPath=/logs/heapdump.hprof\"\n    },\n    {\n     ", "timestamp": 1784982069.0045826}
+
+data: {"type": "thinking", "node": "ppt", "content": " \"type\": \"content\",\n      \"title\": \"技术选型决策框架\",\n      \"", "timestamp": 1784982069.1752734}
+
+data: {"type": "thinking", "node": "ppt", "content": "key_points\": [\n        \"业务规模与团队能力匹配度评估\",\n        \"", "timestamp": 1784982069.4273853}
+
+data: {"type": "thinking", "node": "ppt", "content": "社区活跃度与长期维护风险考量\",\n        \"迁移成本与收益的量化分析\"\n      ],\n      \"detail", "timestamp": 1784982069.8350925}
+
+data: {"type": "thinking", "node": "ppt", "content": "_content\": [\n        \"小团队优先成熟单体，百人以上再考虑微服务拆分节奏\",\n       ", "timestamp": 1784982070.3667555}
+
+data: {"type": "thinking", "node": "ppt", "content": " \"选择CNCF毕业项目或Apache顶级项目，避免绑定小众厂商\",\n        \"POC验证核心", "timestamp": 1784982070.7976956}
+
+data: {"type": "thinking", "node": "ppt", "content": "场景，计算人力投入与预期ROI后再全面推广\"\n      ],\n      \"layout\": \"right", "timestamp": 1784982071.1672263}
+
+data: {"type": "thinking", "node": "ppt", "content": "_content\"\n    },\n    {\n      \"type\": \"content\",\n      \"title", "timestamp": 1784982071.430342}
+
+data: {"type": "thinking", "node": "ppt", "content": "\": \"常见架构反模式规避\",\n      \"key_points\": [\n        \"过早引入分布式导致复杂度", "timestamp": 1784982071.9420705}
+
+data: {"type": "thinking", "node": "ppt", "content": "爆炸\",\n        \"缓存滥用引发数据不一致灾难\",\n        \"缺乏监控使系统成为黑盒运行", "timestamp": 1784982072.3185124}
+
+data: {"type": "thinking", "node": "ppt", "content": "\"\n      ],\n      \"detail_content\": [\n        \"先做好模块化与接口", "timestamp": 1784982072.6618285}
+
+data: {"type": "thinking", "node": "ppt", "content": "隔离，待流量真实增长再渐进式拆分\",\n        \"明确缓存边界与失效策略，关键写操作直连数据库保障强", "timestamp": 1784982073.3288417}
+
+data: {"type": "thinking", "node": "ppt", "content": "一致\",\n        \"从Day1埋点指标与告警，建立可观测性文化而非事后救火\"\n      ],\n      \"", "timestamp": 1784982073.8165174}
+
+data: {"type": "thinking", "node": "ppt", "content": "layout\": \"top_banner\"\n    },\n    {\n      \"type\": \"summary\",", "timestamp": 1784982074.1244557}
+
+data: {"type": "thinking", "node": "ppt", "content": "\n      \"title\": \"Java后端进阶核心总结\",\n      \"key_points\":", "timestamp": 1784982074.2935557}
+
+data: {"type": "thinking", "node": "ppt", "content": " [\n        \"基础扎实是应对复杂系统的根本前提\",\n        \"架构演进需以业务价值为导向", "timestamp": 1784982074.6995368}
+
+data: {"type": "thinking", "node": "ppt", "content": "而非技术炫技\",\n        \"工程化能力决定技术方案能否稳定落地\"\n      ],\n      \"", "timestamp": 1784982075.1320977}
+
+data: {"type": "thinking", "node": "ppt", "content": "detail_content\": [\n        \"持续深耕JVM、并发、存储等底层知识，形成系统性认知", "timestamp": 1784982075.4780636}
+
+data: {"type": "thinking", "node": "ppt", "content": "框架\",\n        \"每次技术决策都回答'解决什么业务问题'，避免为用而用\",\n        \"将最佳", "timestamp": 1784982076.0877295}
+
+data: {"type": "thinking", "node": "ppt", "content": "实践沉淀为工具链与规范，让高质量交付可复制可持续\"\n      ]\n    }\n  ]\n}", "timestamp": 1784982076.5554678}
+
+data: {"type": "thinking", "node": "ppt", "content": "[LLM 推理完成]", "timestamp": 1784982076.5554793}
+
+data: {"type": "thinking", "node": "ppt", "content": "[LLM 开始推理]\n输入:\n你是PPT配色师，严格要求：\n1. content_title_color固定#1A1A1A，text_body固定#333333，section_content_color固定#333333不能改\n2. 全部色值6位#十六进制\n3. 只输出纯JSON，无任何多余文字\n{\n    \"cover_main_title_color\": \"#xxxxxx\",\n    \"cover_subtitle_color\": \"#xxxxxx\",\n    \"section_title_color\": \"#xxxxxx\",\n    \"section_content_color\": \"#333333\",\n    \"...", "timestamp": 1784982076.5577862}
+
+data: {"type": "thinking", "node": "ppt", "content": "{\n    \"cover_main_title_color\": \"#1A1A1A\",\n    \"cover", "timestamp": 1784982077.6137264}
+
+data: {"type": "thinking", "node": "ppt", "content": "_subtitle_color\": \"#5C7C64\",\n    \"section_title_color", "timestamp": 1784982078.0395086}
+
+data: {"type": "thinking", "node": "ppt", "content": "\": \"#8B5E3C\",\n    \"section_content_color\": \"#333333", "timestamp": 1784982078.3427594}
+
+data: {"type": "thinking", "node": "ppt", "content": "\",\n    \"content_title_color\": \"#1A1A1A\",\n    \"accent", "timestamp": 1784982078.5901918}
+
+data: {"type": "thinking", "node": "ppt", "content": "\": \"#A63D2F\",\n    \"text_body\": \"#333333\"\n}", "timestamp": 1784982079.0106895}
+
+data: {"type": "thinking", "node": "ppt", "content": "[LLM 推理完成]", "timestamp": 1784982079.0106983}
+
+data: {"type": "thinking", "node": "ppt", "content": "[LLM 开始推理]\n输入:\n\n你是PPT背景图提示词工程师，只需要为封面页和最后一页（总结页）生成背景图提示词。\n输入：PPT主题、风格、配色\n输出固定JSON结构：\n{\n    \"cover_bg_prompt\":\"封面背景英文prompt\",\n    \"last_bg_prompt\":\"尾页背景英文prompt\"\n}\n规则：\n- 只生成2张背景图：封面和尾页\n- 背景图必须是纯装饰性图片，无任何文字、无字母、无符号、无代码、无设备\n- 风格：简约抽象渐变背景，配合PPT主题的专业感，色调与配色方案一致\n- 封面：大气、有冲击力，适合放标题\n- 尾页：简洁、留白多，适合放总结要点\n- 全部用英文描述，16:9比例\n...", "timestamp": 1784982079.0133622}
+
+data: {"type": "thinking", "node": "ppt", "content": "{\n    \"cover_bg_prompt\": \"Minimalist abstract background in", "timestamp": 1784982079.8783157}
+
+data: {"type": "thinking", "node": "ppt", "content": " 16:9 ratio, neo-Chinese tech fusion style, elegant ink", "timestamp": 1784982080.1258738}
+
+data: {"type": "thinking", "node": "ppt", "content": " wash texture blended with soft digital gradient, dominant deep charcoal and", "timestamp": 1784982080.4131281}
+
+data: {"type": "thinking", "node": "ppt", "content": " muted sage green tones with subtle terracotta accent highlights", "timestamp": 1784982080.506318}
+
+data: {"type": "thinking", "node": "ppt", "content": ", atmospheric and grand composition with ample negative", "timestamp": 1784982080.7125578}
+
+data: {"type": "thinking", "node": "ppt", "content": " space on the right for title placement, no text no", "timestamp": 1784982080.883206}
+
+data: {"type": "thinking", "node": "ppt", "content": " letters no symbols no code no devices no people, pure decorative", "timestamp": 1784982081.0840943}
+
+data: {"type": "thinking", "node": "ppt", "content": " professional aesthetic\",\n    \"last_bg_prompt\": \"Minimalist", "timestamp": 1784982081.25974}
+
+data: {"type": "thinking", "node": "ppt", "content": " abstract background in 16:9 ratio, neo-Chinese tech fusion style", "timestamp": 1784982081.4499679}
+
+data: {"type": "thinking", "node": "ppt", "content": ", clean and serene composition with extensive white", "timestamp": 1784982081.5399842}
+
+data: {"type": "thinking", "node": "ppt", "content": " space on the left for summary content, delicate ink wash", "timestamp": 1784982081.6729636}
+
+data: {"type": "thinking", "node": "ppt", "content": " fade combined with smooth gradient in warm brown and", "timestamp": 1784982081.9460337}
+
+data: {"type": "thinking", "node": "ppt", "content": " soft green hues, subtle terracotta accent glow at bottom edge", "timestamp": 1784982082.252669}
+
+data: {"type": "thinking", "node": "ppt", "content": ", tranquil and balanced layout, no text no letters no symbols", "timestamp": 1784982082.4326015}
+
+data: {"type": "thinking", "node": "ppt", "content": " no code no devices no people, pure decorative professional", "timestamp": 1784982082.5457458}
+
+data: {"type": "thinking", "node": "ppt", "content": " aesthetic\"\n}", "timestamp": 1784982082.6141}
+
+data: {"type": "thinking", "node": "ppt", "content": "[LLM 推理完成]", "timestamp": 1784982082.6141093}
+
+data: {"type": "thinking", "node": "ppt", "content": "PPT生成完成: 0页", "timestamp": 1784982458.086667}
+
+data: {"type": "node_status", "node": "ppt", "status": "complete", "detail": "", "timestamp": 1784982458.0870206}
+
+data: {"type": "thinking", "node": "integrator", "content": "开始整合所有节点的执行结果", "timestamp": 1784982458.0978625}
+
+data: {"type": "thinking", "node": "integrator", "content": "结果整合完成，准备持久化保存", "timestamp": 1784982459.300573}
+
+data: {"type": "node_status", "node": "integrator", "status": "complete", "detail": "task_type=ppt, status=success", "timestamp": 1784982459.300586}
+
+data: {"type": "node_status", "node": "task", "status": "complete", "detail": "status=success", "timestamp": 1784982459.302107}
+
+data: {"type": "node_status", "timestamp": 1784982459.3023422, "node": "conduct_layer", "status": "complete", "detail": ""}
+
+data: {"type": "thinking", "timestamp": 1784982459.3023484, "node": "conduct_layer", "content": "✅ conduct_layer 节点执行完成"}
+
+data: {"type": "node_status", "timestamp": 1784982459.3047023, "node": "integrator", "status": "start", "detail": "task_type=ppt"}
+
+data: {"type": "thinking", "timestamp": 1784982459.3047173, "node": "integrator", "content": "🚀 integrator 节点开始执行"}
+
+data: {"type": "node_status", "timestamp": 1784982459.306302, "node": "integrator", "status": "complete", "detail": ""}
+
+data: {"type": "thinking", "timestamp": 1784982459.3063097, "node": "integrator", "content": "✅ integrator 节点执行完成"}
+
+data: {"type": "task_result", "timestamp": 1784982459.3074908, "result": {"status": "success", "layer": "conduct", "task_type": "ppt", "document": null, "practice": null, "question": null, "extension": null, "video": null, "mindmap": null, "animation": null, "study_plan": null, "study_plan_status": null, "weak_points_info": null, "ppt": {"status": "success", "filename": "用户选择了Java后端开发进阶路线学习方案侧重Java后端开发与微服务架构能力风格JavaSpring_BootMySQ_00a2fe.pptx", "filepath": "D:\\Python_Agent\\all_tame_channel\\Agent\\children_agent\\PPT\\ppt_create\\outputs\\用户选择了Java后端开发进阶路线学习方案侧重Java后端开发与微服务架构能力风格JavaSpring_BootMySQ_00a2fe.pptx", "markdown_filename": "5d3a84123758419082829081d3429cd5.md", "markdown_path": "D:\\Python_Agent\\all_tame_channel\\Agent\\children_agent\\PPT\\ppt_create\\markdown\\5d3a84123758419082829081d3429cd5.md", "topic": "[用户选择了'Java后端开发进阶路线'学习方案（侧重Java后端开发与微服务架构能力，风格Java、Spring Boot、MySQL、Redis、微服务、JVM，难度medium）]\n帮我生成关于Java基础的PPT", "style": "新中式科技风", "pages": 18, "message": "PPT「[用户选择了'Java后端开发进阶路线'学习方案（侧重Java后端开发与微服务架构能力，风格Java、Spring Boot、MySQL、Redis、微服务、JVM，难度medium）]\n帮我生成关于Java基础的PPT」已生成！共18页，含视频链接与Markdown", "oss_url": "https://all-tame-max-oss.oss-cn-beijing.aliyuncs.com/ppt/user_001/用户选择了Java后端开发进阶路线学习方案侧重Java后端开发与微服务架构能力风格JavaSpring_BootMySQ_00a2fe_c4e69c7b.pptx", "resource_id": "ppt_3497e537288b"}, "judge": null, "student_features": {"academic_background": {"major_preference": "Flutter跨端移动开发", "knowledge_level": "高级", "ability_tendency": "能够深入对比高级概念，开始系统学习Python基础知识；本次搜索Python基础视频；同时展现跨领域知识应用能力，主动生成Java基础PPT", "foundation_level": "基础扎实，具备跨领域知识结构化能力，在变量概念整理中表现稳固，本次进一步验证", "score": 100, "change_reason": "本次任务虽主题为Flutter路线，但用户主动生成Java基础PPT并达到good质量，显示知识整合与迁移能力，但学术背景已达上限，暂不调整", "confidence": 95}, "learning_behavior": {"learning_style": "主动规划式，善于通过思维导图梳理知识；本次采用AI整理但仍体现结构化偏好", "learning_pace": "中等偏快", "interaction_level": "低", "resource_preference": "概念解释类，视频资源偏好明显；本次选择黑马程序员Python零基础教程，符合偏好", "score": 100, "change_reason": "学习行为得分已达上限，本次任务完成效率高但未提供足够新证据调整", "confidence": 90}, "goal_motivation": {"short_term_goals": "完成Python入门到实战计划（已进行1部分）；本次搜索Python基础视频，额外生成Java基础PPT", "long_term_career": "Flutter跨端移动开发", "motivation_strength": "高", "achievement_expectation": "中高", "score": 100, "change_reason": "目标动机得分已达上限，本次任务主动拓展Java基础，显示学习动力持续，但无足够差异调整", "confidence": 90}, "cognitive_abilities": {"logical_thinking": "能够构建3层深度思维导图，逻辑清晰；本次笔记对比Non-local与Transformer，逻辑分析能力持续", "creative_thinking": "无表现", "problem_solving": "能够通过思维导图解决知识梳理问题，本次任务进一步验证", "metacognition": "通过思维导图自查知识盲点，元认知能力佳；本次笔记体现自我监控与知识整合", "score": 100, "change_reason": "认知能力得分已达上限，本次PPT生成质量good，但未提供维度内新突破证据", "confidence": 90}, "emotional_state": {"interest_level": "高", "frustration_tolerance": "高", "anxiety_level": "中", "confidence_level": "高", "score": 63, "change_reason": "emotional_state权重为0，练题任务不影响此维度，保持原值", "confidence": 80}, "social_interaction": {"collaboration_tendency": "中等", "help_seeking_pattern": "活跃（主动提问）", "knowledge_sharing_willingness": "高", "peer_influence": "", "score": 100, "change_reason": "social_interaction权重为0，练题任务不影响此维度，保持原值", "confidence": 80}, "time_management": {"learning_regularity": "低", "priority_judgment": "低", "procrastination_tendency": "", "time_allocation_efficiency": "低", "score": 8, "change_reason": "time_management权重为0，练题任务不影响此维度，保持原值", "confidence": 70}, "creativity_innovation": {"divergent_thinking": "极低", "cross_domain_association": "低", "experimental_exploration": "极低", "original_expression": "极低", "score": 17, "change_reason": "本次任务创意得分75，且用户自主选择生成与主路线不同的Java基础PPT，体现跨领域关联和原创表达，但原分数极低，基于证据上调10分（最大调整幅度±15）", "confidence": 85}, "summary_scores": {"dimension_scores": [100, 100, 100, 100, 63, 100, 8, 17], "overall_score": 73, "trend": "稳定"}, "des_completed": true, "des_completed_time": "2026-07-25T20:20:34.013627"}, "metadata": {"agents_used": ["router", "ppt"], "raw_results": {"doc_result": null, "practice_result": null, "question_result": null, "extension_result": null, "video_result": null, "mindmap_result": null, "animation_result": null, "study_plan_result": null, "ppt_result": {"status": "success", "filename": "用户选择了Java后端开发进阶路线学习方案侧重Java后端开发与微服务架构能力风格JavaSpring_BootMySQ_00a2fe.pptx", "filepath": "D:\\Python_Agent\\all_tame_channel\\Agent\\children_agent\\PPT\\ppt_create\\outputs\\用户选择了Java后端开发进阶路线学习方案侧重Java后端开发与微服务架构能力风格JavaSpring_BootMySQ_00a2fe.pptx", "markdown_filename": "5d3a84123758419082829081d3429cd5.md", "markdown_path": "D:\\Python_Agent\\all_tame_channel\\Agent\\children_agent\\PPT\\ppt_create\\markdown\\5d3a84123758419082829081d3429cd5.md", "topic": "[用户选择了'Java后端开发进阶路线'学习方案（侧重Java后端开发与微服务架构能力，风格Java、Spring Boot、MySQL、Redis、微服务、JVM，难度medium）]\n帮我生成关于Java基础的PPT", "style": "新中式科技风", "pages": 18, "message": "PPT「[用户选择了'Java后端开发进阶路线'学习方案（侧重Java后端开发与微服务架构能力，风格Java、Spring Boot、MySQL、Redis、微服务、JVM，难度medium）]\n帮我生成关于Java基础的PPT」已生成！共18页，含视频链接与Markdown", "oss_url": "https://all-tame-max-oss.oss-cn-beijing.aliyuncs.com/ppt/user_001/用户选择了Java后端开发进阶路线学习方案侧重Java后端开发与微服务架构能力风格JavaSpring_BootMySQ_00a2fe_c4e69c7b.pptx", "resource_id": "ppt_3497e537288b"}, "judge_result": null}}, "resource_id": "ppt_3497e537288b"}}
+
+data: {"type": "done"}
+

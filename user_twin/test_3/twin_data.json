@@ -1,0 +1,72 @@
+{
+  "user_id": "test_3",
+  "enabled": true,
+  "created_at": "2026-07-29T09:38:08.132589",
+  "last_built_at": "2026-07-29T09:38:08.132589",
+  "build_count": 1,
+  "profile": {
+    "dimension_scores": [
+      87,
+      88,
+      94,
+      84,
+      99,
+      88,
+      90,
+      40
+    ],
+    "overall_score": 83,
+    "knowledge_mastery": {
+      "循环结构": 0.25,
+      "数学计算": 0.25,
+      "条件判断": 0.25,
+      "黑马程序员Java零基础视频教程_上部(Java入门，含斯坦福大学练习题+力扣算法题和大厂java面": 0.25,
+      "single_choice": 0.25,
+      "文件操作": 0.25,
+      "数组操作": 0.25,
+      "函数定义": 0.25,
+      "字符串操作": 0.25,
+      "Java学习视频资源推荐": 0.25,
+      "Java基础知识视频教程": 0.25,
+      "KNN算法原理": 0.25,
+      "Java学习资源推荐": 0.25,
+      "Java视频学习资源": 0.25,
+      "Java视频学习资源推荐": 0.25,
+      "Python": 0.25,
+      ",": 0.0,
+      "循": 0.0,
+      "环": 0.0,
+      "结": 0.0,
+      "构": 0.0,
+      "条": 0.0,
+      "件": 0.0,
+      "判": 0.0,
+      "断": 0.0,
+      "数": 0.0,
+      "组": 0.0,
+      "操": 0.0,
+      "作": 0.0
+    },
+    "ability_weights": {
+      "logical_thinking": 0.5,
+      "memory": 0.5,
+      "comprehension": 0.5,
+      "application": 0.5,
+      "creativity": 0.5
+    },
+    "error_patterns": {
+      "concept_confusion": 0.25,
+      "careless_mistake": 0.25,
+      "incomplete_knowledge": 0.25,
+      "misunderstanding": 0.25,
+      "calculation_error": 0.0
+    },
+    "guess_probability": 0.15,
+    "slip_probability": 0.125,
+    "confidence_factor": 0.5,
+    "feature_source": true,
+    "mastery_source": true,
+    "built_at": "2026-07-29T09:38:08.132572"
+  },
+  "comparison_history": []
+}

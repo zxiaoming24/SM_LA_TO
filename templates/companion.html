@@ -1,0 +1,2857 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>学伴匹配</title>
+<!-- CodeMirror 代码编辑器 -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/monokai.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/clike/clike.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+       background: #f5f7fa; color: #1a1a2e; min-height: 100vh; }
+
+.header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+           color: #fff; padding: 20px 32px; display: flex; align-items: center;
+           justify-content: space-between; }
+.header h1 { font-size: 22px; font-weight: 600; }
+.header .user-area { display: flex; align-items: center; gap: 12px; }
+.header .user-area input { padding: 8px 14px; border: none; border-radius: 8px;
+                           background: rgba(255,255,255,0.2); color: #fff;
+                           font-size: 14px; width: 160px; outline: none; }
+.header .user-area input::placeholder { color: rgba(255,255,255,0.6); }
+.header .user-area button { padding: 8px 18px; border: none; border-radius: 8px;
+                            background: rgba(255,255,255,0.25); color: #fff;
+                            cursor: pointer; font-size: 14px; transition: all .2s; }
+.header .user-area button:hover { background: rgba(255,255,255,0.35); }
+
+.tab-bar { display: flex; background: #fff; border-bottom: 1px solid #e0e0e0; padding: 0 32px; }
+.tab-bar .tab { padding: 14px 24px; cursor: pointer; font-size: 14px; font-weight: 500;
+                color: #888; border-bottom: 3px solid transparent; transition: all .2s; }
+.tab-bar .tab:hover { color: #667eea; }
+.tab-bar .tab.active { color: #667eea; border-bottom-color: #667eea; font-weight: 600; }
+
+.container { max-width: 800px; margin: 0 auto; padding: 24px 16px; }
+
+.section-card { background: #fff; border-radius: 16px; padding: 24px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 16px; }
+.section-card .title { font-size: 16px; font-weight: 600; margin-bottom: 12px; }
+
+/* ★★★ 雷达扫描动画 ★★★ */
+.radar-container { position: relative; width: 280px; height: 280px; margin: 20px auto;
+                   border-radius: 50%; background: #0a1628; overflow: hidden;
+                   border: 2px solid #22d3ee; box-shadow: 0 0 30px rgba(34,211,238,0.15); }
+.radar-container .radar-sweep { position: absolute; top: 50%; left: 50%; width: 50%; height: 2px;
+                                background: linear-gradient(90deg, rgba(34,211,238,0.8), transparent);
+                                transform-origin: left center; animation: radarSpin 2s linear infinite;
+                                z-index: 2; }
+.radar-container .radar-sweep::after { content: ''; position: absolute; right: 0; top: -4px;
+                                       width: 10px; height: 10px; border-radius: 50%;
+                                       background: #22d3ee; box-shadow: 0 0 10px #22d3ee; }
+.radar-container .radar-grid { position: absolute; inset: 0; border-radius: 50%; z-index: 0; }
+.radar-container .radar-grid .ring { position: absolute; border-radius: 50%; border: 1px solid rgba(34,211,238,0.15); }
+.radar-container .radar-grid .ring:nth-child(1) { inset: 20%; }
+.radar-container .radar-grid .ring:nth-child(2) { inset: 40%; }
+.radar-container .radar-grid .ring:nth-child(3) { inset: 60%; }
+.radar-container .radar-grid .ring:nth-child(4) { inset: 80%; }
+.radar-container .radar-label { position: absolute; bottom: 8px; left: 0; right: 0; text-align: center;
+                                color: rgba(34,211,238,0.6); font-size: 11px; z-index: 3;
+                                font-family: monospace; letter-spacing: 2px; }
+@keyframes radarSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+.radar-blip { position: absolute; width: 12px; height: 12px; border-radius: 50%;
+              background: #22d3ee; box-shadow: 0 0 12px #22d3ee; z-index: 3;
+              transform: translate(-50%, -50%); opacity: 0;
+              transition: opacity 0.5s ease; cursor: pointer; }
+.radar-blip.found { opacity: 1; animation: blipPulse 1.5s ease-in-out infinite; }
+@keyframes blipPulse { 0%, 100% { box-shadow: 0 0 8px #22d3ee; } 50% { box-shadow: 0 0 20px #22d3ee, 0 0 40px #22d3ee; } }
+
+/* ★★★ 发现的用户以动画方式展示 ★★★ */
+.discovery-area { min-height: 100px; margin-top: 20px; }
+.discovery-item { display: flex; align-items: center; padding: 16px; border-radius: 12px;
+                  margin-bottom: 10px; background: #f8f9fa; border: 1px solid transparent;
+                  animation: slideIn 0.5s ease-out; }
+.discovery-item.high { border-color: #22c55e; }
+.discovery-item.mid { border-color: #f59e0b; }
+@keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+.discovery-item .avatar { width: 40px; height: 40px; border-radius: 20px;
+                          background: linear-gradient(135deg, #667eea, #764ba2);
+                          color: #fff; display: flex; align-items: center;
+                          justify-content: center; font-size: 16px; font-weight: 700;
+                          flex-shrink: 0; }
+.discovery-item .info { flex: 1; margin: 0 14px; }
+.discovery-item .info .name { font-size: 14px; font-weight: 600; }
+.discovery-item .info .reason { font-size: 12px; color: #888; }
+.discovery-item .match-tag { padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+.discovery-item .match-tag.high { background: #dcfce7; color: #166534; }
+.discovery-item .match-tag.mid { background: #fef3c7; color: #92400e; }
+.discovery-item .btn-invite { padding: 6px 16px; border: none; border-radius: 8px;
+                              background: #667eea; color: #fff; cursor: pointer;
+                              font-size: 12px; margin-left: 8px; }
+.discovery-item .btn-invite:disabled { background: #ccc; cursor: not-allowed; }
+
+.empty-state { text-align: center; padding: 40px 20px; color: #aaa; }
+.empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+.empty-state p { font-size: 15px; }
+
+/* 扫描按钮 */
+.btn-scan { display: block; margin: 0 auto; padding: 12px 40px; border: none;
+            border-radius: 12px; background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff; font-size: 16px; font-weight: 600; cursor: pointer;
+            transition: all .3s; box-shadow: 0 4px 15px rgba(102,126,234,0.4); }
+.btn-scan:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102,126,234,0.5); }
+.btn-scan:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.btn-scan .spinner-sm { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3);
+                        border-top-color: #fff; border-radius: 50%; animation: spin .8s linear infinite;
+                        vertical-align: middle; margin-right: 6px; }
+
+/* 学伴卡片 */
+.invite-item { padding: 14px; border-radius: 10px; margin-bottom: 8px;
+               background: #fefce8; border: 1px solid #fde68a;
+               display: flex; align-items: center; justify-content: space-between; }
+.invite-item .info { font-size: 14px; }
+.invite-item .actions { display: flex; gap: 8px; }
+.invite-item .btn-accept { padding: 6px 16px; border: none; border-radius: 6px;
+                           background: #22c55e; color: #fff; cursor: pointer; font-size: 12px; }
+.invite-item .btn-reject { padding: 6px 16px; border: 1px solid #ddd; border-radius: 6px;
+                           background: #fff; color: #666; cursor: pointer; font-size: 12px; }
+
+/* 学伴卡片 */
+.companion-card { display: flex; align-items: center; padding: 16px; border-radius: 12px;
+                  margin-bottom: 10px; background: #f0fdf4; border: 1px solid #bbf7d0; }
+.companion-card .avatar { width: 40px; height: 40px; border-radius: 20px;
+                          background: #22c55e; color: #fff; display: flex;
+                          align-items: center; justify-content: center;
+                          font-size: 16px; font-weight: 700; flex-shrink: 0; }
+.companion-card .info { flex: 1; margin: 0 14px; }
+.companion-card .info .name { font-size: 14px; font-weight: 600; }
+.companion-card .info .meta { font-size: 12px; color: #888; }
+
+.empty-state { text-align: center; padding: 60px 20px; color: #aaa; }
+.empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+.empty-state p { font-size: 15px; margin-bottom: 16px; }
+
+.spinner-sm { display: inline-block; width: 16px; height: 16px;
+              border: 2px solid #e0e0e0; border-top-color: #667eea;
+              border-radius: 50%; animation: spin .8s linear infinite;
+              vertical-align: middle; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 600px) {
+  .header { flex-direction: column; gap: 12px; align-items: flex-start; }
+  .match-item { flex-wrap: wrap; gap: 8px; }
+}
+
+/* 悬浮通话按钮 */
+.floating-call-btn {
+  position: fixed; bottom: 24px; left: 24px; width: 56px; height: 56px;
+  border-radius: 28px; border: none; cursor: pointer;
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  color: #fff; font-size: 24px; box-shadow: 0 4px 16px rgba(34,197,94,0.4);
+  z-index: 2500; transition: all .3s; display: flex;
+  align-items: center; justify-content: center;
+}
+.floating-call-btn:hover { transform: scale(1.1); box-shadow: 0 6px 24px rgba(34,197,94,0.5); }
+.floating-call-btn:active { transform: scale(0.95); }
+
+/* ★★★ 小组标签页样式 ★★★ */
+.group-card { display: flex; align-items: center; padding: 16px; border-radius: 12px;
+              margin-bottom: 10px; background: #f0f7ff; border: 1px solid #bae6fd; cursor: pointer;
+              transition: all .2s; }
+.group-card:hover { background: #e0f2fe; transform: translateY(-1px); }
+.group-card .g-avatar { width: 44px; height: 44px; border-radius: 12px;
+                        background: linear-gradient(135deg, #0ea5e9, #6366f1);
+                        color: #fff; display: flex; align-items: center; justify-content: center;
+                        font-size: 20px; font-weight: 700; flex-shrink: 0; }
+.group-card .g-info { flex: 1; margin: 0 14px; }
+.group-card .g-info .g-name { font-size: 15px; font-weight: 600; }
+.group-card .g-info .g-meta { font-size: 12px; color: #888; }
+
+/* 比赛卡片 */
+.comp-card { padding: 16px; border-radius: 12px; margin-bottom: 10px;
+             background: #fff7ed; border: 1px solid #fed7aa; }
+.comp-card .comp-header { display: flex; justify-content: space-between; align-items: center; }
+.comp-card .comp-title { font-size: 15px; font-weight: 600; }
+.comp-card .comp-status { font-size: 12px; padding: 2px 10px; border-radius: 10px; font-weight: 600; }
+.comp-card .comp-status.pending { background: #fef3c7; color: #92400e; }
+.comp-card .comp-status.running { background: #dcfce7; color: #166534; animation: statusPulse 1.5s ease-in-out infinite; }
+.comp-card .comp-status.finished { background: #f3f4f6; color: #6b7280; }
+@keyframes statusPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
+.comp-card .comp-meta { font-size: 12px; color: #888; margin-top: 6px; }
+.comp-card .comp-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* 比赛实时排行样式 */
+.leaderboard-container { background: #0f172a; border-radius: 16px; padding: 20px; margin-top: 16px;
+                         border: 1px solid #1e293b; overflow: hidden; }
+.leaderboard-title { color: #e2e8f0; font-size: 16px; font-weight: 700; margin-bottom: 16px;
+                     display: flex; align-items: center; gap: 8px; }
+.leaderboard-title .live-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+                               background: #22c55e; animation: statusPulse 1s ease-in-out infinite; }
+.lb-table { width: 100%; border-collapse: collapse; }
+.lb-table th { color: #94a3b8; font-size: 12px; font-weight: 600; padding: 8px 6px;
+               text-align: center; border-bottom: 1px solid #1e293b; }
+.lb-table td { color: #e2e8f0; font-size: 13px; padding: 8px 6px; text-align: center;
+               border-bottom: 1px solid #1e293b; transition: all 0.4s ease; }
+.lb-row { transition: transform 0.5s ease, background 0.3s ease; }
+.lb-row.rank-up { animation: rankUp 0.6s ease-out; }
+.lb-row.rank-down { animation: rankDown 0.6s ease-out; }
+@keyframes rankUp { 0% { transform: translateY(-10px); } 50% { transform: translateY(2px); } 100% { transform: translateY(0); } }
+@keyframes rankDown { 0% { transform: translateY(10px); } 50% { transform: translateY(-2px); } 100% { transform: translateY(0); } }
+.lb-rank-1 { color: #fbbf24; font-weight: 700; font-size: 16px; }
+.lb-rank-2 { color: #94a3b8; font-weight: 700; font-size: 15px; }
+.lb-rank-3 { color: #d97706; font-weight: 700; font-size: 14px; }
+.lb-score { color: #22c55e; font-weight: 700; font-size: 15px; }
+.lb-penalty { color: #94a3b8; font-size: 12px; }
+.lb-problem-ac { color: #22c55e; font-weight: 600; }
+.lb-problem-partial { color: #f59e0b; }
+.lb-problem-wa { color: #ef4444; }
+.lb-problem-empty { color: #334155; }
+
+/* 题目卡片 */
+.problem-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+.problem-card .p-title { font-size: 15px; font-weight: 600; color: #1e293b; margin-bottom: 8px; }
+.problem-card .p-desc { font-size: 13px; color: #475569; line-height: 1.6; white-space: pre-wrap; }
+.problem-card .p-diff { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; margin-top: 8px; }
+.problem-card .p-diff.easy { background: #dcfce7; color: #166534; }
+.problem-card .p-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-card .p-diff.hard { background: #fef2f2; color: #991b1b; }
+
+/* 群聊消息 */
+.group-msg { display: flex; margin-bottom: 12px; gap: 8px; }
+.group-msg .msg-avatar { width: 32px; height: 32px; border-radius: 8px;
+                         background: linear-gradient(135deg, #667eea, #764ba2);
+                         color: #fff; display: flex; align-items: center;
+                         justify-content: center; font-size: 12px; font-weight: 700;
+                         flex-shrink: 0; }
+.group-msg .msg-body { max-width: 75%; }
+.group-msg .msg-body .msg-sender { font-size: 11px; color: #888; font-weight: 600; margin-bottom: 2px; }
+.group-msg .msg-body .msg-bubble { padding: 8px 14px; border-radius: 12px; font-size: 13px;
+                                   background: #f1f5f9; color: #1e293b; display: inline-block; }
+.group-msg .msg-body .msg-bubble img { max-width: 200px; border-radius: 8px; margin-top: 4px;
+                                        cursor: pointer; border: 1px solid #e2e8f0; }
+.group-msg .msg-body .msg-time { font-size: 10px; color: #aaa; margin-top: 2px; }
+
+/* 学伴选择面板 */
+.companion-picker-panel {
+  position: fixed; bottom: 90px; left: 24px; width: 320px; max-height: 400px;
+  background: #fff; border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+  z-index: 2500; overflow: hidden; animation: slideUp 0.3s ease-out;
+}
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.companion-picker-panel .picker-header {
+  padding: 16px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff; font-size: 15px; font-weight: 600; display: flex;
+  align-items: center; justify-content: space-between;
+}
+.companion-picker-panel .picker-close {
+  background: none; border: none; color: #fff; font-size: 20px;
+  cursor: pointer; opacity: 0.8; padding: 0; line-height: 1;
+}
+.companion-picker-panel .picker-close:hover { opacity: 1; }
+.companion-picker-panel .picker-list {
+  max-height: 320px; overflow-y: auto; padding: 8px;
+}
+.companion-picker-panel .picker-item {
+  display: flex; align-items: center; padding: 12px; border-radius: 10px;
+  cursor: pointer; transition: all .2s; margin-bottom: 4px;
+}
+.companion-picker-panel .picker-item:hover { background: #f0fdf4; }
+.companion-picker-panel .picker-item .picker-avatar {
+  width: 36px; height: 36px; border-radius: 18px;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: #fff; display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700; flex-shrink: 0;
+}
+.companion-picker-panel .picker-item .picker-info { flex: 1; margin-left: 12px; }
+.companion-picker-panel .picker-item .picker-name { font-size: 14px; font-weight: 600; }
+.companion-picker-panel .picker-item .picker-status { font-size: 12px; color: #888; }
+.companion-picker-panel .picker-empty { padding: 40px 20px; text-align: center; color: #aaa; }
+
+/* 语音通话 UI 已移至主页面 unified.html */
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>👥 学伴匹配</h1>
+  <div class="user-area">
+    <input id="userId" type="text" placeholder="用户ID"
+           onchange="onUserChange()" onkeydown="if(event.key==='Enter')initPage()">
+    <button onclick="initPage()">查找学伴</button>
+  </div>
+</div>
+
+<div class="tab-bar">
+  <div class="tab active" data-tab="find" onclick="switchTab('find')">🔍 找学伴</div>
+  <div class="tab" data-tab="my" onclick="switchTab('my')">🤝 我的学伴</div>
+  <div class="tab" data-tab="invites" onclick="switchTab('invites')">📩 邀请</div>
+  <div class="tab" data-tab="shared" onclick="switchTab('shared')">📦 学伴共享</div>
+  <div class="tab" data-tab="costudy" onclick="switchTab('costudy')">🤝 共同学习</div>
+  <div class="tab" data-tab="fav" onclick="switchTab('fav')">⭐ 收藏</div>
+  <div class="tab" data-tab="calls" onclick="switchTab('calls')">📞 通话记录</div>
+  <div class="tab" data-tab="groups" onclick="switchTab('groups')">👥 小组</div>
+</div>
+
+<div class="container">
+  <div id="findSection" class="section-card">
+    <div class="title" style="text-align:center">🔍 扫描附近的学习伙伴</div>
+    <div style="text-align:center;font-size:13px;color:#888;margin-bottom:8px">点击下方按钮，系统将根据你的特征自动搜索匹配的学伴</div>
+    <button class="btn-scan" id="scanBtn" onclick="startScan()">🔍 开始扫描</button>
+    <div id="radarArea" style="display:none">
+      <div class="radar-container" id="radarContainer">
+        <div class="radar-grid"><div class="ring"></div><div class="ring"></div><div class="ring"></div><div class="ring"></div></div>
+        <div class="radar-sweep"></div>
+        <div class="radar-label">SCANNING FOR COMPANIONS</div>
+      </div>
+      <div id="scanStatus" style="text-align:center;font-size:13px;color:#888;margin-top:8px">正在扫描...</div>
+    </div>
+    <div class="discovery-area" id="discoveryArea"></div>
+  </div>
+  <div id="mySection" class="section-card" style="display:none">
+    <div class="title">🤝 我的学伴</div>
+    <div id="companionList"></div>
+  </div>
+  <div id="invitesSection" class="section-card" style="display:none">
+    <div class="title">📩 待处理的邀请</div>
+    <div id="inviteList"></div>
+  </div>
+  <div id="sharedSection" class="section-card" style="display:none">
+    <div class="title">📦 学伴共享给我的资源</div>
+    <div id="sharedList"></div>
+  </div>
+  <div id="costudySection" class="section-card" style="display:none">
+    <div class="title">🤝 共同学习</div>
+    <div id="coStudyInvites"></div>
+    <div id="coStudySessions"></div>
+  </div>
+  <div id="favSection" class="section-card" style="display:none">
+    <div class="title">⭐ 我的收藏</div>
+    <div id="favList"></div>
+  </div>
+  <div id="callsSection" class="section-card" style="display:none">
+    <div class="title">📞 通话记录</div>
+    <div id="callHistoryList"></div>
+  </div>
+  <div id="groupsSection" class="section-card" style="display:none">
+    <div class="title" style="display:flex;justify-content:space-between;align-items:center">
+      <span>👥 学习小组</span>
+      <div style="display:flex;gap:8px">
+        <button onclick="showCreateGroupForm()" style="padding:6px 14px;background:#0ea5e9;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600">➕ 创建小组</button>
+        <button onclick="showDiscoverGroups()" style="padding:6px 14px;background:#6366f1;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600">🔍 发现小组</button>
+        <button onclick="loadMyGroups()" style="padding:6px 14px;background:#f59e0b;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600">📋 我的小组</button>
+      </div>
+    </div>
+    <div id="groupContent">
+      <div class="empty-state"><div class="icon">👥</div><p>查看我的小组或发现新小组</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- 悬浮通话按钮 -->
+<button class="floating-call-btn" onclick="toggleCompanionPicker()" title="语音通话">📞</button>
+
+<!-- 学伴选择面板 -->
+<div class="companion-picker-panel" id="companionPickerPanel" style="display:none">
+  <div class="picker-header">
+    <span>选择通话学伴</span>
+    <button class="picker-close" onclick="closeCompanionPicker()">×</button>
+  </div>
+  <div class="picker-list" id="companionPickerList">
+    <div class="picker-empty">加载中...</div>
+  </div>
+</div>
+
+<script>
+function getUserId() {
+  const uid = document.getElementById('userId').value.trim();
+  if (uid) {
+    localStorage.setItem('companion_user_id', uid);
+    return uid;
+  }
+  const saved = localStorage.getItem('companion_user_id') || localStorage.getItem('study_plan_user_id');
+  if (saved) {
+    document.getElementById('userId').value = saved;
+    return saved;
+  }
+  return 'user_001';
+}
+
+function onUserChange() {
+  const uid = document.getElementById('userId').value.trim();
+  if (uid) localStorage.setItem('companion_user_id', uid);
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  document.getElementById('findSection').style.display = tab === 'find' ? 'block' : 'none';
+  document.getElementById('mySection').style.display = tab === 'my' ? 'block' : 'none';
+  document.getElementById('invitesSection').style.display = tab === 'invites' ? 'block' : 'none';
+  document.getElementById('sharedSection').style.display = tab === 'shared' ? 'block' : 'none';
+  document.getElementById('costudySection').style.display = tab === 'costudy' ? 'block' : 'none';
+  document.getElementById('favSection').style.display = tab === 'fav' ? 'block' : 'none';
+  document.getElementById('callsSection').style.display = tab === 'calls' ? 'block' : 'none';
+  document.getElementById('groupsSection').style.display = tab === 'groups' ? 'block' : 'none';
+  if (tab === 'my') loadCompanions();
+  if (tab === 'invites') loadInvites();
+  if (tab === 'shared') loadSharedResources();
+  if (tab === 'costudy') loadCoStudy();
+  if (tab === 'fav') loadFavorites();
+  if (tab === 'calls') loadCallHistory();
+  if (tab === 'groups') loadMyGroups();
+  if (tab === 'find') { document.getElementById('discoveryArea').innerHTML = ''; }
+}
+
+let _cachedMatches = [];
+
+function initPage() {
+  const userId = getUserId();
+  if (!userId) { alert('请输入用户ID'); return; }
+  switchTab('find');
+  document.getElementById('discoveryArea').innerHTML = '';
+  document.getElementById('companionList').innerHTML = '';
+  document.getElementById('inviteList').innerHTML = '';
+  loadCompanions();
+  loadInvites();
+}
+
+// ★★★ 雷达扫描 + 发现学伴 ★★★
+async function startScan() {
+  const btn = document.getElementById('scanBtn');
+  const radarArea = document.getElementById('radarArea');
+  const discoveryArea = document.getElementById('discoveryArea');
+  const scanStatus = document.getElementById('scanStatus');
+  const radarContainer = document.getElementById('radarContainer');
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-sm"></span> 扫描中...';
+  radarArea.style.display = 'block';
+  discoveryArea.innerHTML = '';
+  _cachedMatches = [];
+
+  // 清除旧的光点
+  radarContainer.querySelectorAll('.radar-blip').forEach(el => el.remove());
+
+  try {
+    scanStatus.textContent = '正在搜索匹配的学习伙伴...';
+    const resp = await fetch(`/companion/match/${getUserId()}?limit=20`);
+    const data = await resp.json();
+    if (!data.success) throw new Error(data.detail || '匹配失败');
+
+    const allMatches = (data.matches || []).filter(m => m.similarity >= 60);
+    _cachedMatches = allMatches;
+    scanStatus.textContent = `发现 ${allMatches.length} 名匹配的学习伙伴（匹配度≥60%）`;
+
+    if (allMatches.length === 0) {
+      scanStatus.textContent = '暂无匹配度 ≥60% 的学伴，试试稍后再扫描';
+      btn.disabled = false;
+      btn.innerHTML = '🔍 重新扫描';
+      setTimeout(() => { radarArea.style.display = 'none'; }, 2000);
+      return;
+    }
+
+    // 逐个在雷达上显示光点，然后展示用户卡片
+    for (let i = 0; i < allMatches.length; i++) {
+      const m = allMatches[i];
+      // 在雷达上生成一个随机位置的光点
+      const angle = (i / allMatches.length) * 360 + 15;
+      const radius = 30 + Math.random() * 50;
+      const rad = (angle * Math.PI) / 180;
+      const cx = 140 + radius * Math.cos(rad);
+      const cy = 140 + radius * Math.sin(rad);
+
+      const blip = document.createElement('div');
+      blip.className = 'radar-blip';
+      blip.style.left = cx + 'px';
+      blip.style.top = cy + 'px';
+      blip.style.transitionDelay = (i * 0.3) + 's';
+      radarContainer.appendChild(blip);
+
+      // 延迟出现光点
+      setTimeout(() => { blip.classList.add('found'); }, 300 + i * 300);
+      scanStatus.textContent = `发现 ${m.user_id}（匹配度 ${m.similarity}%）...`;
+
+      // 延迟展示卡片
+      showDiscoveryItem(m, i);
+      await sleep(400);
+    }
+
+    scanStatus.textContent = `✅ 扫描完成，发现 ${allMatches.length} 名匹配学伴`;
+
+  } catch (e) {
+    scanStatus.textContent = '扫描失败: ' + e.message;
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '🔍 重新扫描';
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function showDiscoveryItem(m, index) {
+  const area = document.getElementById('discoveryArea');
+  const sim = m.similarity || 0;
+  const level = sim >= 80 ? 'high' : 'mid';
+  const tagText = sim >= 80 ? '高度匹配' : '良好匹配';
+
+  let btnHtml = '';
+  const rs = m.relationship_status || 'none';
+  if (rs === 'accepted') {
+    btnHtml = '<button class="btn-invite" disabled style="background:#22c55e">✅ 学伴</button>';
+  } else if (rs === 'pending') {
+    btnHtml = '<button class="btn-invite" disabled style="background:#f59e0b">⏳ 已邀请</button>';
+  } else {
+    btnHtml = `<button class="btn-invite" id="invite-${m.user_id}" onclick="inviteCompanion('${m.user_id}')">邀请</button>`;
+  }
+
+  const div = document.createElement('div');
+  div.className = 'discovery-item ' + level;
+  div.style.animationDelay = (index * 0.15) + 's';
+  div.innerHTML = `
+    <div class="avatar">${escapeHtml(m.user_id.slice(-2).toUpperCase())}</div>
+    <div class="info">
+      <div class="name">${escapeHtml(m.user_id)} <span class="match-tag ${level}">${sim}% ${tagText}</span></div>
+      <div class="reason">${escapeHtml(m.reason || '')}</div>
+    </div>
+    ${btnHtml}
+  `;
+  area.appendChild(div);
+}
+
+async function inviteCompanion(toUser) {
+  const userId = getUserId();
+  const btn = document.getElementById(`invite-${toUser}`);
+  btn.disabled = true;
+  btn.textContent = '发送中...';
+  try {
+    const resp = await fetch('/companion/invite', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from_user: userId, to_user: toUser }),
+    });
+    const data = await resp.json();
+    if (data.success) {
+      btn.textContent = '已邀请';
+    } else {
+      btn.textContent = '邀请';
+      btn.disabled = false;
+      alert(data.error || '发送失败');
+    }
+  } catch (e) {
+    btn.textContent = '邀请';
+    btn.disabled = false;
+  }
+}
+
+async function loadCompanions() {
+  const userId = getUserId();
+  const list = document.getElementById('companionList');
+  try {
+    const [resp, actResp] = await Promise.all([
+      fetch(`/companion/list/${userId}`),
+      fetch(`/companion/activities/${userId}`)
+    ]);
+    const data = await resp.json();
+    const actData = await actResp.json();
+    if (!data.success) throw new Error(data.detail);
+
+    const companions = data.companions || [];
+    const activities = actData.success ? (actData.activities || []) : [];
+    const activityMap = {};
+    activities.forEach(a => { activityMap[a.user_id] = a; });
+
+    if (companions.length === 0) {
+      list.innerHTML = '<div class="empty-state"><div class="icon">🤝</div><p>还没有学伴，去"找学伴"页面寻找吧</p></div>';
+      return;
+    }
+
+    list.innerHTML = '';
+    companions.forEach(c => {
+      const act = activityMap[c.user_id] || {};
+      const actHtml = act.task_type
+        ? `<div style="font-size:12px;color:#6c5ce7;margin-top:4px">${act.label || ''} ${act.topic ? '· ' + escapeHtml(act.topic) : ''}</div>`
+        : '<div style="font-size:12px;color:#aaa;margin-top:4px">💤 暂无动态</div>';
+      const card = document.createElement('div');
+      card.className = 'companion-card';
+      card.innerHTML = `
+        <div class="avatar">${c.user_id.slice(-2).toUpperCase()}</div>
+        <div class="info">
+          <div class="name">${escapeHtml(c.user_id)}</div>
+          <div class="meta">${escapeHtml(c.current_phase || '学习中')}</div>
+          ${actHtml}
+        </div>
+      `;
+      list.appendChild(card);
+    });
+  } catch (e) {
+    list.innerHTML = `<div class="empty-state"><p style="color:#e74c3c">${escapeHtml(e.message)}</p></div>`;
+  }
+}
+
+async function loadInvites() {
+  const userId = getUserId();
+  const list = document.getElementById('inviteList');
+  try {
+    const resp = await fetch(`/companion/pending/${userId}`);
+    const data = await resp.json();
+    if (!data.success) throw new Error(data.detail);
+
+    const invites = data.invites || [];
+    if (invites.length === 0) {
+      list.innerHTML = '<div class="empty-state"><div class="icon">📩</div><p>暂无待处理的邀请</p></div>';
+      return;
+    }
+
+    list.innerHTML = '';
+    invites.forEach(inv => {
+      const otherId = inv.user_id_a;
+      const div = document.createElement('div');
+      div.className = 'invite-item';
+      div.innerHTML = `
+        <div class="info"><strong>${escapeHtml(otherId)}</strong> 邀请你成为学伴</div>
+        <div class="actions">
+          <button class="btn-accept" onclick="respondInvite(${inv.id}, true)">接受</button>
+          <button class="btn-reject" onclick="respondInvite(${inv.id}, false)">拒绝</button>
+        </div>
+      `;
+      list.appendChild(div);
+    });
+  } catch (e) {
+    list.innerHTML = `<div class="empty-state"><p style="color:#e74c3c">${escapeHtml(e.message)}</p></div>`;
+  }
+}
+
+async function respondInvite(companionId, accept) {
+  const userId = getUserId();
+  try {
+    const resp = await fetch('/companion/respond', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, companion_id: companionId, accept: accept }),
+    });
+    const data = await resp.json();
+    if (data.success) {
+      alert(data.message || (accept ? '已接受' : '已拒绝'));
+      await loadInvites();
+      await loadCompanions();
+    } else {
+      alert(data.error || '操作失败');
+    }
+  } catch (e) {
+    alert('操作失败: ' + e.message);
+  }
+}
+
+async function loadSharedResources() {
+  const userId = getUserId();
+  const list = document.getElementById('sharedList');
+  try {
+    const resp = await fetch(`/companion/shared/to-me/${userId}`);
+    const data = await resp.json();
+    if (!data.success) throw new Error(data.detail);
+    const shared = data.shared || [];
+    if (shared.length === 0) {
+      list.innerHTML = '<div class="empty-state"><div class="icon">📦</div><p>还没有人分享资源给你</p></div>';
+      return;
+    }
+    const typeLabels = { doc: '📄 文档', practice: '💻 编程题', question: '📝 理论题', video: '🎬 视频', mindmap: '🧠 思维导图', extension: '📖 拓展阅读', ppt: '📊 PPT' };
+    list.innerHTML = '';
+    shared.forEach(s => {
+      const div = document.createElement('div');
+      div.className = 'companion-card';
+
+      var cardName = s.resource_id;
+      if ((s.resource_type === 'ppt' || s.resource_type === 'doc') && s.title) { cardName = s.title; }
+
+      let extraHtml = '';
+      if (s.resource_type === 'doc') {
+        var dlUrl = '/document/download/' + encodeURIComponent(s.sharer_id) + '/' + encodeURIComponent(s.resource_id);
+        if (dlUrl) {
+          extraHtml += `<div style="margin-top:8px"><a href="${escapeHtml(dlUrl)}" target="_blank" style="display:inline-block;padding:4px 14px;background:linear-gradient(135deg,#11998e,#38ef7d);color:#fff;border-radius:6px;text-decoration:none;font-size:12px;font-weight:600" onclick="event.stopPropagation()">⬇️ 下载Word文档</a></div>`;
+        }
+      } else if (s.resource_type === 'ppt') {
+        var pptDlUrl = (s.filename ? '/ppt/download/' + encodeURIComponent(s.filename) + '?viewer_id=' + encodeURIComponent(getUserId()) : s.oss_url || '');
+        if (pptDlUrl) {
+          extraHtml += `<div style="margin-top:8px"><a href="${escapeHtml(pptDlUrl)}" target="_blank" style="display:inline-block;padding:4px 14px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border-radius:6px;text-decoration:none;font-size:12px;font-weight:600" onclick="event.stopPropagation()">⬇️ 下载PPT文件</a></div>`;
+        }
+      }
+
+      div.innerHTML = `
+        <div style="font-size:20px;flex-shrink:0">${typeLabels[s.resource_type] || '📁'}</div>
+        <div class="info">
+          <div class="name">${escapeHtml(cardName)}</div>
+          <div class="meta">${(s.created_at || '').slice(0,10)}</div>
+          ${extraHtml}
+        </div>
+        <button class="p-btn" onclick="viewSharedResource('${escapeHtml(s.sharer_id)}','${escapeHtml(s.resource_type)}','${escapeHtml(s.resource_id)}')">查看</button>
+      `;
+      list.appendChild(div);
+    });
+  } catch (e) {
+    list.innerHTML = `<div class="empty-state"><p style="color:#e74c3c">${escapeHtml(e.message)}</p></div>`;
+  }
+}
+
+async function viewSharedResource(sharerId, resourceType, resourceId) {
+  try {
+    const resp = await fetch(`/companion/shared/load/${sharerId}/${resourceType}/${resourceId}?viewer_id=${getUserId()}`);
+    const data = await resp.json();
+    if (!data.success || !data.resource) { alert('无法加载资源'); return; }
+    showResourcePreview(data.resource, resourceType, sharerId, resourceId);
+  } catch (e) { alert('加载失败: ' + e.message); }
+}
+
+async function viewFavResource(fav) {
+  if (fav.source_user_id) {
+    await viewSharedResource(fav.source_user_id, fav.resource_type, fav.resource_id);
+  } else {
+    try {
+      const resp = await fetch(`/companion/shared/load/${getUserId()}/${fav.resource_type}/${fav.resource_id}?viewer_id=${getUserId()}`);
+      const data = await resp.json();
+      if (!data.success || !data.resource) { alert('无法加载资源'); return; }
+      showResourcePreview(data.resource, fav.resource_type, getUserId(), fav.resource_id);
+    } catch (e) { alert('加载失败: ' + e.message); }
+  }
+}
+
+function showResourcePreview(resource, resourceType, ownerId, resourceId) {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+  const box = document.createElement('div');
+  box.style.cssText = 'background:#fff;border-radius:16px;padding:28px;max-width:700px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,0.15);position:relative;';
+  let contentHtml = '';
+
+  if (resourceType === 'doc' || resourceType === 'extension') {
+    if (resourceType === 'extension') {
+      // ★★★ 拓展阅读直接展示文本内容 ★★★
+      var extTitle = resource.title || '拓展阅读';
+      var extContent = resource.content || resource.background || '';
+      contentHtml = `<div style="padding:20px">
+        <h3 style="margin-bottom:16px">📖 ${escapeHtml(extTitle)}</h3>
+        <div style="font-size:14px;line-height:1.8;white-space:pre-wrap">${escapeHtml(extContent)}</div>
+      </div>`;
+    } else {
+      var docDlUrl = '/document/download/' + encodeURIComponent(ownerId) + '/' + encodeURIComponent(resourceId);
+      if (docDlUrl) {
+        contentHtml = `<div style="padding:40px 20px;text-align:center">
+          <div style="font-size:48px;margin-bottom:16px">📄</div>
+          <h3 style="margin-bottom:20px">文档</h3>
+          <a href="${escapeHtml(docDlUrl)}" target="_blank" style="display:inline-block;padding:12px 32px;background:linear-gradient(135deg,#11998e,#38ef7d);color:#fff;border-radius:10px;text-decoration:none;font-size:15px;font-weight:600">⬇️ 下载Word文档</a>
+        </div>`;
+      } else {
+        contentHtml = '<div style="padding:40px 20px;text-align:center;color:#999">文档下载链接不可用</div>';
+      }
+    }
+  } else if (resourceType === 'practice') {
+    const problem = resource.problem || resource;
+    const title = problem.title || problem.topic || '编程题';
+    const desc = problem.description || problem.content || '';
+    const diff = problem.difficulty || '中等';
+    const kpRaw = problem.knowledge_points || [];
+    const kpText = Array.isArray(kpRaw) ? kpRaw.join(', ') : (typeof kpRaw === 'string' ? kpRaw : '');
+    const fromDb = resource._from_resource_db;
+    const hasId = problem.id || problem.problem_id;
+    const pid = hasId || resourceId;
+    contentHtml = `<h3 style="margin-bottom:12px">💻 ${escapeHtml(title)}</h3>
+      <div style="font-size:14px;line-height:1.6;margin-bottom:12px">${escapeHtml(desc)}</div>
+      <div style="color:#888;font-size:13px">难度: ${escapeHtml(typeof diff === 'number' ? ['','简单','中等偏易','中等','中等偏难','困难'][diff] || '中等' : diff)}</div>
+      <div style="margin-top:8px;font-size:12px;color:#888">知识点: ${escapeHtml(kpText)}</div>
+      <div style="margin-top:6px;font-size:11px;color:#aaa">${fromDb ? '✅ 来自题库，内容固定' : '📄 来自分享者的生成记录'}</div>
+      <button onclick="startPractice('${escapeHtml(pid)}','${escapeHtml(ownerId)}')" style="margin-top:16px;padding:10px 24px;background:#667eea;color:#fff;border:none;border-radius:10px;cursor:pointer;font-size:14px;font-weight:600">💻 同练这道题</button>`;
+  } else if (resourceType === 'mindmap') {
+    const mm = resource.mindmap || resource;
+    contentHtml = `<h3 style="margin-bottom:12px">🧠 ${escapeHtml(mm.topic || '思维导图')}</h3><pre style="font-size:12px;background:#f8f9fa;padding:16px;border-radius:8px;overflow:auto;max-height:400px">${escapeHtml(JSON.stringify(mm, null, 2))}</pre>`;
+  } else if (resourceType === 'video') {
+    const videos = resource.videos || [resource];
+    if (videos.length > 0) {
+      const v = videos[0];
+      contentHtml = `<h3 style="margin-bottom:12px">🎬 ${escapeHtml(v.title || '视频')}</h3>
+        <div style="font-size:13px;color:#888;margin-bottom:8px">${escapeHtml(v.author || '')}${v.duration ? ' · ' + escapeHtml(v.duration) : ''}</div>
+        <a href="${escapeHtml(v.url || '#')}" target="_blank" style="display:inline-block;padding:10px 24px;background:#fb7299;color:#fff;border-radius:10px;text-decoration:none;font-size:14px;font-weight:600">去B站观看</a>`;
+    }
+  } else if (resourceType === 'question') {
+    const questions = resource.questions || [resource];
+    contentHtml = `<h3 style="margin-bottom:12px">📝 理论题</h3><pre style="font-size:12px;background:#f8f9fa;padding:16px;border-radius:8px;overflow:auto;max-height:400px">${escapeHtml(JSON.stringify(questions, null, 2))}</pre>`;
+  } else if (resourceType === 'ppt') {
+    var pptDlUrl = (resource.filename ? '/ppt/download/' + encodeURIComponent(resource.filename) + '?viewer_id=' + encodeURIComponent(getUserId()) : resource.oss_url || '');
+    if (pptDlUrl) {
+      contentHtml = `<div style="padding:40px 20px;text-align:center">
+        <div style="font-size:48px;margin-bottom:16px">📊</div>
+        <h3 style="margin-bottom:20px">PPT</h3>
+        <a href="${escapeHtml(pptDlUrl)}" target="_blank" style="display:inline-block;padding:12px 32px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border-radius:10px;text-decoration:none;font-size:15px;font-weight:600">⬇️ 下载PPT文件</a>
+      </div>`;
+    } else {
+      contentHtml = '<div style="padding:40px 20px;text-align:center;color:#999">PPT下载链接不可用</div>';
+    }
+  } else {
+    contentHtml = `<pre style="font-size:12px;background:#f8f9fa;padding:16px;border-radius:8px;overflow:auto;max-height:400px">${escapeHtml(JSON.stringify(resource, null, 2))}</pre>`;
+  }
+
+  box.innerHTML = `<button onclick="this.closest('[style]').remove()" style="position:absolute;top:12px;right:16px;background:none;border:none;font-size:24px;cursor:pointer;color:#999;line-height:1">&times;</button>${contentHtml}`;
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+}
+
+async function loadFavorites() {
+  const userId = getUserId();
+  const list = document.getElementById('favList');
+  try {
+    const resp = await fetch(`/companion/favorites/${userId}`);
+    const data = await resp.json();
+    if (!data.success) throw new Error(data.detail);
+    const favs = data.favorites || [];
+    if (favs.length === 0) {
+      list.innerHTML = '<div class="empty-state"><div class="icon">⭐</div><p>还没有收藏任何资源，去学习计划或智能助手中收藏吧</p></div>';
+      return;
+    }
+    const typeLabels = { doc: '📄 文档', practice: '💻 编程题', question: '📝 理论题', video: '🎬 视频', mindmap: '🧠 思维导图', extension: '📖 拓展阅读', ppt: '📊 PPT' };
+    list.innerHTML = '';
+    favs.forEach(f => {
+       const div = document.createElement('div');
+       div.className = 'companion-card';
+
+       var cardName = f.resource_id;
+       if ((f.resource_type === 'ppt' || f.resource_type === 'doc') && f.title) { cardName = f.title; }
+
+       let extraHtml = '';
+       if (f.resource_type === 'doc') {
+         var ownerId = f.source_user_id || getUserId();
+         var dlUrl = '/document/download/' + encodeURIComponent(ownerId) + '/' + encodeURIComponent(f.resource_id);
+         if (dlUrl) {
+           extraHtml += `<div style="margin-top:8px"><a href="${escapeHtml(dlUrl)}" target="_blank" style="display:inline-block;padding:4px 14px;background:linear-gradient(135deg,#11998e,#38ef7d);color:#fff;border-radius:6px;text-decoration:none;font-size:12px;font-weight:600" onclick="event.stopPropagation()">⬇️ 下载Word文档</a></div>`;
+         }
+       } else if (f.resource_type === 'ppt') {
+         var pptDlUrl = (f.filename ? '/ppt/download/' + encodeURIComponent(f.filename) + '?viewer_id=' + encodeURIComponent(getUserId()) : f.oss_url || '');
+         if (pptDlUrl) {
+           extraHtml += `<div style="margin-top:8px"><a href="${escapeHtml(pptDlUrl)}" target="_blank" style="display:inline-block;padding:4px 14px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border-radius:6px;text-decoration:none;font-size:12px;font-weight:600" onclick="event.stopPropagation()">⬇️ 下载PPT文件</a></div>`;
+         }
+       }
+
+       div.innerHTML = `
+         <div style="font-size:20px;flex-shrink:0">${typeLabels[f.resource_type] || '📁'}</div>
+         <div class="info">
+           <div class="name">${escapeHtml(cardName)}</div>
+           <div class="meta">${(f.created_at || '').slice(0,10)}</div>
+           ${extraHtml}
+         </div>
+         <button class="p-btn" onclick='viewFavResource(${JSON.stringify(f).replace(/'/g, "\\'")})' style="margin-right:6px">查看</button>
+         <button style="padding:6px 12px;border:1px solid #ddd;border-radius:6px;background:#fff;color:#e74c3c;cursor:pointer;font-size:12px" onclick="removeFav('${escapeHtml(f.resource_type)}','${escapeHtml(f.resource_id)}',this)">取消收藏</button>
+       `;
+      list.appendChild(div);
+    });
+  } catch (e) {
+    list.innerHTML = `<div class="empty-state"><p style="color:#e74c3c">${escapeHtml(e.message)}</p></div>`;
+  }
+}
+
+async function removeFav(resourceType, resourceId, btn) {
+  const userId = getUserId();
+  try {
+    await fetch('/companion/favorite/remove', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, resource_type: resourceType, resource_id: resourceId }),
+    });
+    btn.closest('.companion-card').remove();
+  } catch (e) {}
+}
+
+// ==================== 共学邀请 ====================
+
+async function loadCoStudy() {
+  const userId = getUserId();
+  const invitesDiv = document.getElementById('coStudyInvites');
+  const sessionsDiv = document.getElementById('coStudySessions');
+  try {
+    const [invResp, sessResp, sentResp] = await Promise.all([
+      fetch(`/companion/co-study/invites/${userId}`),
+      fetch(`/companion/co-study/sessions/${userId}`),
+      fetch(`/companion/co-study/sent/${userId}`)
+    ]);
+    const invData = await invResp.json();
+    const sessData = await sessResp.json();
+    const sentData = await sentResp.json();
+
+    // ---- 待处理的邀请（作为被邀请方） ----
+    const invites = invData.success ? (invData.invites || []) : [];
+    if (invites.length === 0) {
+      invitesDiv.innerHTML = '<div class="empty-state" style="padding:20px"><div class="icon">📩</div><p>暂无待处理的共学邀请</p></div>';
+    } else {
+      invitesDiv.innerHTML = '<div style="font-size:14px;font-weight:600;color:#333;margin-bottom:12px">📩 待处理的共学邀请</div>';
+      invites.forEach(inv => {
+        const typeLabels = { practice: '💻 编程题', video: '🎬 视频', doc: '📄 文档', question: '📝 理论题', mindmap: '🧠 思维导图' };
+        const tLabel = typeLabels[inv.resource_type] || '📚 ' + inv.resource_type;
+        const div = document.createElement('div');
+        div.className = 'invite-item';
+        div.innerHTML = `
+          <div class="info"><strong>${escapeHtml(inv.inviter_id)}</strong> 邀请你共同学习 ${tLabel}：${escapeHtml(inv.title || '')}</div>
+          <div class="actions">
+            <button class="btn-accept" onclick="respondCoStudy(${inv.id}, true, this)">接受</button>
+            <button class="btn-reject" onclick="respondCoStudy(${inv.id}, false, this)">拒绝</button>
+            <button style="padding:4px 10px;border:1px solid #ddd;border-radius:6px;background:#fff;color:#e74c3c;cursor:pointer;font-size:11px;margin-left:4px" onclick="deleteCoStudy(${inv.id},this)">删除</button>
+          </div>
+        `;
+        invitesDiv.appendChild(div);
+      });
+    }
+
+    // ---- 我发出的邀请（作为邀请方） ----
+    let sentHtml = '';
+    const sentInvites = sentData.success ? (sentData.invites || []) : [];
+    const pendingSent = sentInvites.filter(s => s.status === 'pending');
+    if (pendingSent.length > 0) {
+      sentHtml = '<div style="font-size:14px;font-weight:600;color:#333;margin-bottom:12px;margin-top:20px">📤 已发出的邀请（等待回应）</div>';
+      pendingSent.forEach(s => {
+        const typeLabels = { practice: '💻 编程题', video: '🎬 视频', doc: '📄 文档', question: '📝 理论题', mindmap: '🧠 思维导图' };
+        const tLabel = typeLabels[s.resource_type] || '📚 ' + s.resource_type;
+        sentHtml += `
+          <div class="invite-item" style="background:#fff8e1;border-color:#fde68a">
+            <div class="info">已邀请 <strong>${escapeHtml(s.invitee_id)}</strong> 共学 ${tLabel}：${escapeHtml(s.title || '')}</div>
+            <div class="actions">
+              <span style="font-size:12px;color:#f59e0b;font-weight:600">⏳ 等待对方回应</span>
+              <button style="padding:4px 10px;border:1px solid #ddd;border-radius:6px;background:#fff;color:#e74c3c;cursor:pointer;font-size:11px;margin-left:8px" onclick="deleteCoStudy(${s.id},this)">删除</button>
+            </div>
+          </div>`;
+      });
+    }
+    const acceptedSent = sentInvites.filter(s => s.status === 'accepted');
+    if (acceptedSent.length > 0) {
+      sentHtml += '<div style="font-size:14px;font-weight:600;color:#333;margin-bottom:12px;margin-top:20px">✅ 已被接受的邀请</div>';
+      acceptedSent.forEach(s => {
+        const typeLabels = { practice: '💻 编程题', video: '🎬 视频', doc: '📄 文档', question: '📝 理论题', mindmap: '🧠 思维导图' };
+        const tLabel = typeLabels[s.resource_type] || '📚 ' + s.resource_type;
+        const isPair = s.mode === 'pair';
+        let sentActionBtns = '';
+        if (isPair && s.resource_type === 'practice') {
+          sentActionBtns = `<button class="p-btn" onclick="openPairProgramming(${s.id})" style="background:#f59e0b;color:#fff">👥 结对编程</button>`;
+        } else {
+          if (s.resource_type === 'practice') {
+            sentActionBtns += `<button class="p-btn" onclick="showComparison('${escapeHtml(s.resource_id)}','${escapeHtml(s.inviter_id)}','${escapeHtml(s.invitee_id)}')">📊 对比成绩</button>`;
+          }
+          sentActionBtns += `<button class="p-btn" onclick="startPractice('${escapeHtml(s.resource_id)}','${escapeHtml(s.inviter_id)}')" style="margin-left:6px;background:#667eea">去学习</button>`;
+        }
+        sentHtml += `
+          <div class="companion-card" style="background:#f0fdf4;border-color:#bbf7d0">
+            <div style="font-size:20px;flex-shrink:0">${tLabel}${isPair ? '<br><span style="font-size:11px;color:#f59e0b;font-weight:600">结对编程</span>' : ''}</div>
+            <div class="info">
+              <div class="name">${escapeHtml(s.title || '共学')}</div>
+              <div class="meta"><strong>${escapeHtml(s.invitee_id)}</strong> 已接受 · ${(s.responded_at || '').slice(0,10)}</div>
+            </div>
+            ${sentActionBtns}
+            <button class="p-btn" onclick="openCoStudyChat(${s.id},'${escapeHtml(s.inviter_id)}','${escapeHtml(s.invitee_id)}')" style="margin-left:6px;background:#8b5cf6">💬 讨论</button>
+            <button style="padding:6px 12px;border:1px solid #ddd;border-radius:6px;background:#fff;color:#e74c3c;cursor:pointer;font-size:12px;margin-left:6px" onclick="deleteCoStudy(${s.id},this)">删除</button>
+          </div>`;
+      });
+    }
+    const rejectedSent = sentInvites.filter(s => s.status === 'rejected');
+    if (rejectedSent.length > 0) {
+      sentHtml += '<div style="font-size:14px;font-weight:600;color:#333;margin-bottom:12px;margin-top:20px">❌ 被拒绝的邀请</div>';
+      rejectedSent.forEach(s => {
+        sentHtml += `
+          <div class="invite-item" style="background:#fef2f2;border-color:#fca5a5">
+            <div class="info"><strong>${escapeHtml(s.invitee_id)}</strong> 拒绝了你的共学邀请：${escapeHtml(s.title || '')}</div>
+            <div style="margin-top:6px"><button style="padding:4px 10px;border:1px solid #ddd;border-radius:6px;background:#fff;color:#e74c3c;cursor:pointer;font-size:11px" onclick="deleteCoStudy(${s.id},this)">删除</button></div>
+          </div>`;
+      });
+    }
+
+    invitesDiv.insertAdjacentHTML('beforeend', sentHtml);
+
+    // ---- 历史共学记录 ----
+    const sessions = sessData.success ? (sessData.sessions || []) : [];
+    if (sessions.length === 0) {
+      sessionsDiv.innerHTML = '<div class="empty-state" style="padding:20px;margin-top:10px"><div class="icon">🤝</div><p>还没有共学记录，邀请学伴一起学习吧！</p></div>';
+    } else {
+      sessionsDiv.innerHTML = '<div style="font-size:14px;font-weight:600;color:#333;margin-bottom:12px;margin-top:20px">📋 历史共学记录</div>';
+      sessions.forEach(s => {
+        const typeLabels = { practice: '💻 编程题', video: '🎬 视频', doc: '📄 文档', question: '📝 理论题', mindmap: '🧠 思维导图' };
+        const tLabel = typeLabels[s.resource_type] || '📚 ' + s.resource_type;
+        const otherId = s.inviter_id === userId ? s.invitee_id : s.inviter_id;
+        const isPair = s.mode === 'pair';
+        const div = document.createElement('div');
+        div.className = 'companion-card';
+        let actionBtns = '';
+        if (isPair && s.resource_type === 'practice') {
+          actionBtns = `<button class="p-btn" onclick="openPairProgramming(${s.id})" style="background:#f59e0b;color:#fff">👥 结对编程</button>`;
+        } else {
+          if (s.resource_type === 'practice') {
+            actionBtns += `<button class="p-btn" onclick="showComparison('${escapeHtml(s.resource_id)}','${escapeHtml(s.inviter_id)}','${escapeHtml(s.invitee_id)}')">📊 对比成绩</button>`;
+          }
+          const studyLabel = s.resource_type === 'practice' ? '去作答'
+            : s.resource_type === 'video' ? '去观看'
+            : s.resource_type === 'doc' ? '去阅读'
+            : '去学习';
+          actionBtns += `<button class="p-btn" onclick="startPractice('${escapeHtml(s.resource_id)}','${escapeHtml(s.inviter_id)}')" style="margin-left:6px;background:#667eea">${studyLabel}</button>`;
+        }
+        div.innerHTML = `
+          <div style="font-size:20px;flex-shrink:0">${tLabel}${isPair ? '<br><span style="font-size:11px;color:#f59e0b;font-weight:600">结对编程</span>' : ''}</div>
+          <div class="info">
+            <div class="name">${escapeHtml(s.title || '共学')}</div>
+            <div class="meta">与 ${escapeHtml(otherId)} · ${(s.created_at || '').slice(0,10)}</div>
+          </div>
+          ${actionBtns}
+          <button class="p-btn" onclick="openCoStudyChat(${s.id},'${escapeHtml(s.inviter_id)}','${escapeHtml(s.invitee_id)}')" style="margin-left:6px;background:#8b5cf6">💬 讨论</button>
+          <button style="padding:6px 12px;border:1px solid #ddd;border-radius:6px;background:#fff;color:#e74c3c;cursor:pointer;font-size:12px;margin-left:6px" onclick="deleteCoStudy(${s.id},this)">删除</button>
+        `;
+        sessionsDiv.appendChild(div);
+      });
+    }
+  } catch (e) {
+    invitesDiv.innerHTML = `<div class="empty-state"><p style="color:#e74c3c">${escapeHtml(e.message)}</p></div>`;
+  }
+}
+
+// 在 companion.html 中打开结对编程
+function openPairProgramming(invitationId) {
+  try {
+    window.parent.postMessage({
+      type: 'openPairProgramming',
+      invitationId: invitationId
+    }, '*');
+  } catch(e) {}
+}
+
+async function respondCoStudy(inviteId, accept, btn) {
+  btn.disabled = true;
+  btn.textContent = '处理中...';
+  try {
+    const resp = await fetch('/companion/co-study/respond', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ invite_id: inviteId, accept: accept }),
+    });
+    const data = await resp.json();
+    if (data.success) {
+      if (accept) {
+        if (data.mode === 'pair') {
+          if (confirm('已接受结对编程邀请，是否现在加入？')) {
+            openPairProgramming(inviteId);
+          }
+        } else {
+          const goMsg = data.resource_type === 'practice' ? '是否现在去作答？'
+            : data.resource_type === 'video' ? '是否现在去观看？'
+            : data.resource_type === 'doc' ? '是否现在去阅读？'
+            : '是否现在去学习？';
+          if (confirm('已接受共学邀请，' + goMsg)) {
+            startPractice(data.resource_id, data.inviter_id);
+          }
+        }
+      }
+      loadCoStudy();
+    } else {
+      alert(data.error || '操作失败');
+      btn.disabled = false;
+    }
+  } catch (e) {
+    alert('操作失败');
+    btn.disabled = false;
+  }
+}
+
+async function deleteCoStudy(invitationId, btn) {
+  if (!confirm('确定删除这条共学记录？')) return;
+  const userId = getUserId();
+  btn.disabled = true;
+  btn.textContent = '删除中...';
+  try {
+    const resp = await fetch('/companion/co-study/delete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ invitation_id: invitationId, user_id: userId }),
+    });
+    const data = await resp.json();
+    if (data.success) {
+      btn.closest('.companion-card, .invite-item').remove();
+    } else {
+      alert(data.error || '删除失败');
+      btn.disabled = false;
+    }
+  } catch (e) {
+    alert('删除失败');
+    btn.disabled = false;
+  }
+}
+
+// ==================== 共学讨论面板 ====================
+
+function openCoStudyChat(invitationId, userA, userB) {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+  const box = document.createElement('div');
+  box.style.cssText = 'background:#fff;border-radius:16px;padding:24px;max-width:550px;width:100%;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,0.15);';
+  const currentUser = getUserId();
+  const otherUser = currentUser === userA ? userB : userA;
+  box.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div style="font-size:16px;font-weight:600">💬 与 ${escapeHtml(otherUser)} 讨论</div>
+      <button onclick="this.closest('[style]').remove()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#999">&times;</button>
+    </div>
+    <div id="chatMsg_${invitationId}" style="flex:1;overflow-y:auto;background:#f8f9fa;border-radius:10px;padding:14px;min-height:250px;max-height:400px;margin-bottom:12px;font-size:13px;line-height:1.6">
+      <div style="text-align:center;color:#aaa;padding:40px 0">加载中...</div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <input id="chatInput_${invitationId}" type="text" placeholder="输入消息..." style="flex:1;padding:10px 14px;border:2px solid #e0e0e0;border-radius:10px;font-size:13px;outline:none"
+        onkeydown="if(event.key==='Enter')sendChatMsg(${invitationId},'${escapeHtml(currentUser)}')">
+      <button onclick="sendChatMsg(${invitationId},'${escapeHtml(currentUser)}')" style="padding:10px 20px;background:#667eea;color:#fff;border:none;border-radius:10px;cursor:pointer;font-size:13px;font-weight:600">发送</button>
+    </div>
+  `;
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+  loadChatMessages(invitationId);
+  startChatPolling(invitationId);
+}
+
+let _chatPollTimers = {};
+
+function startChatPolling(invitationId) {
+  if (_chatPollTimers[invitationId]) clearInterval(_chatPollTimers[invitationId]);
+  _chatPollTimers[invitationId] = setInterval(function() {
+    loadChatMessages(invitationId, true);
+  }, 3000);
+}
+
+async function loadChatMessages(invitationId, appendOnly) {
+  try {
+    const resp = await fetch('/companion/co-study/messages/' + invitationId);
+    const data = await resp.json();
+    if (!data.success) return;
+    const container = document.getElementById('chatMsg_' + invitationId);
+    if (!container) { clearInterval(_chatPollTimers[invitationId]); return; }
+    const msgs = data.messages || [];
+    if (msgs.length === 0) {
+      if (!appendOnly) container.innerHTML = '<div style="text-align:center;color:#aaa;padding:40px 0">暂无消息，开始讨论吧 💬</div>';
+      return;
+    }
+    const currentUser = getUserId();
+    let html = '';
+    msgs.forEach(function(m) {
+      const isMe = m.sender_id === currentUser;
+      html += '<div style="display:flex;margin-bottom:10px;' + (isMe ? 'justify-content:flex-end' : 'justify-content:flex-start') + '">' +
+        '<div style="max-width:75%;padding:8px 14px;border-radius:12px;background:' + (isMe ? '#667eea' : '#e9ecef') + ';color:' + (isMe ? '#fff' : '#333') + ';font-size:13px">' +
+        '<div style="font-size:11px;font-weight:600;margin-bottom:2px;opacity:0.7">' + escapeHtml(isMe ? '我' : m.sender_id) + '</div>' +
+        escapeHtml(m.content) +
+        '<div style="font-size:10px;margin-top:4px;opacity:0.5">' + (m.created_at || '').slice(11, 19) + '</div>' +
+        '</div></div>';
+    });
+    container.innerHTML = html;
+    container.scrollTop = container.scrollHeight;
+  } catch(e) {}
+}
+
+async function sendChatMsg(invitationId, senderId) {
+  const input = document.getElementById('chatInput_' + invitationId);
+  if (!input || !input.value.trim()) return;
+  const content = input.value.trim();
+  input.value = '';
+  try {
+    await fetch('/companion/co-study/message', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ invitation_id: invitationId, sender_id: senderId, content: content }),
+    });
+    loadChatMessages(invitationId);
+  } catch(e) {}
+}
+
+// ==================== 成绩对比弹窗 ====================
+
+async function showComparison(problemId, userA, userB) {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+  const box = document.createElement('div');
+  box.style.cssText = 'background:#fff;border-radius:16px;padding:28px;max-width:600px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,0.15);';
+  box.innerHTML = '<div style="text-align:center;padding:30px">📊 加载对比数据中...</div>';
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+
+  try {
+    const resp = await fetch(`/companion/compare/${problemId}/${userA}/${userB}`);
+    const data = await resp.json();
+    if (!data.success) throw new Error(data.detail || '对比失败');
+
+    const aLabel = data.winner === data.user_a ? '🏆 ' : '';
+    const bLabel = data.winner === data.user_b ? '🏆 ' : '';
+    const winnerText = data.winner === '平局' ? '🤝 平局！' : `🏆 ${escapeHtml(data.winner)} 领先！`;
+
+    box.innerHTML = `
+      <button onclick="this.closest('[style]').remove()" style="position:absolute;top:12px;right:16px;background:none;border:none;font-size:24px;cursor:pointer;color:#999;line-height:1">&times;</button>
+      <h3 style="margin-bottom:20px;text-align:center">📊 成绩对比</h3>
+      <div style="display:flex;gap:16px;margin-bottom:20px">
+        <div style="flex:1;background:${aLabel ? '#f0fdf4' : '#f8f9fa'};border-radius:12px;padding:20px;text-align:center;border:${aLabel ? '2px solid #22c55e' : '1px solid #e0e0e0'}">
+          <div style="font-size:16px;font-weight:600">${aLabel}${escapeHtml(data.user_a)}</div>
+          <div style="font-size:36px;font-weight:700;color:#6c5ce7;margin:12px 0">${data.a_result.score}<span style="font-size:16px;color:#888"> 分</span></div>
+          <div style="font-size:13px;color:#666">结果: ${data.a_result.verdict}</div>
+          <div style="font-size:13px;color:#666">通过: ${data.a_result.passed}</div>
+        </div>
+        <div style="flex:1;background:${bLabel ? '#f0fdf4' : '#f8f9fa'};border-radius:12px;padding:20px;text-align:center;border:${bLabel ? '2px solid #22c55e' : '1px solid #e0e0e0'}">
+          <div style="font-size:16px;font-weight:600">${bLabel}${escapeHtml(data.user_b)}</div>
+          <div style="font-size:36px;font-weight:700;color:#6c5ce7;margin:12px 0">${data.b_result.score}<span style="font-size:16px;color:#888"> 分</span></div>
+          <div style="font-size:13px;color:#666">结果: ${data.b_result.verdict}</div>
+          <div style="font-size:13px;color:#666">通过: ${data.b_result.passed}</div>
+        </div>
+      </div>
+      <div style="text-align:center;font-size:18px;font-weight:600;color:#333">${winnerText}</div>
+      <button onclick="this.closest('[style]').remove()" style="display:block;width:100%;padding:12px;margin-top:20px;border:none;border-radius:10px;background:#f0f0f0;color:#666;font-size:14px;cursor:pointer">关闭</button>
+    `;
+  } catch (e) {
+    box.innerHTML = `<div style="text-align:center;padding:30px;color:#e74c3c">❌ 加载失败: ${escapeHtml(e.message)}</div>`;
+  }
+}
+
+function escapeHtml(s) {
+  if (!s) return '';
+  const div = document.createElement('div');
+  div.textContent = typeof s === 'string' ? s : String(s);
+  return div.innerHTML;
+}
+
+function startPractice(problemId, sharerId) {
+  document.querySelectorAll('[style]').forEach(el => { if (el.style.zIndex === '2000') el.remove(); });
+  try {
+    window.parent.postMessage({
+      type: 'startPractice',
+      problemId: problemId,
+      sharerId: sharerId || '',
+    }, '*');
+  } catch(e) {}
+}
+
+(function() {
+  const saved = localStorage.getItem('companion_user_id') || localStorage.getItem('study_plan_user_id');
+  if (saved) document.getElementById('userId').value = saved;
+  initPage();
+})();
+
+window.addEventListener('message', function(e) {
+  if (e.data && e.data.type === 'setUserId') {
+    document.getElementById('userId').value = e.data.userId;
+    localStorage.setItem('companion_user_id', e.data.userId);
+    initPage();
+  }
+});
+
+// ==================== 通话记录 ====================
+
+async function loadCallHistory() {
+  const userId = getUserId();
+  const list = document.getElementById('callHistoryList');
+  try {
+    const resp = await fetch(`/companion/voice/history/${userId}?limit=50`);
+    const data = await resp.json();
+    if (!data.success) throw new Error(data.detail);
+    const history = data.history || [];
+    if (history.length === 0) {
+      list.innerHTML = '<div class="empty-state"><div class="icon">📞</div><p>暂无通话记录</p></div>';
+      return;
+    }
+    list.innerHTML = '';
+    history.forEach(call => {
+      const isCaller = call.caller_id === userId;
+      const peerId = isCaller ? call.callee_id : call.caller_id;
+      const statusIcon = call.status === 'connected' ? '✅' : call.status === 'rejected' ? '❌' : call.status === 'ended' ? '📞' : '⏳';
+      const statusText = call.status === 'connected' ? '已通话' : call.status === 'rejected' ? '已拒绝' : call.status === 'ended' ? '已结束' : '未接通';
+      const duration = call.duration_sec ? Math.floor(call.duration_sec) + '秒' : '';
+      const direction = isCaller ? '呼出' : '呼入';
+      const div = document.createElement('div');
+      div.className = 'companion-card';
+      div.innerHTML = `
+        <div style="font-size:24px;flex-shrink:0">${statusIcon}</div>
+        <div class="info">
+          <div class="name">${escapeHtml(peerId)}</div>
+          <div class="meta">${direction} · ${statusText}${duration ? ' · ' + duration : ''}</div>
+          <div class="meta" style="font-size:11px;color:#aaa">${(call.created_at || '').replace('T', ' ').slice(0, 19)}</div>
+        </div>
+      `;
+      list.appendChild(div);
+    });
+  } catch (e) {
+    list.innerHTML = `<div class="empty-state"><p style="color:#e74c3c">${escapeHtml(e.message)}</p></div>`;
+  }
+}
+
+// ==================== 悬浮通话按钮 ====================
+
+let _companionPickerOpen = false;
+
+// 切换学伴选择面板
+function toggleCompanionPicker() {
+  if (_companionPickerOpen) {
+    closeCompanionPicker();
+  } else {
+    openCompanionPicker();
+  }
+}
+
+// 打开面板并加载学伴列表
+async function openCompanionPicker() {
+  const panel = document.getElementById('companionPickerPanel');
+  const list = document.getElementById('companionPickerList');
+  panel.style.display = 'block';
+  _companionPickerOpen = true;
+  list.innerHTML = '<div class="picker-empty">加载中...</div>';
+
+  try {
+    const userId = getUserId();
+    const resp = await fetch(`/companion/list/${userId}`);
+    const data = await resp.json();
+    if (!data.success) throw new Error(data.detail);
+
+    const companions = data.companions || [];
+    if (companions.length === 0) {
+      list.innerHTML = '<div class="picker-empty">暂无学伴，先去"我的学伴"添加吧</div>';
+      return;
+    }
+
+    list.innerHTML = '';
+    companions.forEach(c => {
+      const item = document.createElement('div');
+      item.className = 'picker-item';
+      item.onclick = () => {
+        closeCompanionPicker();
+        startVoiceCall(c.user_id);
+      };
+      item.innerHTML = `
+        <div class="picker-avatar">${c.user_id.slice(-2).toUpperCase()}</div>
+        <div class="picker-info">
+          <div class="picker-name">${escapeHtml(c.user_id)}</div>
+          <div class="picker-status">${escapeHtml(c.current_phase || '学习中')}</div>
+        </div>
+      `;
+      list.appendChild(item);
+    });
+  } catch (e) {
+    list.innerHTML = `<div class="picker-empty" style="color:#e74c3c">${escapeHtml(e.message)}</div>`;
+  }
+}
+
+// 关闭面板
+function closeCompanionPicker() {
+  const panel = document.getElementById('companionPickerPanel');
+  panel.style.display = 'none';
+  _companionPickerOpen = false;
+}
+
+// 点击页面其他地方关闭面板
+document.addEventListener('click', function(e) {
+  const panel = document.getElementById('companionPickerPanel');
+  const btn = document.querySelector('.floating-call-btn');
+  if (_companionPickerOpen && !panel.contains(e.target) && !btn.contains(e.target)) {
+    closeCompanionPicker();
+  }
+});
+
+// ==================== 语音通话功能（委托给主页面） ====================
+
+// 发起语音通话 - 通过 postMessage 通知主页面 unified.html 处理
+function startVoiceCall(calleeId) {
+  if (window.parent && window.parent !== window) {
+    window.parent.postMessage({ type: 'voiceCall', calleeId: calleeId }, '*');
+  } else {
+    alert('请在主页面中使用通话功能');
+  }
+}
+
+// ==================== 学习小组功能 ====================
+
+let _currentGroupView = 'list'; // list / detail / competition
+let _rankPollTimers = {};
+
+function showCreateGroupForm() {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:16px;padding:28px;max-width:450px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,0.15)">
+      <h3 style="margin-bottom:20px">📝 创建学习小组</h3>
+      <div style="margin-bottom:14px">
+        <label style="font-size:13px;font-weight:600;color:#333">小组名称 *</label>
+        <input id="gNameInput" type="text" placeholder="取一个响亮的名字" style="width:100%;padding:10px 14px;border:2px solid #e0e0e0;border-radius:10px;font-size:14px;margin-top:4px;outline:none">
+      </div>
+      <div style="margin-bottom:14px">
+        <label style="font-size:13px;font-weight:600;color:#333">小组描述</label>
+        <textarea id="gDescInput" placeholder="介绍一下你们小组..." style="width:100%;padding:10px 14px;border:2px solid #e0e0e0;border-radius:10px;font-size:14px;margin-top:4px;outline:none;min-height:80px;resize:vertical"></textarea>
+      </div>
+      <div style="margin-bottom:14px">
+        <label style="font-size:13px;font-weight:600;color:#333;margin-bottom:6px;display:block">小组类型</label>
+        <div style="display:flex;gap:12px">
+          <label style="flex:1;padding:10px 16px;border:2px solid #e0e0e0;border-radius:10px;cursor:pointer;text-align:center;transition:all .2s" id="publicLabel" onclick="selectGroupType(true)">
+            <input type="radio" name="gType" checked style="display:none">
+            <div style="font-size:18px">🌍</div>
+            <div style="font-size:13px;font-weight:600;margin-top:2px">公开小组</div>
+            <div style="font-size:11px;color:#888">任何人可加入</div>
+          </label>
+          <label style="flex:1;padding:10px 16px;border:2px solid #e0e0e0;border-radius:10px;cursor:pointer;text-align:center;transition:all .2s" id="privateLabel" onclick="selectGroupType(false)">
+            <input type="radio" name="gType" style="display:none">
+            <div style="font-size:18px">🔒</div>
+            <div style="font-size:13px;font-weight:600;margin-top:2px">私密小组</div>
+            <div style="font-size:11px;color:#888">需邀请才能加入</div>
+          </label>
+        </div>
+      </div>
+      <button onclick="doCreateGroup()" style="width:100%;padding:12px;background:linear-gradient(135deg,#0ea5e9,#6366f1);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer">✅ 创建</button>
+      <button onclick="this.closest('[style]').remove()" style="width:100%;padding:10px;margin-top:8px;background:#f3f4f6;color:#666;border:none;border-radius:10px;font-size:14px;cursor:pointer">取消</button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  selectGroupType(true);
+  setTimeout(() => document.getElementById('gNameInput')?.focus(), 100);
+}
+
+function updateEndTime() {
+  const startInput = document.getElementById('compStartAt');
+  const endInput = document.getElementById('compEndAt');
+  if (!startInput || !endInput || !startInput.value) return;
+  const startDate = new Date(startInput.value);
+  if (isNaN(startDate.getTime())) return;
+  const endDate = new Date(startDate.getTime() + 2 * 3600000);
+  endInput.value = endDate.toISOString().slice(0, 16);
+}
+
+let _groupIsPublic = true;
+
+function selectGroupType(isPublic) {
+  _groupIsPublic = isPublic;
+  document.getElementById('publicLabel').style.borderColor = isPublic ? '#0ea5e9' : '#e0e0e0';
+  document.getElementById('publicLabel').style.background = isPublic ? '#f0f9ff' : '#fff';
+  document.getElementById('privateLabel').style.borderColor = isPublic ? '#e0e0e0' : '#0ea5e9';
+  document.getElementById('privateLabel').style.background = isPublic ? '#fff' : '#f0f9ff';
+}
+
+async function doCreateGroup() {
+  const name = document.getElementById('gNameInput')?.value.trim();
+  if (!name) { alert('请输入小组名称'); return; }
+  const desc = document.getElementById('gDescInput')?.value.trim() || '';
+  try {
+    const resp = await fetch('/group/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, creator_id: getUserId(), description: desc, is_public: _groupIsPublic }),
+    });
+    const data = await resp.json();
+    if (data.success) {
+      alert('🎉 小组创建成功！');
+      document.querySelectorAll('[style]').forEach(el => { if (el.style.zIndex === '2000') el.remove(); });
+      loadMyGroups();
+    } else {
+      alert(data.error || '创建失败');
+    }
+  } catch (e) { alert('创建失败: ' + e.message); }
+}
+
+async function loadMyGroups() {
+  _currentGroupView = 'list';
+  const content = document.getElementById('groupContent');
+  // 先获取待处理的邀请
+  const pendingInvites = await loadPendingGroupInvites();
+  const hasPending = pendingInvites && pendingInvites.length > 0;
+
+  try {
+    const resp = await fetch('/group/list/' + getUserId());
+    const data = await resp.json();
+    if (!data.success) throw new Error(data.detail);
+    const groups = data.groups || [];
+
+    let html = '';
+
+    // 有待处理邀请时，显示醒目的通知条
+    if (hasPending) {
+      html += `<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:14px 16px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="showPendingGroupInvites()">
+        <span style="font-size:14px;color:#991b1b;font-weight:600">📩 你有 ${pendingInvites.length} 条小组邀请待处理</span>
+        <span style="padding:4px 14px;background:#ef4444;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600">查看 →</span>
+      </div>`;
+    }
+
+    if (groups.length === 0 && !hasPending) {
+      content.innerHTML = '<div class="empty-state"><div class="icon">👥</div><p>还没有加入任何小组</p><button onclick="showDiscoverGroups()" style="margin-top:12px;padding:10px 24px;background:#6366f1;color:#fff;border:none;border-radius:10px;cursor:pointer;font-size:14px">🔍 发现小组</button></div>' + (hasPending ? html : '');
+      return;
+    }
+
+    groups.forEach(g => {
+      const roleBadge = g.role === 'owner' ? '👑 创建者' : g.role === 'admin' ? '🛡️ 管理员' : '👤 成员';
+      html += `<div class="group-card" onclick="openGroupDetail(${g.id})">
+        <div class="g-avatar">${escapeHtml(g.name.charAt(0).toUpperCase())}</div>
+        <div class="g-info">
+          <div class="g-name">${escapeHtml(g.name)} <span style="font-size:11px;color:#888">${roleBadge}</span></div>
+          <div class="g-meta">${escapeHtml(g.description || '暂无描述')} · ${g.member_count || 0} 人</div>
+        </div>
+        <span style="font-size:18px;color:#ccc">→</span>
+      </div>`;
+    });
+    content.innerHTML = html;
+  } catch (e) {
+    content.innerHTML = `<div class="empty-state"><p style="color:#e74c3c">${escapeHtml(e.message)}</p></div>`;
+  }
+}
+
+async function showDiscoverGroups() {
+  _currentGroupView = 'list';
+  const content = document.getElementById('groupContent');
+  try {
+    const resp = await fetch('/group/all');
+    const data = await resp.json();
+    if (!data.success) throw new Error(data.detail);
+    const groups = data.groups || [];
+    if (groups.length === 0) {
+      content.innerHTML = '<div class="empty-state"><div class="icon">🔍</div><p>暂无公开小组，创建一个吧</p></div>';
+      return;
+    }
+    let html = '<div style="margin-bottom:12px;font-size:14px;font-weight:600;color:#333">🔍 发现公开小组</div>';
+    groups.forEach(g => {
+      const isPublic = g.is_public !== 0;
+      html += `<div class="group-card" onclick="${isPublic ? `quickJoinGroup(${g.id}, '${escapeHtml(g.name)}')` : ''}">
+        <div class="g-avatar">${escapeHtml(g.name.charAt(0).toUpperCase())}</div>
+        <div class="g-info">
+          <div class="g-name">${escapeHtml(g.name)} <span style="font-size:11px;color:#888">🌍 公开</span></div>
+          <div class="g-meta">创建者: ${escapeHtml(g.creator_id)} · ${g.member_count || 0} 人</div>
+        </div>
+        <button onclick="event.stopPropagation();quickJoinGroup(${g.id}, '${escapeHtml(g.name)}')" style="padding:6px 16px;background:#22c55e;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600">加入</button>
+      </div>`;
+    });
+    content.innerHTML = html;
+  } catch (e) {
+    content.innerHTML = `<div class="empty-state"><p style="color:#e74c3c">${escapeHtml(e.message)}</p></div>`;
+  }
+}
+
+async function quickJoinGroup(groupId, groupName) {
+  try {
+    const resp = await fetch('/group/join', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ group_id: groupId, user_id: getUserId() }),
+    });
+    const data = await resp.json();
+    if (data.success) {
+      alert('✅ 已加入 ' + groupName);
+      loadMyGroups();
+    } else {
+      alert(data.error || '加入失败');
+    }
+  } catch (e) { alert('加入失败: ' + e.message); }
+}
+
+let _currentGroupId = null;
+let _chatPollTimer = null;
+
+async function openGroupDetail(groupId) {
+  _currentGroupView = 'detail';
+  _currentGroupId = groupId;
+  const content = document.getElementById('groupContent');
+  try {
+    const [detailResp, msgResp] = await Promise.all([
+      fetch('/group/detail/' + groupId),
+      fetch('/group/messages/' + groupId + '?limit=50'),
+    ]);
+    const detail = await detailResp.json();
+    const msgs = await msgResp.json();
+    if (!detail.success) throw new Error(detail.detail);
+
+    const group = detail.group;
+    const members = group.members || [];
+    const messages = msgs.success ? (msgs.messages || []) : [];
+    const isOwner = getUserId() === group.creator_id;
+    // 公开小组任何成员都可邀请，私密小组仅 owner/admin
+    const canInvite = group.is_public || isOwner || group.role === 'admin';
+
+    let membersHtml = members.map(m =>
+      `<span style="display:inline-block;padding:2px 10px;background:#f1f5f9;border-radius:6px;font-size:12px;margin:2px">
+        ${escapeHtml(m.user_id)}${m.role === 'owner' ? ' 👑' : m.role === 'admin' ? ' 🛡️' : ''}
+       </span>`
+    ).join('');
+
+    let msgsHtml = messages.map(m => {
+      const isMe = m.sender_id === getUserId();
+      if (m.msg_type === 'image') {
+        return `<div class="group-msg" style="${isMe ? 'flex-direction:row-reverse' : ''}">
+          <div class="msg-avatar" style="${isMe ? 'background:linear-gradient(135deg,#22c55e,#16a34a)' : ''}">${m.sender_id.slice(-2).toUpperCase()}</div>
+          <div class="msg-body" style="${isMe ? 'text-align:right' : ''}">
+            <div class="msg-sender">${isMe ? '我' : escapeHtml(m.sender_id)}</div>
+            <div class="msg-bubble" style="${isMe ? 'background:#667eea;color:#fff' : ''}">
+              <img src="${escapeHtml(m.content)}" onclick="window.open(this.src,'_blank')" alt="图片">
+            </div>
+            <div class="msg-time">${(m.created_at || '').slice(11,19)}</div>
+          </div>
+        </div>`;
+      }
+      return `<div class="group-msg" style="${isMe ? 'flex-direction:row-reverse' : ''}">
+        <div class="msg-avatar" style="${isMe ? 'background:linear-gradient(135deg,#22c55e,#16a34a)' : ''}">${m.sender_id.slice(-2).toUpperCase()}</div>
+        <div class="msg-body" style="${isMe ? 'text-align:right' : ''}">
+          <div class="msg-sender">${isMe ? '我' : escapeHtml(m.sender_id)}</div>
+          <div class="msg-bubble" style="${isMe ? 'background:#667eea;color:#fff' : ''}">${escapeHtml(m.content)}</div>
+          <div class="msg-time">${(m.created_at || '').slice(11,19)}</div>
+        </div>
+      </div>`;
+    }).join('') || '<div style="text-align:center;color:#aaa;padding:20px">暂无消息</div>';
+
+    // 获取比赛列表
+    let compHtml = '';
+    let hasRunningComp = false;
+    try {
+      const compResp = await fetch('/group/competitions/' + groupId);
+      const compData = await compResp.json();
+      if (compData.success && compData.competitions) {
+        compData.competitions.forEach(c => {
+          const statusText = c.status === 'pending' ? '待开始' : c.status === 'running' ? '进行中' : '已结束';
+          if (c.status === 'running') hasRunningComp = true;
+          const startStr = c.start_at ? formatLocalTime(c.start_at) : '';
+          const endStr = c.end_at ? formatLocalTime(c.end_at) : '';
+          compHtml += `<div class="comp-card">
+            <div class="comp-header">
+              <div class="comp-title">🏆 ${escapeHtml(c.title)}</div>
+              <span class="comp-status ${c.status}">${statusText}</span>
+            </div>
+            <div class="comp-meta">${c.problem_count || 0} 道题 · ${startStr}~${endStr}</div>
+            <div class="comp-actions">
+              ${c.status === 'pending' ? `<button class="p-btn" onclick="openCompetition(${c.id})">📝 管理赛题</button>` : ''}
+              ${c.status === 'running' ? `<button class="p-btn" onclick="openCompetition(${c.id})">⚡ 进入比赛</button>` : ''}
+              ${c.status === 'finished' ? `<button class="p-btn" onclick="openCompetition(${c.id})">📊 查看排行</button>` : ''}
+              ${c.created_by === getUserId() ? `<button onclick="event.stopPropagation();deleteCompetitionFromCard(${c.id},${groupId})" style="padding:4px 10px;background:#fee2e2;color:#dc2626;border:1px solid #fecaca;border-radius:6px;cursor:pointer;font-size:11px">🗑️</button>` : ''}
+            </div>
+          </div>`;
+        });
+      }
+    } catch(e) {}
+
+    const runningBanner = hasRunningComp
+      ? `<div style="background:#dcfce7;border:1px solid #86efac;border-radius:12px;padding:12px 16px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:14px;color:#166534;font-weight:600">🏁 有比赛正在进行中，快去参加！</span>
+          <button onclick="openGroupDetail(${groupId})" style="padding:4px 14px;background:#22c55e;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">刷新</button>
+        </div>`
+      : '';
+
+    content.innerHTML = `
+      <div style="margin-bottom:16px">
+        <button onclick="loadMyGroups()" style="background:none;border:none;color:#667eea;cursor:pointer;font-size:13px">← 返回小组列表</button>
+      </div>
+      ${runningBanner}
+      <div style="display:flex;gap:16px;flex-wrap:wrap">
+        <div style="flex:1;min-width:300px">
+          <div style="background:#fff;border-radius:12px;border:1px solid #e0e0e0;padding:16px;margin-bottom:12px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+              <div><strong style="font-size:16px">${escapeHtml(group.name)}</strong> <span style="font-size:12px;color:#888">${members.length} 人</span></div>
+              <div style="display:flex;gap:6px">
+                ${isOwner ? `<button onclick="dissolveGroup(${groupId})" style="padding:4px 10px;background:#fef2f2;color:#ef4444;border:1px solid #fecaca;border-radius:6px;cursor:pointer;font-size:11px">🗑️ 解散</button>` : `<button onclick="leaveGroupWithConfirm(${groupId})" style="padding:4px 10px;background:#f3f4f6;color:#666;border:1px solid #ddd;border-radius:6px;cursor:pointer;font-size:11px">退出</button>`}
+              </div>
+            </div>
+            <div style="margin-bottom:10px">${membersHtml}</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              ${canInvite ? `<button onclick="showInviteMemberForm(${groupId})" style="padding:6px 16px;background:#0ea5e9;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600">👋 邀请成员</button>` : ''}
+              ${isOwner ? `<button onclick="showCreateCompetitionForm(${groupId})" style="padding:6px 16px;background:#f59e0b;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600">🏆 发布比赛</button>` : ''}
+            </div>
+          </div>
+          <!-- 聊天区域 -->
+          <div style="background:#fff;border-radius:12px;border:1px solid #e0e0e0;padding:16px">
+            <div style="font-size:14px;font-weight:600;margin-bottom:10px">💬 群聊</div>
+            <div id="groupChatMsgs" style="max-height:320px;overflow-y:auto;margin-bottom:12px;padding:4px">${msgsHtml}</div>
+            <div style="display:flex;gap:8px">
+              <input id="groupChatInput" type="text" placeholder="输入消息..." style="flex:1;padding:10px 14px;border:2px solid #e0e0e0;border-radius:10px;font-size:13px;outline:none"
+                onkeydown="if(event.key==='Enter')sendGroupMsg(${groupId})">
+              <button onclick="sendGroupMsg(${groupId})" style="padding:10px 16px;background:#667eea;color:#fff;border:none;border-radius:10px;cursor:pointer;font-size:13px">发送</button>
+              <input type="file" id="groupImageInput" accept="image/*" style="display:none" onchange="uploadGroupImage(${groupId})">
+              <button onclick="document.getElementById('groupImageInput').click()" style="padding:10px 14px;background:#f3f4f6;color:#666;border:1px solid #ddd;border-radius:10px;cursor:pointer;font-size:16px">🖼️</button>
+            </div>
+          </div>
+        </div>
+        <div style="flex:1;min-width:300px">
+          <div style="font-size:14px;font-weight:600;margin-bottom:10px">🏆 比赛</div>
+          ${compHtml || '<div class="empty-state" style="padding:20px"><p>暂无比赛</p></div>'}
+        </div>
+      </div>
+    `;
+    // 启动聊天轮询
+    startGroupChatPolling(groupId);
+  } catch (e) {
+    content.innerHTML = `<div class="empty-state"><p style="color:#e74c3c">${escapeHtml(e.message)}</p></div>`;
+  }
+}
+
+function startGroupChatPolling(groupId) {
+  if (_chatPollTimer) clearInterval(_chatPollTimer);
+  _chatPollTimer = setInterval(() => refreshGroupChat(groupId), 3000);
+}
+
+async function refreshGroupChat(groupId) {
+  try {
+    const resp = await fetch('/group/messages/' + groupId + '?limit=50');
+    const data = await resp.json();
+    if (!data.success) return;
+    const container = document.getElementById('groupChatMsgs');
+    if (!container) { clearInterval(_chatPollTimer); return; }
+    const msgs = data.messages || [];
+    let html = msgs.map(m => {
+      const isMe = m.sender_id === getUserId();
+      if (m.msg_type === 'image') {
+        return `<div class="group-msg" style="${isMe ? 'flex-direction:row-reverse' : ''}">
+          <div class="msg-avatar" style="${isMe ? 'background:linear-gradient(135deg,#22c55e,#16a34a)' : ''}">${m.sender_id.slice(-2).toUpperCase()}</div>
+          <div class="msg-body" style="${isMe ? 'text-align:right' : ''}">
+            <div class="msg-sender">${isMe ? '我' : escapeHtml(m.sender_id)}</div>
+            <div class="msg-bubble" style="${isMe ? 'background:#667eea;color:#fff' : ''}">
+              <img src="${escapeHtml(m.content)}" onclick="window.open(this.src,'_blank')" alt="图片">
+            </div>
+            <div class="msg-time">${(m.created_at || '').slice(11,19)}</div>
+          </div>
+        </div>`;
+      }
+      return `<div class="group-msg" style="${isMe ? 'flex-direction:row-reverse' : ''}">
+        <div class="msg-avatar" style="${isMe ? 'background:linear-gradient(135deg,#22c55e,#16a34a)' : ''}">${m.sender_id.slice(-2).toUpperCase()}</div>
+        <div class="msg-body" style="${isMe ? 'text-align:right' : ''}">
+          <div class="msg-sender">${isMe ? '我' : escapeHtml(m.sender_id)}</div>
+          <div class="msg-bubble" style="${isMe ? 'background:#667eea;color:#fff' : ''}">${escapeHtml(m.content)}</div>
+          <div class="msg-time">${(m.created_at || '').slice(11,19)}</div>
+        </div>
+      </div>`;
+    }).join('');
+    container.innerHTML = html || '<div style="text-align:center;color:#aaa;padding:20px">暂无消息</div>';
+    container.scrollTop = container.scrollHeight;
+  } catch(e) {}
+}
+
+async function sendGroupMsg(groupId) {
+  const input = document.getElementById('groupChatInput');
+  if (!input || !input.value.trim()) return;
+  const content = input.value.trim();
+  input.value = '';
+  try {
+    await fetch('/group/message', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ group_id: groupId, sender_id: getUserId(), content, msg_type: 'text' }),
+    });
+    refreshGroupChat(groupId);
+  } catch(e) {}
+}
+
+async function uploadGroupImage(groupId) {
+  const fileInput = document.getElementById('groupImageInput');
+  if (!fileInput || !fileInput.files || !fileInput.files[0]) return;
+  const file = fileInput.files[0];
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('sender_id', getUserId());
+  formData.append('group_id', groupId);
+  try {
+    const resp = await fetch('/group/upload-image', { method: 'POST', body: formData });
+    const data = await resp.json();
+    if (data.success) {
+      refreshGroupChat(groupId);
+    } else {
+      alert(data.error || '上传失败');
+    }
+  } catch(e) { alert('上传失败: ' + e.message); }
+  fileInput.value = '';
+}
+
+function leaveGroupWithConfirm(groupId) {
+  if (!confirm('确定退出这个小组？')) return;
+  doLeaveGroup(groupId);
+}
+
+async function doLeaveGroup(groupId) {
+  try {
+    const resp = await fetch('/group/leave', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ group_id: groupId, user_id: getUserId() }),
+    });
+    const data = await resp.json();
+    if (data.success) {
+      alert('已退出');
+      loadMyGroups();
+    } else {
+      alert(data.error || '退出失败');
+    }
+  } catch(e) { alert('退出失败: ' + e.message); }
+}
+
+async function dissolveGroup(groupId) {
+  if (!confirm('确定解散这个小组？此操作不可恢复并会删除所有数据和比赛！')) return;
+  try {
+    const resp = await fetch('/group/dissolve', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ group_id: groupId, user_id: getUserId() }),
+    });
+    const data = await resp.json();
+    if (data.success) {
+      alert('小组已解散');
+      loadMyGroups();
+    } else {
+      alert(data.error || '解散失败');
+    }
+  } catch(e) { alert('解散失败: ' + e.message); }
+}
+
+// ==================== 小组邀请功能 ====================
+
+async function loadPendingGroupInvites() {
+  try {
+    const resp = await fetch('/group/invites/pending/' + getUserId());
+    const data = await resp.json();
+    if (!data.success) return [];
+    const invites = data.invites || [];
+    // 在小组 Tab 上显示红点角标
+    const tab = document.querySelector('.tab[data-tab="groups"]');
+    if (tab) {
+      let badgeEl = tab.querySelector('.invite-badge');
+      if (invites.length > 0) {
+        if (!badgeEl) {
+          badgeEl = document.createElement('span');
+          badgeEl.className = 'invite-badge';
+          badgeEl.style.cssText = 'background:#ef4444;color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;margin-left:4px;font-weight:600';
+          tab.appendChild(badgeEl);
+        }
+        badgeEl.textContent = invites.length;
+      } else if (badgeEl) {
+        badgeEl.remove();
+      }
+    }
+    return invites;
+  } catch(e) { return []; }
+}
+
+function showInviteMemberForm(groupId) {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:16px;padding:28px;max-width:400px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,0.15)">
+      <h3 style="margin-bottom:20px">👋 邀请成员</h3>
+      <div style="margin-bottom:14px">
+        <label style="font-size:13px;font-weight:600;color:#333">输入用户ID</label>
+        <input id="inviteUserId" type="text" placeholder="例如: user_002" style="width:100%;padding:10px 14px;border:2px solid #e0e0e0;border-radius:10px;font-size:14px;margin-top:4px;outline:none">
+      </div>
+      <button onclick="doInviteToGroup(${groupId})" style="width:100%;padding:12px;background:linear-gradient(135deg,#0ea5e9,#6366f1);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer">📩 发送邀请</button>
+      <button onclick="this.closest('[style]').remove()" style="width:100%;padding:10px;margin-top:8px;background:#f3f4f6;color:#666;border:none;border-radius:10px;font-size:14px;cursor:pointer">取消</button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  setTimeout(() => document.getElementById('inviteUserId')?.focus(), 100);
+}
+
+async function doInviteToGroup(groupId) {
+  const userId = document.getElementById('inviteUserId')?.value.trim();
+  if (!userId) { alert('请输入用户ID'); return; }
+  try {
+    const resp = await fetch('/group/invite', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ group_id: groupId, inviter_id: getUserId(), invitee_id: userId }),
+    });
+    const data = await resp.json();
+    if (data.success) {
+      alert('✅ 邀请已发送');
+      document.querySelectorAll('[style]').forEach(el => { if (el.style.zIndex === '2000') el.remove(); });
+    } else {
+      alert(data.error || '邀请失败');
+    }
+  } catch(e) { alert('邀请失败: ' + e.message); }
+}
+
+function showPendingGroupInvites() {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+  const body = document.createElement('div');
+  body.style.cssText = 'background:#fff;border-radius:16px;padding:28px;max-width:500px;width:100%;max-height:70vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,0.15)';
+  body.innerHTML = '<div style="text-align:center;padding:30px"><div class="spinner-sm"></div></div>';
+  overlay.appendChild(body);
+  document.body.appendChild(overlay);
+
+  fetch('/group/invites/pending/' + getUserId()).then(r => r.json()).then(data => {
+    const invites = data.success ? (data.invites || []) : [];
+    if (invites.length === 0) {
+      body.innerHTML = '<h3 style="margin-bottom:16px">📩 小组邀请</h3><div style="text-align:center;color:#aaa;padding:30px">暂无待处理的邀请</div><button onclick="this.closest(\'[style]\').remove()" style="width:100%;padding:10px;background:#f3f4f6;color:#666;border:none;border-radius:10px;font-size:14px;cursor:pointer">关闭</button>';
+      return;
+    }
+    let html = '<h3 style="margin-bottom:16px">📩 小组邀请 (' + invites.length + ')</h3>';
+    invites.forEach(inv => {
+      html += `<div style="background:#fefce8;border:1px solid #fde68a;border-radius:12px;padding:16px;margin-bottom:10px">
+        <div style="font-size:14px;font-weight:600">🔒 ${escapeHtml(inv.group_name)}</div>
+        <div style="font-size:12px;color:#888">邀请人: ${escapeHtml(inv.inviter_id)} · ${inv.member_count || 0} 人</div>
+        <div style="margin-top:10px;display:flex;gap:8px">
+          <button onclick="respondGroupInvite(${inv.id}, true)" style="padding:6px 16px;background:#22c55e;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600">✅ 接受</button>
+          <button onclick="respondGroupInvite(${inv.id}, false)" style="padding:6px 16px;background:#f3f4f6;color:#666;border:1px solid #ddd;border-radius:8px;cursor:pointer;font-size:12px">❌ 拒绝</button>
+        </div>
+      </div>`;
+    });
+    html += '<button onclick="this.closest(\'[style]\').remove();loadMyGroups()" style="width:100%;padding:10px;background:#f3f4f6;color:#666;border:none;border-radius:10px;font-size:14px;cursor:pointer">关闭</button>';
+    body.innerHTML = html;
+  }).catch(() => {
+    body.innerHTML = '<div style="text-align:center;color:#e74c3c;padding:30px">加载失败</div>';
+  });
+}
+
+async function respondGroupInvite(invitationId, accept) {
+  try {
+    const resp = await fetch('/group/invite/respond', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ invitation_id: invitationId, invitee_id: getUserId(), accept }),
+    });
+    const data = await resp.json();
+    if (data.success) {
+      alert(accept ? '✅ 已加入小组' : '已拒绝');
+      // 关闭邀请弹窗
+      document.querySelectorAll('[style]').forEach(el => { if (el.style.zIndex === '2000') el.remove(); });
+      // 清除 badge 并刷新邀请状态
+      const badge = document.querySelector('.tab[data-tab="groups"] .invite-badge');
+      if (badge) badge.remove();
+      // 刷新小组列表（显示新加入的组 + 剩余邀请通知）
+      loadMyGroups();
+    } else {
+      alert(data.error || '操作失败');
+    }
+  } catch(e) { alert('操作失败: ' + e.message); }
+}
+
+// ==================== 比赛功能 ====================
+
+function showCreateCompetitionForm(groupId) {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+  // 默认开始时间为当前时间 + 5分钟
+  const defaultStart = new Date(Date.now() + 5*60000 + 60000 - (Date.now() % 60000)).toISOString().slice(0,16);
+  const defaultEnd = new Date(Date.now() + 2*3600000 + 60000 - (Date.now() % 60000)).toISOString().slice(0,16);
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:16px;padding:28px;max-width:500px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,0.15)">
+      <h3 style="margin-bottom:20px">🏆 发布比赛</h3>
+      <div style="margin-bottom:14px">
+        <label style="font-size:13px;font-weight:600;color:#333">比赛名称 *</label>
+        <input id="compTitleInput" type="text" placeholder="例如：算法挑战赛" style="width:100%;padding:10px 14px;border:2px solid #e0e0e0;border-radius:10px;font-size:14px;margin-top:4px;outline:none">
+      </div>
+      <div style="margin-bottom:14px">
+        <label style="font-size:13px;font-weight:600;color:#333">比赛描述</label>
+        <textarea id="compDescInput" placeholder="描述一下比赛内容..." style="width:100%;padding:10px 14px;border:2px solid #e0e0e0;border-radius:10px;font-size:14px;margin-top:4px;outline:none;min-height:60px;resize:vertical"></textarea>
+      </div>
+      <div style="margin-bottom:14px">
+        <label style="font-size:13px;font-weight:600;color:#333">比赛主题（用于生成赛题）</label>
+        <textarea id="compTopicInput" placeholder="输入比赛主题/知识点，例如：动态规划、字符串处理、图算法..." style="width:100%;padding:10px 14px;border:2px solid #e0e0e0;border-radius:10px;font-size:14px;margin-top:4px;outline:none;min-height:60px;resize:vertical"></textarea>
+      </div>
+      <div style="margin-bottom:14px">
+        <label style="font-size:13px;font-weight:600;color:#333">题目数量</label>
+        <input id="compProblemCount" type="number" value="3" min="1" max="20" style="width:100%;padding:10px 14px;border:2px solid #e0e0e0;border-radius:10px;font-size:14px;margin-top:4px;outline:none">
+      </div>
+      <div style="display:flex;gap:12px;margin-bottom:14px">
+        <div style="flex:1">
+          <label style="font-size:13px;font-weight:600;color:#333">开始时间</label>
+          <input id="compStartAt" type="datetime-local" value="${defaultStart}" onchange="updateEndTime()" style="width:100%;padding:10px 14px;border:2px solid #e0e0e0;border-radius:10px;font-size:14px;margin-top:4px;outline:none">
+        </div>
+        <div style="flex:1">
+          <label style="font-size:13px;font-weight:600;color:#333">结束时间</label>
+          <input id="compEndAt" type="datetime-local" value="${defaultEnd}" style="width:100%;padding:10px 14px;border:2px solid #e0e0e0;border-radius:10px;font-size:14px;margin-top:4px;outline:none">
+        </div>
+      </div>
+      <button onclick="doCreateCompetition(${groupId})" style="width:100%;padding:12px;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer">🚀 创建并生成赛题</button>
+      <button onclick="this.closest('[style]').remove()" style="width:100%;padding:10px;margin-top:8px;background:#f3f4f6;color:#666;border:none;border-radius:10px;font-size:14px;cursor:pointer">取消</button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+}
+
+async function doCreateCompetition(groupId) {
+  const title = document.getElementById('compTitleInput')?.value.trim();
+  if (!title) { alert('请输入比赛名称'); return; }
+  const desc = document.getElementById('compDescInput')?.value.trim() || '';
+  const topic = document.getElementById('compTopicInput')?.value.trim() || '编程算法';
+  const countStr = document.getElementById('compProblemCount')?.value.trim();
+  const problemCount = parseInt(countStr);
+  if (!countStr || isNaN(problemCount) || problemCount < 1) {
+    alert('题目数量必须是一个大于 0 的整数'); return;
+  }
+  const startAt = document.getElementById('compStartAt')?.value;
+  const endAt = document.getElementById('compEndAt')?.value;
+  const startAtISO = startAt ? new Date(startAt).toISOString() : null;
+  const endAtISO = endAt ? new Date(endAt).toISOString() : null;
+
+  // 按钮加载状态
+  const btn = document.querySelector('[onclick*="doCreateCompetition"]');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-sm"></span> 创建中...'; }
+
+  try {
+    // 1. 创建比赛
+    const resp1 = await fetch('/group/competition/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ group_id: groupId, title, created_by: getUserId(), description: desc, problem_count: problemCount, start_at: startAtISO, end_at: endAtISO }),
+    });
+    const data1 = await resp1.json();
+    if (!data1.success) { alert(data1.error); if (btn) { btn.disabled = false; btn.innerHTML = '🚀 创建并生成赛题'; } return; }
+    const compId = data1.competition_id;
+
+    // 2. 生成赛题
+    if (btn) btn.innerHTML = '<span class="spinner-sm"></span> 生成赛题中...';
+    const resp2 = await fetch('/group/competition/generate-problems', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ competition_id: compId, user_id: getUserId(), input_text: topic, problem_count: problemCount }),
+    });
+    const data2 = await resp2.json();
+    if (!data2.success) { alert('赛题生成失败: ' + (data2.error || '')); if (btn) { btn.disabled = false; btn.innerHTML = '🚀 创建并生成赛题'; } return; }
+
+    alert(`✅ 比赛「${title}」创建成功！\n已生成 ${data2.count || problemCount} 道赛题。\n\n点击「开始比赛」即可开启答题。`);
+    document.querySelectorAll('[style]').forEach(el => { if (el.style.zIndex === '2000') el.remove(); });
+    openGroupDetail(groupId);
+  } catch (e) { alert('创建失败: ' + e.message); if (btn) { btn.disabled = false; btn.innerHTML = '🚀 创建并生成赛题'; } }
+}
+
+// ==================== 内联保存比赛信息 ====================
+
+async function doInlineUpdate(compId) {
+  const title = document.getElementById('inlineCompTitle')?.value.trim();
+  if (!title) { alert('请输入比赛名称'); return; }
+  const desc = document.getElementById('inlineCompDesc')?.value.trim() || '';
+  const startAt = document.getElementById('inlineCompStart')?.value;
+  const endAt = document.getElementById('inlineCompEnd')?.value;
+  const startAtISO = startAt ? new Date(startAt).toISOString() : null;
+  const endAtISO = endAt ? new Date(endAt).toISOString() : null;
+
+  const btn = document.querySelector('[onclick*="doInlineUpdate"]');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-sm"></span> 保存中...'; }
+
+  try {
+    const resp = await fetch('/group/competition/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        competition_id: compId,
+        user_id: getUserId(),
+        title,
+        description: desc,
+        start_at: startAtISO,
+        end_at: endAtISO,
+      }),
+    });
+    const data = await resp.json();
+    if (data.success) {
+      openCompetition(compId);  // 刷新
+    } else {
+      alert(data.error || '更新失败');
+      if (btn) { btn.disabled = false; btn.innerHTML = '💾 保存'; }
+    }
+  } catch (e) {
+    alert('更新失败: ' + e.message);
+    if (btn) { btn.disabled = false; btn.innerHTML = '💾 保存'; }
+  }
+}
+
+async function openCompetition(competitionId) {
+  // 进行中的比赛重定向到全屏竞技场
+  const checkResp = await fetch('/group/competition/detail/' + competitionId);
+  const checkData = await checkResp.json();
+  if (checkData.success && checkData.competition) {
+    if (checkData.competition.status === 'running') {
+      openCompetitionArena(competitionId);
+      return;
+    }
+    if (checkData.competition.status === 'finished') {
+      openCompetitionArena(competitionId);
+      return;
+    }
+  }
+
+  _currentGroupView = 'competition';
+  const content = document.getElementById('groupContent');
+  if (_rankPollTimers[competitionId]) clearInterval(_rankPollTimers[competitionId]);
+  try {
+    const resp = await fetch('/group/competition/detail/' + competitionId);
+    const data = await resp.json();
+    if (!data.success || !data.competition) { alert('比赛不存在'); return; }
+    const comp = data.competition;
+    const isOwner = comp.created_by === getUserId();
+    const isRunning = comp.status === 'running';
+    const isPending = comp.status === 'pending';
+
+    // 题目渲染：待开始显示编辑按钮，进行中显示提交区
+    let problemsHtml = '';
+    (comp.problems || []).forEach(p => {
+      const diffClass = p.difficulty === '简单' ? 'easy' : p.difficulty === '困难' ? 'hard' : 'medium';
+      problemsHtml += `<div class="problem-card" id="prob_${p.id}">
+        <div class="p-title">
+          <span class="prob-title-display">${escapeHtml(p.title)}</span>
+          <span class="p-diff ${diffClass}">${escapeHtml(p.difficulty)}</span>
+          ${isOwner && isPending ? `
+            <span style="float:right;font-size:12px;color:#888">${p.score}分</span>
+          ` : ''}
+        </div>
+        <div class="p-desc prob-desc-display">${escapeHtml(p.description)}</div>
+        ${!isOwner || !isPending ? `<div style="margin-top:8px;color:#888;font-size:12px">分值: ${p.score} 分</div>` : ''}
+        ${isOwner && isPending ? `
+          <div style="margin-top:10px;display:flex;gap:6px">
+            <button onclick="editProblemInline(${comp.id},${p.id})" style="padding:4px 12px;background:#f0f9ff;color:#0ea5e9;border:1px solid #bae6fd;border-radius:6px;cursor:pointer;font-size:11px">✏️ 编辑</button>
+            <button onclick="deleteProblem(${comp.id},${p.id})" style="padding:4px 12px;background:#fef2f2;color:#ef4444;border:1px solid #fecaca;border-radius:6px;cursor:pointer;font-size:11px">🗑️ 删除</button>
+          </div>
+        ` : ''}
+        ${isRunning ? `
+          <div style="margin-top:10px">
+            <textarea id="answer_${p.id}" placeholder="输入你的答案/代码..." style="width:100%;padding:10px 14px;border:2px solid #e0e0e0;border-radius:10px;font-size:13px;font-family:monospace;min-height:80px;outline:none;resize:vertical"></textarea>
+            <button onclick="submitAnswer(${comp.id},${p.id})" style="margin-top:6px;padding:8px 20px;background:#22c55e;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600">📤 提交</button>
+          </div>
+        ` : ''}
+      </div>`;
+    });
+
+    // 排行区域
+    const rankHtml = `<div class="leaderboard-container" id="leaderboard_${competitionId}">
+      <div class="leaderboard-title"><span class="live-dot"></span> 实时排行 (每5秒更新)</div>
+      <div style="text-align:center;color:#64748b;padding:20px">加载排行中...</div>
+    </div>`;
+
+    // 内联编辑：待开始且为创建者时，比赛信息直接可编辑
+    function toLocalStr(isoStr) {
+      if (!isoStr) return '';
+      const d = new Date(isoStr);
+      return d.getFullYear() + '-' +
+        String(d.getMonth()+1).padStart(2,'0') + '-' +
+        String(d.getDate()).padStart(2,'0') + 'T' +
+        String(d.getHours()).padStart(2,'0') + ':' +
+        String(d.getMinutes()).padStart(2,'0');
+    }
+    const canEdit = isOwner && isPending;
+
+    content.innerHTML = `
+      <div style="margin-bottom:16px">
+        <button onclick="openGroupDetail(${comp.group_id})" style="background:none;border:none;color:#667eea;cursor:pointer;font-size:13px">← 返回小组</button>
+      </div>
+      <div style="background:#fff;border-radius:12px;border:1px solid #e0e0e0;padding:20px;margin-bottom:16px">
+        <div style="display:flex;justify-content:space-between;align-items:start">
+          <div style="flex:1">
+            ${canEdit ? `
+              <input id="inlineCompTitle" type="text" value="${escapeHtml(comp.title)}" style="width:100%;font-size:18px;font-weight:700;padding:8px 12px;border:2px solid #e0e0e0;border-radius:8px;outline:none;margin-bottom:6px">
+              <textarea id="inlineCompDesc" style="width:100%;font-size:13px;color:#555;padding:8px 12px;border:2px solid #e0e0e0;border-radius:8px;outline:none;min-height:50px;resize:vertical;margin-bottom:6px">${escapeHtml(comp.description || '')}</textarea>
+              <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+                <span style="font-size:12px;color:#888">状态: <span class="comp-status ${comp.status}">待开始</span></span>
+                <input id="inlineCompStart" type="datetime-local" value="${toLocalStr(comp.start_at)}" style="padding:6px 10px;border:2px solid #e0e0e0;border-radius:6px;font-size:12px;outline:none">
+                <span style="font-size:12px;color:#888">~</span>
+                <input id="inlineCompEnd" type="datetime-local" value="${toLocalStr(comp.end_at)}" style="padding:6px 10px;border:2px solid #e0e0e0;border-radius:6px;font-size:12px;outline:none">
+              </div>
+            ` : `
+              <div style="font-size:18px;font-weight:700">🏆 ${escapeHtml(comp.title)}</div>
+              <div style="font-size:13px;color:#888;margin-top:4px">${escapeHtml(comp.description || '')}</div>
+              <div style="font-size:12px;color:#888;margin-top:4px">
+                状态: <span class="comp-status ${comp.status}">${isPending ? '待开始' : isRunning ? '🟢 进行中' : '已结束'}</span>
+                ${comp.start_at ? ' · ' + formatLocalTime(comp.start_at) : ''}
+                ${comp.end_at ? ' ~ ' + formatLocalTime(comp.end_at) : ''}
+              </div>
+            `}
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-left:12px">
+            ${canEdit ? `<button onclick="doInlineUpdate(${comp.id})" style="padding:8px 20px;background:#22c55e;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600">💾 保存</button>` : ''}
+            ${isOwner && isRunning ? `<button onclick="endCompetition(${comp.id})" style="padding:8px 20px;background:#ef4444;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600">⏹️ 结束比赛</button>` : ''}
+          </div>
+        </div>
+        ${canEdit ? `
+          <div style="margin-top:14px;padding-top:14px;border-top:1px dashed #e0e0e0;display:flex;gap:8px;flex-wrap:wrap">
+            <button onclick="showGenerateProblemsForm(${comp.id})" style="padding:6px 14px;background:#6366f1;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600">🤖 AI 生成赛题</button>
+            <button onclick="addProblemManually(${comp.id})" style="padding:6px 14px;background:#0ea5e9;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600">✏️ 手动添加题目</button>
+          </div>
+        ` : ''}
+      </div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap">
+        <div style="flex:1;min-width:350px">
+          <div style="font-size:14px;font-weight:600;margin-bottom:10px">📝 题目 (${(comp.problems || []).length}道)</div>
+          ${problemsHtml || '<div class="empty-state"><p>暂无题目</p></div>'}
+        </div>
+        <div style="flex:1;min-width:320px">
+          ${(isRunning || comp.status === 'finished') ? rankHtml : '<div class="empty-state"><p>比赛开始后将显示排行榜</p></div>'}
+        </div>
+      </div>
+    `;
+
+    if (isRunning || comp.status === 'finished') {
+      loadRanking(competitionId);
+      if (isRunning) startRankPolling(competitionId);
+    }
+  } catch (e) {
+    content.innerHTML = `<div class="empty-state"><p style="color:#e74c3c">${escapeHtml(e.message)}</p></div>`;
+  }
+}
+
+async function startCompetition(competitionId) {
+  try {
+    const resp = await fetch('/group/competition/start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ group_id: competitionId, user_id: getUserId() }),
+    });
+    const data = await resp.json();
+    if (data.success) {
+      alert('✅ 比赛已开始！');
+      openCompetition(competitionId);
+    } else {
+      alert(data.error || '开始失败');
+    }
+  } catch(e) { alert('开始失败: ' + e.message); }
+}
+
+async function endCompetition(competitionId) {
+  if (!confirm('确定结束比赛？')) return;
+  try {
+    const resp = await fetch('/group/competition/end', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ group_id: competitionId, user_id: getUserId() }),
+    });
+    const data = await resp.json();
+    if (data.success) {
+      alert('比赛已结束');
+      if (_rankPollTimers[competitionId]) clearInterval(_rankPollTimers[competitionId]);
+      openCompetition(competitionId);
+    } else {
+      alert(data.error || '结束失败');
+    }
+  } catch(e) { alert('结束失败: ' + e.message); }
+}
+
+async function deleteCompetitionFromCard(compId, groupId) {
+  if (!confirm('确定删除这个比赛？不可恢复！')) return;
+  try {
+    const resp = await fetch('/group/competition/delete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ group_id: compId, user_id: getUserId() }),
+    });
+    const data = await resp.json();
+    if (data.success) {
+      openGroupDetail(groupId);
+    } else {
+      alert(data.error || '删除失败');
+    }
+  } catch(e) { alert('删除失败: ' + e.message); }
+}
+
+// ==================== 全屏比赛竞技场 ====================
+
+let _arenaData = null;
+let _arenaEditor = null;
+let _arenaCurrentIdx = 0;
+let _arenaProblemStatus = {};
+let _arenaRankTimer = null;
+
+async function openCompetitionArena(competitionId) {
+  try {
+    const resp = await fetch('/group/competition/detail/' + competitionId);
+    const data = await resp.json();
+    if (!data.success || !data.competition) { alert('比赛不存在'); return; }
+    const comp = data.competition;
+    _arenaData = comp;
+    _arenaCurrentIdx = 0;
+
+    // 构建覆盖层
+    const overlay = document.createElement('div');
+    overlay.id = 'arenaOverlay';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:10000;background:#0f172a;display:flex;flex-direction:column;';
+    overlay.innerHTML = `
+      <!-- 顶栏 -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:#1e293b;border-bottom:1px solid #334155;flex-shrink:0">
+        <div style="display:flex;align-items:center;gap:12px">
+          <button onclick="closeCompetitionArena()" style="background:none;border:none;color:#94a3b8;cursor:pointer;font-size:14px">✕ 退出</button>
+          <span style="color:#e2e8f0;font-weight:600">🏆 ${escapeHtml(comp.title)}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px">
+          <span id="arenaTimer" style="color:#22c55e;font-size:14px;font-weight:600;font-family:monospace"></span>
+          <span id="arenaSolvedCount" style="color:#94a3b8;font-size:13px">已通过: 0/0</span>
+        </div>
+      </div>
+      <!-- 主体 -->
+      <div style="display:flex;flex:1;overflow:hidden">
+        <!-- 左侧: 题目导航 -->
+        <div style="width:200px;background:#1e293b;border-right:1px solid #334155;overflow-y:auto;flex-shrink:0;padding:12px" id="arenaNav"></div>
+        <!-- 中间: 题目 + 编辑器 -->
+        <div style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+          <div id="arenaProblemArea" style="flex:1;overflow-y:auto;padding:20px"></div>
+          <div style="border-top:1px solid #334155;background:#1e293b;padding:12px 20px;flex-shrink:0">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+              <select id="arenaLang" style="padding:6px 10px;border:1px solid #334155;border-radius:6px;background:#0f172a;color:#e2e8f0;font-size:13px;cursor:pointer">
+                <option value="python">🐍 Python</option>
+                <option value="cpp">⚡ C++</option>
+                <option value="java">☕ Java</option>
+                <option value="javascript">📜 JavaScript</option>
+                <option value="c">🔧 C</option>
+              </select>
+              <div style="flex:1"></div>
+              <button onclick="arenaPrevProblem()" style="padding:6px 16px;background:#334155;color:#e2e8f0;border:none;border-radius:6px;cursor:pointer;font-size:13px">◀ 上一题</button>
+              <button onclick="arenaSubmit()" style="padding:6px 20px;background:#22c55e;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600">🚀 提交</button>
+              <button onclick="arenaNextProblem()" style="padding:6px 16px;background:#334155;color:#e2e8f0;border:none;border-radius:6px;cursor:pointer;font-size:13px">下一题 ▶</button>
+            </div>
+            <textarea id="arenaCodeEditor" placeholder="# 在此编写代码..." style="width:100%;height:200px;background:#0f172a;color:#e2e8f0;border:1px solid #334155;border-radius:8px;padding:12px;font-family:monospace;font-size:13px;resize:none"></textarea>
+          </div>
+          <!-- 判分结果 -->
+          <div id="arenaJudgeResult" style="display:none;padding:12px 20px;border-top:1px solid #334155;flex-shrink:0"></div>
+        </div>
+        <!-- 右侧: 排行 -->
+        <div style="width:300px;background:#1e293b;border-left:1px solid #334155;overflow-y:auto;flex-shrink:0;padding:12px" id="arenaRanking"></div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    // 初始化 CodeMirror
+    _arenaEditor = CodeMirror.fromTextArea(document.getElementById('arenaCodeEditor'), {
+      mode: 'python',
+      theme: 'monokai',
+      lineNumbers: true,
+      styleActiveLine: true,
+      autoCloseBrackets: true,
+      lineWrapping: true,
+      indentUnit: 4,
+      tabSize: 4,
+      extraKeys: {"Tab": "indentMore"},
+    });
+    _arenaEditor.setSize(null, 200);
+
+    // 语言切换
+    document.getElementById('arenaLang').onchange = function() {
+      const modeMap = { python: 'python', cpp: 'text/x-c++src', java: 'text/x-java', javascript: 'javascript', c: 'text/x-csrc' };
+      _arenaEditor.setOption('mode', modeMap[this.value] || 'python');
+    };
+
+    // 渲染左侧导航
+    renderArenaNav();
+    // 显示第一题
+    arenaShowProblem(0);
+    // 加载排行
+    if (comp.status === 'running' || comp.status === 'finished') {
+      arenaLoadRanking();
+      if (comp.status === 'running') {
+        _arenaRankTimer = setInterval(arenaLoadRanking, 5000);
+        arenaStartTimer();
+      }
+    }
+  } catch (e) { alert('加载失败: ' + e.message); }
+}
+
+function closeCompetitionArena() {
+  if (_arenaRankTimer) clearInterval(_arenaRankTimer);
+  _arenaRankTimer = null;
+  const overlay = document.getElementById('arenaOverlay');
+  if (overlay) overlay.remove();
+  _arenaEditor = null;
+  _arenaData = null;
+}
+
+function renderArenaNav() {
+  const nav = document.getElementById('arenaNav');
+  if (!nav || !_arenaData) return;
+  const problems = _arenaData.problems || [];
+  let html = '<div style="font-size:13px;font-weight:600;color:#94a3b8;margin-bottom:10px">📋 题目列表</div>';
+  problems.forEach((p, idx) => {
+    const status = _arenaProblemStatus[p.id];
+    let icon = '○', color = '#64748b';
+    if (status === 'accepted') { icon = '●'; color = '#22c55e'; }
+    else if (status === 'wrong') { icon = '●'; color = '#ef4444'; }
+    else if (status === 'partial') { icon = '●'; color = '#f59e0b'; }
+    const isActive = idx === _arenaCurrentIdx;
+    html += `<div onclick="arenaShowProblem(${idx})" style="padding:8px 12px;border-radius:8px;cursor:pointer;margin-bottom:4px;background:${isActive ? '#334155' : 'transparent'};border-left:3px solid ${isActive ? '#6366f1' : 'transparent'}">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="color:${color};font-size:16px">${icon}</span>
+        <span style="color:#e2e8f0;font-size:13px">${escapeHtml(_getLetter(idx))}. ${escapeHtml(p.title)}</span>
+      </div>
+      ${status ? `<div style="font-size:11px;color:${color};margin-top:2px;margin-left:24px">${status === 'accepted' ? '✅ 已通过' : status === 'wrong' ? '❌ 未通过' : '⚠️ 部分通过'}</div>` : ''}
+    </div>`;
+  });
+  // 底部排行缩略
+  html += '<div style="margin-top:16px;padding-top:12px;border-top:1px solid #334155"><div style="font-size:12px;font-weight:600;color:#94a3b8;margin-bottom:8px">🏆 排行</div><div id="arenaMiniRank"></div></div>';
+  nav.innerHTML = html;
+}
+
+function arenaShowProblem(idx) {
+  if (!_arenaData) return;
+  const problems = _arenaData.problems || [];
+  if (idx < 0 || idx >= problems.length) return;
+  _arenaCurrentIdx = idx;
+  const p = problems[idx];
+  const diffClass = p.difficulty === '简单' ? 'easy' : p.difficulty === '困难' ? 'hard' : 'medium';
+
+  // 更新题目描述区
+  const area = document.getElementById('arenaProblemArea');
+  area.innerHTML = `
+    <div style="background:#1e293b;border-radius:12px;padding:20px;border:1px solid #334155">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div style="font-size:18px;font-weight:700;color:#e2e8f0">${_getLetter(idx)}. ${escapeHtml(p.title)}</div>
+        <span class="p-diff ${diffClass}" style="font-size:12px">${escapeHtml(p.difficulty)} · ${p.score}分</span>
+      </div>
+      <div style="font-size:14px;color:#cbd5e1;line-height:1.8;white-space:pre-wrap">${escapeHtml(p.description)}</div>
+    </div>
+  `;
+
+  // 恢复编辑器内容
+  const savedCode = localStorage.getItem('arena_code_' + _arenaData.id + '_' + p.id) || '';
+  if (_arenaEditor) {
+    _arenaEditor.setValue(savedCode);
+    _arenaEditor.clearHistory();
+  }
+
+  // 更新导航高亮
+  renderArenaNav();
+  updateSolvedCount();
+}
+
+function arenaNextProblem() {
+  const problems = _arenaData ? (_arenaData.problems || []) : [];
+  if (_arenaCurrentIdx < problems.length - 1) arenaShowProblem(_arenaCurrentIdx + 1);
+}
+
+function arenaPrevProblem() {
+  if (_arenaCurrentIdx > 0) arenaShowProblem(_arenaCurrentIdx - 1);
+}
+
+async function arenaSubmit() {
+  if (!_arenaData) return;
+  const problems = _arenaData.problems || [];
+  const p = problems[_arenaCurrentIdx];
+  if (!p || !_arenaEditor) return;
+  const code = _arenaEditor.getValue().trim();
+  if (!code) { alert('请先编写代码'); return; }
+
+  // 保存代码到 localStorage
+  localStorage.setItem('arena_code_' + _arenaData.id + '_' + p.id, code);
+
+  const resultDiv = document.getElementById('arenaJudgeResult');
+  resultDiv.style.display = 'block';
+  resultDiv.innerHTML = '<div style="color:#94a3b8;font-size:13px">⏳ 评判中...</div>';
+
+  try {
+    const resp = await fetch('/group/competition/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ competition_id: _arenaData.id, problem_id: p.id, user_id: getUserId(), answer_text: code }),
+    });
+    const data = await resp.json();
+    if (data.success) {
+      const statusText = data.status === 'accepted' ? '✅ Accepted' : data.status === 'partial' ? '⚠️ Partial' : '❌ Wrong Answer';
+      const passText = `通过: ${data.passed}/${data.total}`;
+      _arenaProblemStatus[p.id] = data.status;
+      resultDiv.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center">
+        <div><span style="font-size:16px;font-weight:700;color:${data.status === 'accepted' ? '#22c55e' : data.status === 'partial' ? '#f59e0b' : '#ef4444'}">${statusText}</span>
+        <span style="color:#94a3b8;font-size:13px;margin-left:12px">得分: ${data.score} · ${passText}</span></div>
+        <button onclick="document.getElementById('arenaJudgeResult').style.display='none'" style="background:none;border:none;color:#94a3b8;cursor:pointer;font-size:12px">关闭</button>
+      </div>`;
+      renderArenaNav();
+      updateSolvedCount();
+      arenaLoadRanking();
+    } else {
+      resultDiv.innerHTML = `<div style="color:#ef4444;font-size:13px">${escapeHtml(data.error || '提交失败')}</div>`;
+    }
+  } catch(e) {
+    resultDiv.innerHTML = `<div style="color:#ef4444;font-size:13px">提交失败: ${escapeHtml(e.message)}</div>`;
+  }
+}
+
+function updateSolvedCount() {
+  const solved = Object.values(_arenaProblemStatus).filter(s => s === 'accepted').length;
+  const total = (_arenaData && _arenaData.problems) ? _arenaData.problems.length : 0;
+  const el = document.getElementById('arenaSolvedCount');
+  if (el) el.textContent = `已通过: ${solved}/${total}`;
+}
+
+function arenaStartTimer() {
+  if (!_arenaData || !_arenaData.end_at) return;
+  const endTime = new Date(_arenaData.end_at).getTime();
+  const timer = setInterval(() => {
+    const now = Date.now();
+    const diff = Math.max(0, endTime - now);
+    const el = document.getElementById('arenaTimer');
+    if (!el) { clearInterval(timer); return; }
+    if (diff <= 0) {
+      el.textContent = '⏱ 已结束';
+      el.style.color = '#ef4444';
+      clearInterval(timer);
+    } else {
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      el.textContent = `⏱ ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    }
+  }, 1000);
+}
+
+async function arenaLoadRanking() {
+  const container = document.getElementById('arenaRanking');
+  if (!container || !_arenaData) return;
+  try {
+    const resp = await fetch('/group/competition/ranking/' + _arenaData.id);
+    const data = await resp.json();
+    if (!data.success || !data.ranking) return;
+    const ranking = data.ranking;
+    const problems = _arenaData.problems || [];
+
+    let html = '<div style="font-size:14px;font-weight:700;color:#e2e8f0;margin-bottom:12px">🏆 实时排行</div>';
+    if (ranking.length === 0) {
+      html += '<div style="color:#64748b;font-size:13px;text-align:center;padding:20px">暂无提交</div>';
+    } else {
+      // 表头
+      html += '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr>';
+      html += '<th style="color:#94a3b8;padding:4px;text-align:center">#</th>';
+      html += '<th style="color:#94a3b8;padding:4px;text-align:left">选手</th>';
+      html += '<th style="color:#94a3b8;padding:4px;text-align:center">得分</th>';
+      problems.forEach((p, i) => {
+        html += `<th style="color:#94a3b8;padding:2px;text-align:center;font-size:11px" title="${escapeHtml(p.title)}">${_getLetter(i)}</th>`;
+      });
+      html += '</tr></thead><tbody>';
+
+      ranking.forEach((r, ri) => {
+        const medal = r.rank === 1 ? '🥇' : r.rank === 2 ? '🥈' : r.rank === 3 ? '🥉' : '';
+        html += `<tr style="border-bottom:1px solid #1e293b">`;
+        html += `<td style="color:#e2e8f0;padding:4px;text-align:center">${medal || r.rank}</td>`;
+        html += `<td style="color:#e2e8f0;padding:4px;text-align:left;font-size:12px">${escapeHtml(r.user_id)}</td>`;
+        html += `<td style="color:#22c55e;padding:4px;text-align:center;font-weight:700">${r.total_score}</td>`;
+        (r.problem_list || []).forEach(pr => {
+          let color = '#334155', text = '-';
+          if (pr.status === 'accepted' && pr.score >= 80) { color = '#22c55e'; text = '✓'; }
+          else if (pr.status === 'partial' || (pr.status === 'accepted' && pr.score < 80)) { color = '#f59e0b'; text = '~'; }
+          else if (pr.status === 'wrong') { color = '#ef4444'; text = '✗'; }
+          const timeStr = pr.time_cost ? formatTime(pr.time_cost) : '';
+          html += `<td style="color:${color};padding:2px;text-align:center;font-size:12px;font-weight:600" title="${pr.score}分 ${timeStr}">${text}</td>`;
+        });
+        // 补全未作答的题目列
+        for (let i = (r.problem_list || []).length; i < problems.length; i++) {
+          html += `<td style="color:#334155;padding:2px;text-align:center;font-size:12px">-</td>`;
+        }
+        html += '</tr>';
+      });
+      html += '</tbody></table>';
+
+      // 图例
+      html += '<div style="margin-top:10px;display:flex;gap:12px;font-size:11px;color:#64748b;flex-wrap:wrap">';
+      html += '<span><span style="color:#22c55e">✓</span> 通过</span>';
+      html += '<span><span style="color:#f59e0b">~</span> 部分</span>';
+      html += '<span><span style="color:#ef4444">✗</span> 错误</span>';
+      html += '<span style="color:#334155">-</span> 未作答</span>';
+      html += '</div>';
+    }
+    container.innerHTML = html;
+
+    // 也更新左侧迷你排行
+    const miniRank = document.getElementById('arenaMiniRank');
+    if (miniRank && ranking.length > 0) {
+      let mhtml = '';
+      ranking.slice(0, 5).forEach(r => {
+        const medal = r.rank === 1 ? '🥇' : r.rank === 2 ? '🥈' : r.rank === 3 ? '🥉' : `${r.rank}.`;
+        mhtml += `<div style="display:flex;justify-content:space-between;font-size:12px;color:#cbd5e1;padding:3px 0">
+          <span>${medal} ${escapeHtml(r.user_id)}</span>
+          <span style="color:#22c55e">${r.total_score}分</span>
+        </div>`;
+      });
+      miniRank.innerHTML = mhtml;
+    }
+  } catch(e) {}
+}
+
+function _getLetter(i) {
+  return String.fromCharCode(65 + i);
+}
+
+function showGenerateProblemsForm(compId) {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:16px;padding:28px;max-width:450px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,0.15)">
+      <h3 style="margin-bottom:16px">🤖 AI 生成赛题</h3>
+      <div style="margin-bottom:14px">
+        <label style="font-size:13px;font-weight:600;color:#333">比赛主题（用于生成赛题）</label>
+        <textarea id="aiTopicInput" placeholder="输入主题，例如：动态规划、字符串处理..." style="width:100%;padding:10px 14px;border:2px solid #e0e0e0;border-radius:10px;font-size:14px;margin-top:4px;outline:none;min-height:60px"></textarea>
+      </div>
+      <div style="margin-bottom:14px">
+        <label style="font-size:13px;font-weight:600;color:#333">题目数量</label>
+        <input id="aiCountInput" type="number" value="3" min="1" max="20" style="width:100%;padding:10px 14px;border:2px solid #e0e0e0;border-radius:10px;font-size:14px;margin-top:4px;outline:none">
+      </div>
+      <div style="font-size:12px;color:#888;margin-bottom:14px">⚠️ 将会覆盖当前所有赛题</div>
+      <button onclick="doGenerateProblems(${compId})" style="width:100%;padding:12px;background:linear-gradient(135deg,#6366f1,#4f46e5);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer">🚀 生成</button>
+      <button onclick="this.closest('[style]').remove()" style="width:100%;padding:10px;margin-top:8px;background:#f3f4f6;color:#666;border:none;border-radius:10px;font-size:14px;cursor:pointer">取消</button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+}
+
+async function doGenerateProblems(compId) {
+  const topic = document.getElementById('aiTopicInput')?.value.trim() || '编程算法';
+  const count = parseInt(document.getElementById('aiCountInput')?.value || '3');
+  // 按钮加载状态
+  const btn = document.querySelector('[onclick*="doGenerateProblems"]');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-sm"></span> 生成中...'; }
+  try {
+    const resp = await fetch('/group/competition/generate-problems', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ competition_id: compId, user_id: getUserId(), input_text: topic, problem_count: count }),
+    });
+    const data = await resp.json();
+    if (data.success) {
+      alert(`✅ 已生成 ${data.count} 道赛题`);
+      document.querySelectorAll('[style]').forEach(el => { if (el.style.zIndex === '2000') el.remove(); });
+      openCompetition(compId);
+    } else {
+      alert(data.error || '生成失败');
+      if (btn) { btn.disabled = false; btn.innerHTML = '🚀 生成'; }
+    }
+  } catch(e) { 
+    alert('生成失败: ' + e.message); 
+    if (btn) { btn.disabled = false; btn.innerHTML = '🚀 生成'; }
+  }
+}
+
+function editProblemInline(compId, probId) {
+  const card = document.getElementById('prob_' + probId);
+  if (!card) return;
+  const titleEl = card.querySelector('.prob-title-display');
+  const descEl = card.querySelector('.prob-desc-display');
+  if (!titleEl || !descEl) return;
+  const oldTitle = titleEl.textContent;
+  const oldDesc = descEl.textContent;
+  const oldDiff = card.querySelector('.p-diff')?.textContent || '中等';
+  titleEl.innerHTML = `<input id="edit_title_${probId}" type="text" value="${escapeHtml(oldTitle)}" style="width:80%;padding:6px 10px;border:2px solid #0ea5e9;border-radius:6px;font-size:13px;outline:none">`;
+  descEl.innerHTML = `<textarea id="edit_desc_${probId}" style="width:100%;padding:6px 10px;border:2px solid #0ea5e9;border-radius:6px;font-size:13px;outline:none;min-height:60px">${escapeHtml(oldDesc)}</textarea>`;
+  const actionsDiv = card.querySelector('div:last-child');
+  if (actionsDiv) {
+    actionsDiv.innerHTML = `
+      <button onclick="saveProblemEdit(${compId},${probId})" style="padding:4px 12px;background:#22c55e;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:11px">💾 保存</button>
+      <button onclick="openCompetition(${compId})" style="padding:4px 12px;background:#f3f4f6;color:#666;border:1px solid #ddd;border-radius:6px;cursor:pointer;font-size:11px">取消</button>
+    `;
+  }
+}
+
+async function saveProblemEdit(compId, probId) {
+  const newTitle = document.getElementById('edit_title_' + probId)?.value.trim();
+  const newDesc = document.getElementById('edit_desc_' + probId)?.value.trim();
+  if (!newTitle || !newDesc) { alert('标题和描述不能为空'); return; }
+  try {
+    // 重新获取当前比赛的所有题目，编辑后整体保存
+    const detailResp = await fetch('/group/competition/detail/' + compId);
+    const detailData = await detailResp.json();
+    if (!detailData.success) { alert('获取赛题失败'); return; }
+    const problems = (detailData.competition.problems || []).map(p => {
+      if (p.id === probId) {
+        return { title: newTitle, description: newDesc, difficulty: p.difficulty, score: p.score };
+      }
+      return { title: p.title, description: p.description, difficulty: p.difficulty, score: p.score };
+    });
+    const resp = await fetch('/group/competition/save-problems', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ competition_id: compId, user_id: getUserId(), problems }),
+    });
+    const data = await resp.json();
+    if (data.success) {
+      openCompetition(compId);
+    } else {
+      alert(data.error || '保存失败');
+    }
+  } catch(e) { alert('保存失败: ' + e.message); }
+}
+
+async function deleteProblem(compId, probId) {
+  if (!confirm('确定删除这道题？')) return;
+  try {
+    const detailResp = await fetch('/group/competition/detail/' + compId);
+    const detailData = await detailResp.json();
+    if (!detailData.success) { alert('获取赛题失败'); return; }
+    const problems = (detailData.competition.problems || [])
+      .filter(p => p.id !== probId)
+      .map(p => ({ title: p.title, description: p.description, difficulty: p.difficulty, score: p.score }));
+    const resp = await fetch('/group/competition/save-problems', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ competition_id: compId, user_id: getUserId(), problems }),
+    });
+    const data = await resp.json();
+    if (data.success) {
+      openCompetition(compId);
+    } else {
+      alert(data.error || '删除失败');
+    }
+  } catch(e) { alert('删除失败: ' + e.message); }
+}
+
+function addProblemManually(compId) {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:16px;padding:28px;max-width:500px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,0.15)">
+      <h3 style="margin-bottom:16px">✏️ 添加题目</h3>
+      <div style="margin-bottom:12px">
+        <label style="font-size:13px;font-weight:600;color:#333">题目名称 *</label>
+        <input id="manualTitle" type="text" placeholder="例如：两数之和" style="width:100%;padding:10px 14px;border:2px solid #e0e0e0;border-radius:10px;font-size:14px;margin-top:4px;outline:none">
+      </div>
+      <div style="margin-bottom:12px">
+        <label style="font-size:13px;font-weight:600;color:#333">题目描述 *</label>
+        <textarea id="manualDesc" placeholder="描述题目要求、输入输出格式和示例..." style="width:100%;padding:10px 14px;border:2px solid #e0e0e0;border-radius:10px;font-size:14px;margin-top:4px;outline:none;min-height:100px;resize:vertical"></textarea>
+      </div>
+      <div style="display:flex;gap:12px;margin-bottom:12px">
+        <div style="flex:1">
+          <label style="font-size:13px;font-weight:600;color:#333">难度</label>
+          <select id="manualDiff" style="width:100%;padding:10px 14px;border:2px solid #e0e0e0;border-radius:10px;font-size:14px;margin-top:4px;outline:none">
+            <option value="简单">简单</option>
+            <option value="中等" selected>中等</option>
+            <option value="困难">困难</option>
+          </select>
+        </div>
+        <div style="flex:1">
+          <label style="font-size:13px;font-weight:600;color:#333">分值</label>
+          <input id="manualScore" type="number" value="100" min="1" style="width:100%;padding:10px 14px;border:2px solid #e0e0e0;border-radius:10px;font-size:14px;margin-top:4px;outline:none">
+        </div>
+      </div>
+      <button onclick="doAddProblem(${compId})" style="width:100%;padding:12px;background:linear-gradient(135deg,#0ea5e9,#6366f1);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer">✅ 添加</button>
+      <button onclick="this.closest('[style]').remove()" style="width:100%;padding:10px;margin-top:8px;background:#f3f4f6;color:#666;border:none;border-radius:10px;font-size:14px;cursor:pointer">取消</button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+}
+
+async function doAddProblem(compId) {
+  const title = document.getElementById('manualTitle')?.value.trim();
+  const desc = document.getElementById('manualDesc')?.value.trim();
+  if (!title || !desc) { alert('题目名称和描述不能为空'); return; }
+  const difficulty = document.getElementById('manualDiff')?.value || '中等';
+  const score = parseInt(document.getElementById('manualScore')?.value || '100');
+  const btn = document.querySelector('[onclick*="doAddProblem"]');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-sm"></span> 添加中...'; }
+  try {
+    // 追加模式：只发送新题目，replace=false
+    const problems = [{ title, description: desc, difficulty, score }];
+    const resp = await fetch('/group/competition/save-problems', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ competition_id: compId, user_id: getUserId(), problems, replace: false }),
+    });
+    const data = await resp.json();
+    if (data.success) {
+      alert('✅ 已添加');
+      document.querySelectorAll('[style]').forEach(el => { if (el.style.zIndex === '2000') el.remove(); });
+      openCompetition(compId);
+    } else {
+      alert(data.error || '添加失败');
+      if (btn) { btn.disabled = false; btn.innerHTML = '✅ 添加'; }
+    }
+  } catch(e) { 
+    alert('添加失败: ' + e.message); 
+    if (btn) { btn.disabled = false; btn.innerHTML = '✅ 添加'; }
+  }
+}
+
+async function submitAnswer(competitionId, problemId) {
+  const textarea = document.getElementById('answer_' + problemId);
+  if (!textarea || !textarea.value.trim()) { alert('请输入答案'); return; }
+  const answer = textarea.value.trim();
+  const btn = textarea.nextElementSibling;
+  if (btn) btn.disabled = true;
+  try {
+    const resp = await fetch('/group/competition/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ competition_id: competitionId, problem_id: problemId, user_id: getUserId(), answer_text: answer }),
+    });
+    const data = await resp.json();
+    if (data.success) {
+      const statusText = data.status === 'accepted' ? '✅ 完全通过' : data.status === 'partial' ? '⚠️ 部分通过' : '❌ 未通过';
+      alert(`提交成功！\n得分: ${data.score}/${data.total * 20}\n状态: ${statusText}\n通过: ${data.passed}/${data.total}`);
+      loadRanking(competitionId);
+    } else {
+      alert(data.error || '提交失败');
+    }
+  } catch(e) { alert('提交失败: ' + e.message); }
+  if (btn) btn.disabled = false;
+}
+
+// ==================== 实时排行 ====================
+
+let _lastRanking = {};
+let _previousRankingData = {};
+
+async function loadRanking(competitionId) {
+  try {
+    const resp = await fetch('/group/competition/ranking/' + competitionId);
+    const data = await resp.json();
+    if (!data.success || !data.ranking) return;
+    const ranking = data.ranking;
+    renderLeaderboard(competitionId, ranking);
+  } catch(e) {}
+}
+
+function startRankPolling(competitionId) {
+  if (_rankPollTimers[competitionId]) clearInterval(_rankPollTimers[competitionId]);
+  _rankPollTimers[competitionId] = setInterval(() => loadRanking(competitionId), 5000);
+}
+
+function renderLeaderboard(competitionId, ranking) {
+  const container = document.getElementById('leaderboard_' + competitionId);
+  if (!container) return;
+
+  // 保存当前排名用于动画检测
+  const prevRanks = {};
+  if (_previousRankingData[competitionId]) {
+    _previousRankingData[competitionId].forEach(r => {
+      prevRanks[r.user_id] = r.rank;
+    });
+  }
+  _previousRankingData[competitionId] = ranking;
+
+  if (ranking.length === 0) {
+    container.innerHTML = `<div class="leaderboard-title"><span class="live-dot"></span> 实时排行 (每5秒更新)</div>
+      <div style="text-align:center;color:#64748b;padding:30px">暂无提交记录</div>`;
+    return;
+  }
+
+  let rows = '<table class="lb-table"><thead><tr><th>#</th><th>选手</th><th>得分</th><th>罚时</th><th>通过</th><th>题目详情</th></tr></thead><tbody>';
+  ranking.forEach((r, idx) => {
+    const rankClass = r.rank <= 3 ? 'lb-rank-' + r.rank : '';
+    let animClass = '';
+    if (prevRanks[r.user_id] !== undefined) {
+      if (r.rank < prevRanks[r.user_id]) animClass = 'rank-up';
+      else if (r.rank > prevRanks[r.user_id]) animClass = 'rank-down';
+    }
+    const medal = r.rank === 1 ? '🥇' : r.rank === 2 ? '🥈' : r.rank === 3 ? '🥉' : '';
+
+    // 题目详情列
+    let probHtml = '';
+    (r.problem_list || []).forEach(p => {
+      let cls = 'lb-problem-empty';
+      let txt = '-';
+      if (p.status === 'accepted' && p.score >= 80) { cls = 'lb-problem-ac'; txt = '✓'; }
+      else if (p.status === 'partial' || (p.status === 'accepted' && p.score < 80)) { cls = 'lb-problem-partial'; txt = '~'; }
+      else if (p.status === 'wrong') { cls = 'lb-problem-wa'; txt = '✗'; }
+      probHtml += `<span class="${cls}" title="${escapeHtml(p.letter || '')} ${p.score}分">${escapeHtml(p.letter || '')}${txt}</span> `;
+    });
+
+    rows += `<tr class="lb-row ${animClass}">
+      <td class="${rankClass}">${medal || r.rank}</td>
+      <td style="text-align:left;padding-left:10px">${escapeHtml(r.user_id)}</td>
+      <td class="lb-score">${r.total_score}</td>
+      <td class="lb-penalty">${formatTime(r.total_penalty)}</td>
+      <td>${r.solved}</td>
+      <td style="font-size:13px">${probHtml}</td>
+    </tr>`;
+  });
+  rows += '</tbody></table>';
+
+  container.innerHTML = `<div class="leaderboard-title"><span class="live-dot"></span> 实时排行 (每5秒更新)</div>${rows}`;
+}
+
+function formatTime(seconds) {
+  if (!seconds || seconds <= 0) return '0s';
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  if (m > 0) return m + 'm' + s + 's';
+  return s + 's';
+}
+
+function formatLocalTime(isoStr) {
+  if (!isoStr) return '';
+  try {
+    return new Date(isoStr).toLocaleTimeString('zh-CN', { hour:'2-digit', minute:'2-digit', hour12: false });
+  } catch(e) { return (isoStr || '').slice(11,16); }
+}
+</script>
+<script>
+(function(){try{window.parent.postMessage({type:'pageContext',page:'companion',title:'学伴匹配',action:'viewing',detail:''},'*');}catch(e){}})();
+</script>
+</body>
+</html>

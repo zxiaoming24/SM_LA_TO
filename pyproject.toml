@@ -1,0 +1,103 @@
+[project]
+name = "all-tame-channel"
+version = "1.0.0"
+description = "智能教育系统 - AI Agent 驱动的个性化学习平台"
+requires-python = ">=3.11"
+dependencies = [
+    # === Web 框架 ===
+    "fastapi>=0.109.0",
+    "uvicorn>=0.27.0",
+    "pydantic>=2.5.0",
+    "starlette>=0.40.0",
+    "python-multipart>=0.0.6",
+    "flask>=3.0.0",
+    "flask-cors>=4.0.0",
+
+    # === LLM / LangChain ===
+    "langchain-openai>=0.1.0",
+    "langchain-core>=0.1.0",
+    "langgraph>=0.0.40",
+    "openai>=1.0.0",
+    "dashscope>=1.0.0",
+    "google-genai>=1.0.0",
+
+    # === 数据处理 ===
+    "numpy>=1.24.0",
+    "pandas>=2.0.0",
+    "scikit-learn>=1.5.0",
+    "joblib>=1.5.0",
+    "xgboost>=1.7.0",
+    "matplotlib>=3.5.0",
+    "seaborn>=0.13.0",
+    "openpyxl>=3.1.0",
+
+    # === 数据库 ===
+    "sqlalchemy>=2.0.0",
+    "pymysql>=1.1.0",
+    "pymongo>=4.16.0",
+    "chromadb>=0.4.0",
+    "redis>=5.0.0",
+    "dill>=0.4.0",
+
+    # === 向量嵌入 / NLP ===
+    "sentence-transformers>=2.2.0",
+
+    # === OSS 存储 ===
+    "oss2>=2.18.0",
+    "cryptography>=41.0.0",
+
+    # === 文档处理 ===
+    "python-docx>=1.0.0",
+    "python-pptx>=0.6.21",
+    "pypdf>=4.0.0",
+    "Pillow>=10.0.0",
+
+    # === 语音 TTS / ASR ===
+    "edge-tts>=6.1.0",
+    "openai-whisper>=20231117",
+
+    # === 网络请求 ===
+    "requests>=2.31.0",
+    "httpx>=0.28.0",
+    "websockets>=12.0",
+
+    # === YOLO / 视频 / 摄像头 ===
+    "ultralytics>=8.4.0",
+    "opencv-python>=4.10.0",
+    "mediapipe>=0.10.0",
+    "aiortc>=1.14.0",
+    "av>=16.1.0",
+
+    # === 工具 ===
+    "python-dotenv>=1.0.0",
+    "torch>=2.0.0",
+]
+
+[project.optional-dependencies]
+face = [
+    "opencv-python>=4.10.0",
+    "mediapipe>=0.10.0",
+    "ultralytics>=8.4.0",
+    "aiortc>=1.14.0",
+    "av>=16.1.0",
+    "dlib>=19.24.0",
+]
+all = [
+    "flask>=3.0.0",
+    "flask-cors>=4.0.0",
+    "redis>=5.0.0",
+    "pymongo>=4.16.0",
+    "pymysql>=1.1.0",
+    "sqlalchemy>=2.0.0",
+    "edge-tts>=6.1.0",
+    "openai-whisper>=20231117",
+    "google-genai>=1.0.0",
+    "matplotlib>=3.5.0",
+    "seaborn>=0.13.0",
+    "openpyxl>=3.1.0",
+    "xgboost>=1.7.0",
+    "joblib>=1.5.0",
+]
+
+[tool.uv]
+dev-dependencies = []

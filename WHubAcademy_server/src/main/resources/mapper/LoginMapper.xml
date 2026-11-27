@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.dhi.wha.mapper.LoginMapper">
+
+    <update id="forgetPasswordByEmail" parameterType="com.dhi.wha.dto.UserDTO">
+        update user
+        set password = #{password}
+        where email = #{email}
+    </update>
+    <select id="getUserByUserIdList" resultType="com.dhi.wha.vo.UserCommentVO">
+        select id AS userId,username,avatar from user
+        where id in
+        <foreach collection="userIdList" open="(" separator="," close=")" item="uid">
+            #{uid}
+        </foreach>
+    </select>
+
+</mapper>

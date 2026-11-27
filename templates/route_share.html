@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{route_name}} - 学习计划分享</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh;
+       display: flex; align-items: center; justify-content: center; padding: 20px; }
+.share-card { background: #fff; border-radius: 20px; width: 100%; max-width: 900px;
+               box-shadow: 0 20px 60px rgba(0,0,0,0.2); overflow: hidden; }
+.share-header { padding: 28px 32px; color: #fff; background: linear-gradient(135deg, var(--cover-color, #667eea), #764ba2); }
+.share-header h1 { font-size: 24px; font-weight: 700; margin-bottom: 6px; }
+.share-header .subtitle { font-size: 14px; opacity: 0.9; }
+.share-meta { padding: 16px 32px; background: #f8f9ff; display: flex; gap: 20px; flex-wrap: wrap;
+               border-bottom: 1px solid #e8ecff; }
+.share-meta .meta-item { text-align: center; }
+.share-meta .meta-label { font-size: 11px; color: #999; }
+.share-meta .meta-value { font-size: 14px; font-weight: 700; color: #667eea; }
+.share-body { padding: 24px 32px; }
+.share-desc { font-size: 14px; color: #555; line-height: 1.8; margin-bottom: 20px; }
+.flowchart-wrap { background: #f8f9ff; border-radius: 14px; padding: 20px; border: 1px solid #e8ecff;
+                   overflow-x: auto; }
+.flowchart-wrap h3 { font-size: 16px; font-weight: 700; color: #1a1a2e; margin-bottom: 14px;
+                      display: flex; align-items: center; gap: 8px; }
+.flowchart-container { background: #fff; border-radius: 12px; padding: 20px; overflow-x: auto;
+                        min-height: 200px; display: flex; align-items: center; justify-content: center; }
+.flowchart-container svg { max-width: 100%; height: auto; }
+
+/* 流程图缩放控制 */
+.flowchart-controls { display: flex; gap: 8px; margin-bottom: 12px; justify-content: center; flex-wrap: wrap; }
+.flowchart-controls button { padding: 6px 14px; border: 1px solid #ddd; border-radius: 8px;
+                              background: #fff; color: #333; font-size: 13px; cursor: pointer;
+                              transition: all 0.2s; }
+.flowchart-controls button:hover { background: #667eea; color: #fff; border-color: #667eea; }
+.flowchart-zoom-wrap { overflow: auto; max-height: 600px; }
+
+.share-footer { padding: 16px 32px; border-top: 1px solid #f0f0f0; text-align: center; }
+.share-footer a { color: #667eea; text-decoration: none; font-size: 13px; font-weight: 600; }
+.share-footer a:hover { text-decoration: underline; }
+@media (max-width: 768px) {
+  .share-meta { padding: 12px 16px; }
+  .share-body { padding: 16px; }
+  .share-header { padding: 20px 16px; }
+}
+</style>
+</head>
+<body>
+<div class="share-card">
+  <div class="share-header">
+    <h1>{{route_name}}</h1>
+    <div class="subtitle">{{route_subtitle}}</div>
+  </div>
+  <div class="share-meta">
+    <div class="meta-item"><div class="meta-label">难度</div><div class="meta-value">{{diff_label}}</div></div>
+    <div class="meta-item"><div class="meta-label">时长</div><div class="meta-value">{{duration}}</div></div>
+    <div class="meta-item"><div class="meta-label">学时</div><div class="meta-value">{{hours}}h</div></div>
+    <div class="meta-item"><div class="meta-label">评分</div><div class="meta-value">{{rating}}</div></div>
+    <div class="meta-item"><div class="meta-label">采纳</div><div class="meta-value">{{adoptions}}人</div></div>
+  </div>
+  <div class="share-body">
+    <p class="share-desc">{{route_desc}}</p>
+    <div class="flowchart-wrap">
+      <h3>🗺️ 学习路线流程图</h3>
+      <div class="flowchart-controls">
+        <button onclick="zoomOut()">🔍- 缩小</button>
+        <button onclick="zoomIn()"> 放大</button>
+        <button onclick="zoomReset()">🔄 重置</button>
+        <button onclick="toggleFullscreen()"> 全屏</button>
+      </div>
+      <div class="flowchart-zoom-wrap" id="zoomWrap">
+        <div class="flowchart-container" id="flowchartContainer">
+          <pre class="mermaid">{{mermaid_syntax}}</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="share-footer">
+    <a href="/route-market-page" target="_blank">前往路线市场查看更多学习计划 →</a>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>
+mermaid.initialize({
+  startOnLoad: true,
+  theme: 'base',
+  themeVariables: {
+    primaryColor: '#e8ecff',
+    primaryTextColor: '#1a1a2e',
+    primaryBorderColor: '#667eea',
+    lineColor: '#667eea',
+    secondaryColor: '#f0f2f5',
+    tertiaryColor: '#fff',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    fontSize: '13px',
+    clusterBkg: '#f8f9ff',
+    clusterBorder: '#667eea',
+    titleColor: '#667eea',
+  },
+  flowchart: { htmlLabels: true, curve: 'basis', padding: 15, nodeSpacing: 30, rankSpacing: 50 },
+});
+
+// 缩放控制
+let currentScale = 1;
+function zoomIn() { currentScale = Math.min(currentScale + 0.2, 3); applyZoom(); }
+function zoomOut() { currentScale = Math.max(currentScale - 0.2, 0.3); applyZoom(); }
+function zoomReset() { currentScale = 1; applyZoom(); }
+function applyZoom() {
+  const container = document.getElementById('flowchartContainer');
+  container.style.transform = `scale(${currentScale})`;
+  container.style.transformOrigin = 'top center';
+}
+function toggleFullscreen() {
+  const wrap = document.querySelector('.flowchart-wrap');
+  if (!document.fullscreenElement) {
+    wrap.requestFullscreen().catch(err => {});
+  } else {
+    document.exitFullscreen();
+  }
+}
+</script>
+</body>
+</html>

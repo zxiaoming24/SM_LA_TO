@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.dhi.wha.mapper.RadarChartMapper">
+    <resultMap id="radarChartResultMap" type="com.dhi.wha.entity.RadarChart">
+        <id property="id" column="id"/>
+        <result property="preData" column="pre_data"
+                typeHandler="com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler"/>
+        <result property="curData" column="cur_data"
+                typeHandler="com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler"/>
+    </resultMap>
+
+    <select id="selectByRadarMapId" resultMap="radarChartResultMap">
+        SELECT * FROM radar_chart WHERE id = #{radarMapId}
+    </select>
+</mapper>

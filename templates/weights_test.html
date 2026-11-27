@@ -1,0 +1,2179 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>权重配置管理面板</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+       background: #f5f7fa; color: #1a1a2e; min-height: 100vh; }
+
+.header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+           color: #fff; padding: 14px 28px; display: flex; align-items: center;
+           justify-content: space-between; }
+.header h1 { font-size: 20px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.header .subtitle { font-size: 12px; opacity: 0.8; }
+
+.container { max-width: 1100px; margin: 0 auto; padding: 20px 16px; }
+
+/* Tab Bar */
+.tab-bar { background: #fff; display: flex; border-radius: 10px 10px 0 0;
+           box-shadow: 0 1px 3px rgba(0,0,0,0.06); overflow-x: auto; }
+.tab-bar .tab { padding: 12px 20px; cursor: pointer; font-size: 13px; font-weight: 500;
+                color: #888; transition: all .2s; border-bottom: 3px solid transparent;
+                user-select: none; white-space: nowrap; }
+.tab-bar .tab:hover { color: #667eea; background: #fafbfc; }
+.tab-bar .tab.active { color: #667eea; border-bottom-color: #667eea; background: #fff; }
+.tab-group { padding: 12px 6px 12px 12px; font-size: 11px; font-weight: 600; color: #aaa;
+             letter-spacing: 0.5px; user-select: none; white-space: nowrap;
+             border-bottom: 3px solid transparent; }
+
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+.card { background: #fff; border-radius: 0 0 10px 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        padding: 20px 24px; margin-bottom: 16px; }
+
+/* Buttons */
+.btn { padding: 7px 18px; border: none; border-radius: 8px; cursor: pointer;
+       font-size: 13px; font-weight: 500; transition: all .2s; display: inline-flex;
+       align-items: center; gap: 5px; }
+.btn-primary { background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; }
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(102,126,234,0.3); }
+.btn-success { background: linear-gradient(135deg, #00b894, #00cec9); color: #fff; }
+.btn-success:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,184,148,0.3); }
+.btn-danger { background: linear-gradient(135deg, #ff7675, #d63031); color: #fff; }
+.btn-danger:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(255,118,117,0.3); }
+.btn-sm { padding: 5px 12px; font-size: 12px; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+
+/* Status */
+.status { padding: 8px 14px; border-radius: 6px; font-size: 12px; margin-top: 10px; display: none; }
+.status.success { display: block; background: #d5f5e3; color: #1a7a42; border: 1px solid #a3e4bc; }
+.status.error { display: block; background: #fde8e8; color: #c0392b; border: 1px solid #f5b7b1; }
+.status.info { display: block; background: #d6eaf8; color: #1a5276; border: 1px solid #aed6f1; }
+
+/* Toolbar row */
+.toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+.toolbar label { font-size: 13px; color: #666; font-weight: 500; }
+.toolbar select { padding: 6px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px;
+                  background: #fff; outline: none; min-width: 160px; }
+.toolbar select:focus { border-color: #667eea; }
+
+/* Alert */
+.alert-card { background: #fff3e0; border: 1px solid #ffcc80; border-radius: 8px; padding: 10px 14px;
+              font-size: 12px; color: #e65100; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+.alert-card.danger { background: #fde8e8; border-color: #f5b7b1; color: #c0392b; }
+
+/* ===== Form Field Styles ===== */
+.form-section { margin-bottom: 18px; }
+.form-section-title { font-size: 14px; font-weight: 600; color: #333; margin-bottom: 10px;
+                      padding-bottom: 6px; border-bottom: 1px solid #eee;
+                      display: flex; align-items: center; gap: 6px; }
+.form-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px;
+             flex-wrap: wrap; }
+.form-row label { font-size: 13px; color: #555; min-width: 160px; font-weight: 500; }
+.form-row label .hint { font-weight: 400; color: #999; font-size: 11px; }
+.form-row input[type="number"] { width: 100px; padding: 5px 8px; border: 1px solid #ddd;
+                                  border-radius: 6px; font-size: 13px; outline: none; }
+.form-row input[type="number"]:focus { border-color: #667eea; box-shadow: 0 0 0 2px rgba(102,126,234,0.1); }
+.form-row input[type="number"].wide { width: 140px; }
+.form-row .range-info { font-size: 11px; color: #aaa; }
+.form-row .current-val { font-size: 11px; color: #667eea; background: #f0f2ff; padding: 2px 8px;
+                          border-radius: 4px; }
+
+/* Sub-object group (collapsible) */
+.sub-group { background: #f8f9fc; border: 1px solid #eef0f5; border-radius: 8px; padding: 12px 14px;
+             margin-bottom: 10px; }
+.sub-group-title { font-size: 13px; font-weight: 600; color: #556; margin-bottom: 8px;
+                   display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
+.sub-group-title:hover { color: #667eea; }
+.sub-group-body { padding-left: 4px; }
+.sub-group .form-row { margin-bottom: 6px; }
+.sub-group .form-row label { min-width: 130px; font-size: 12px; }
+
+/* Emotion card grid */
+.emo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
+.emo-card { border: 1px solid #eef0f5; border-radius: 8px; padding: 10px 12px; background: #fafbfc; }
+.emo-card .emo-name { font-size: 13px; font-weight: 600; color: #667eea; margin-bottom: 6px; }
+.emo-card .form-row { margin-bottom: 4px; }
+.emo-card .form-row label { min-width: 110px; font-size: 12px; }
+
+/* Score levels list */
+.level-list { display: flex; gap: 8px; flex-wrap: wrap; }
+.level-tag { background: #f0f2ff; border: 1px solid #dde0f0; border-radius: 6px; padding: 4px 10px;
+             font-size: 12px; color: #556; }
+.level-tag .th { color: #667eea; font-weight: 600; }
+
+/* Overview cards */
+.ov-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+.ov-card { background: #f8f9fc; border: 1px solid #eef0f5; border-radius: 10px; padding: 14px; cursor: pointer;
+           transition: all .2s; }
+.ov-card:hover { border-color: #667eea; box-shadow: 0 2px 8px rgba(102,126,234,0.08); }
+.ov-card .ov-name { font-weight: 600; font-size: 14px; color: #667eea; margin-bottom: 4px; }
+.ov-card .ov-desc { font-size: 11px; color: #999; margin-bottom: 8px; }
+.ov-card .ov-fields { font-size: 11px; color: #888; display: flex; flex-wrap: wrap; gap: 4px; }
+.ov-card .ov-fields span { background: #fff; border: 1px solid #e8e8ee; padding: 1px 6px; border-radius: 4px; }
+
+/* Modal */
+.modal-overlay { position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);
+                 z-index:1000;display:flex;align-items:center;justify-content:center; }
+.modal-box { background:#fff;border-radius:12px;width:90%;max-width:640px;max-height:90vh;
+             overflow:hidden;box-shadow:0 12px 48px rgba(0,0,0,0.2);animation:modalIn .2s ease; }
+@keyframes modalIn { from{opacity:0;transform:translateY(20px)scale(0.96)} to{opacity:1;transform:translateY(0)scale(1)} }
+.modal-header { padding:14px 20px;border-bottom:1px solid #eee;display:flex;align-items:center;
+                justify-content:space-between;font-size:16px;font-weight:600; }
+.modal-close { font-size:24px;cursor:pointer;color:#999;padding:0 4px; }
+.modal-close:hover { color:#333; }
+.modal-body { padding:16px 20px;overflow-y:auto;max-height:65vh; }
+.modal-body .form-row { margin-bottom:10px; }
+.modal-body .form-row input[type="text"] { padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;outline:none; }
+.modal-body .form-row input[type="text"]:focus { border-color:#667eea; }
+.modal-footer { padding:12px 20px;border-top:1px solid #eee;display:flex;align-items:center;gap:10px;justify-content:flex-end; }
+
+/* Question table */
+.q-table { width:100%;border-collapse:collapse;font-size:13px; }
+.q-table th { background:#f8f9fc;padding:8px 10px;text-align:left;font-weight:600;color:#556;border-bottom:2px solid #eef0f5;white-space:nowrap; }
+.q-table td { padding:8px 10px;border-bottom:1px solid #f0f0f5;vertical-align:top; }
+.q-table tr:hover td { background:#fafbff; }
+.q-table .q-title { max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+.q-table .q-content-preview { max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#888;font-size:12px; }
+.q-diff { display:inline-block;padding:1px 8px;border-radius:4px;font-size:11px;font-weight:500; }
+.q-diff-1 { background:#e8f5e9;color:#2e7d32; }
+.q-diff-2 { background:#e3f2fd;color:#1565c0; }
+.q-diff-3 { background:#fff8e1;color:#f57f17; }
+.q-diff-4 { background:#fce4ec;color:#c62828; }
+.q-diff-5 { background:#f3e5f5;color:#6a1b9a; }
+.q-topic-tag { display:inline-block;background:#f0f2ff;color:#667eea;padding:1px 6px;border-radius:4px;font-size:11px; }
+
+/* Agent Cards - Icon Only with Hover Tooltip */
+.agent-grid { display:flex;flex-wrap:wrap;gap:16px;justify-content:center;padding:10px 0;min-height:120px; }
+.agent-icon-wrap { position:relative;display:inline-flex; }
+.agent-icon { width:60px;height:60px;border-radius:16px;background:#f8f9fc;border:2px solid #eef0f5;
+              display:flex;align-items:center;justify-content:center;font-size:28px;
+              cursor:pointer;transition:all .25s;user-select:none; }
+.agent-icon.working { border-color:#2ecc71;background:#e8f8f0; }
+.agent-icon.idle { border-color:#eef0f5;background:#f8f9fc; }
+.agent-icon:hover { border-color:#667eea;background:#f0f2ff;transform:translateY(-3px);
+                    box-shadow:0 6px 20px rgba(102,126,234,0.2); }
+.agent-status-label { display:block;text-align:center;font-size:10px;margin-top:4px;font-weight:500; }
+.agent-status-label.working { color:#2ecc71; }
+.agent-status-label.idle { color:#bdc3c7; }
+.agent-tip { position:absolute;left:74px;top:50%;transform:translateY(-50%);
+             background:#fff;border:1px solid #e0e4f0;border-radius:12px;
+             padding:14px 16px;width:300px;box-shadow:0 8px 30px rgba(0,0,0,0.12);
+             z-index:100;opacity:0;pointer-events:none;transition:all .2s ease; }
+.agent-icon-wrap:hover .agent-tip { opacity:1;pointer-events:auto; }
+.agent-tip .at-icon { font-size:24px;margin-bottom:4px; }
+.agent-tip .at-name { font-weight:600;font-size:14px;color:#333; }
+.agent-tip .at-file { font-size:10px;color:#bbb;font-family:monospace;margin-bottom:4px; }
+.agent-tip .at-badges { display:flex;gap:4px;flex-wrap:wrap;margin:6px 0; }
+.agent-tip .at-badge { font-size:10px;padding:2px 8px;border-radius:4px;background:#f0f2ff;color:#667eea; }
+.agent-tip .at-badge.db { background:#e8f5e9;color:#2e7d32; }
+.agent-tip .at-desc { font-size:12px;color:#666;line-height:1.5;margin-bottom:6px; }
+.agent-tip .at-detail { font-size:11px;color:#999;border-top:1px dashed #eee;padding-top:6px; }
+
+/* Agent Monitor */
+.stat-badge { background:#f8f9fc;border:1px solid #eef0f5;border-radius:10px;padding:10px 20px;
+              display:flex;flex-direction:column;align-items:center;min-width:100px; }
+.stat-badge .stat-num { font-size:24px;font-weight:700;color:#667eea;line-height:1.2; }
+.stat-badge .stat-label { font-size:11px;color:#999;margin-top:2px; }
+.agent-status-dot { display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px; }
+.agent-status-dot.idle { background:#bdc3c7; }
+.agent-status-dot.working { background:#2ecc71;animation:pulse-dot 1.2s ease-in-out infinite; }
+@keyframes pulse-dot { 0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(46,204,113,0.4)} 50%{opacity:0.7;box-shadow:0 0 0 6px rgba(46,204,113,0)} }
+.agent-status-dot.error { background:#e74c3c; }
+.monitor-table { width:100%;border-collapse:collapse;font-size:13px; }
+.monitor-table th { background:#f8f9fc;padding:8px 10px;text-align:left;font-weight:600;color:#556;border-bottom:2px solid #eef0f5;white-space:nowrap; }
+.monitor-table td { padding:8px 10px;border-bottom:1px solid #f0f0f5; }
+.monitor-table tr:hover td { background:#fafbff; }
+.rank-num { display:inline-block;width:22px;height:22px;line-height:22px;text-align:center;border-radius:50%;font-size:11px;font-weight:600; }
+.rank-1 { background:linear-gradient(135deg,#f1c40f,#f39c12);color:#fff; }
+.rank-2 { background:linear-gradient(135deg,#bdc3c7,#95a5a6);color:#fff; }
+.rank-3 { background:linear-gradient(135deg,#e67e22,#d35400);color:#fff; }
+.rank-other { background:#f0f0f5;color:#888; }
+.working-chip { display:inline-flex;align-items:center;gap:4px;padding:5px 12px;border-radius:20px;
+                background:#e8f8f0;border:1px solid #a3e4bc;font-size:12px;font-weight:500;color:#1a7a42;
+                animation:chip-pop .3s ease; }
+@keyframes chip-pop { from{transform:scale(0.8);opacity:0} to{transform:scale(1);opacity:1} }
+.working-chip .wc-dot { width:8px;height:8px;border-radius:50%;background:#2ecc71;animation:pulse-dot 1.2s ease-in-out infinite; }
+
+/* Helper Chat Widget */
+.chat-btn { position:fixed;top:50%;right:0;transform:translateY(-50%);width:40px;height:40px;
+            border-radius:8px 0 0 8px;
+            background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;
+            font-size:18px;cursor:pointer;box-shadow:0 4px 12px rgba(102,126,234,0.3);
+            z-index:9999;transition:all .3s;display:flex;align-items:center;justify-content:center; }
+.chat-btn:hover { width:44px;box-shadow:0 6px 20px rgba(102,126,234,0.5); }
+.chat-panel { position:fixed;top:50%;right:44px;transform:translateY(-50%);width:420px;height:560px;
+              background:#fff;border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,0.15);
+              z-index:9998;display:none;flex-direction:column;overflow:hidden;
+              animation:chatIn .25s ease; }
+@keyframes chatIn { from{opacity:0;transform:translateY(20px)scale(0.95)} to{opacity:1;transform:translateY(0)scale(1)} }
+.chat-panel.open { display:flex; }
+.chat-header { background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;
+               padding:12px 16px;display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600; }
+.chat-header .close-btn { margin-left:auto;background:none;border:none;color:#fff;font-size:20px;cursor:pointer;opacity:.7; }
+.chat-header .close-btn:hover { opacity:1; }
+.chat-body { flex:1;overflow-y:auto;padding:12px 14px;font-size:13px;line-height:1.6; }
+.chat-msg { margin-bottom:10px;display:flex;flex-direction:column; }
+.chat-msg.user { align-items:flex-end; }
+.chat-msg.assistant { align-items:flex-start; }
+.chat-msg .bubble { max-width:85%;padding:8px 12px;border-radius:10px;white-space:pre-wrap;word-break:break-word; }
+.chat-msg.user .bubble { background:#667eea;color:#fff;border-radius:10px 10px 2px 10px; }
+.chat-msg.assistant .bubble { background:#f0f2ff;color:#333;border-radius:10px 10px 10px 2px; }
+.chat-msg .bubble.tool-call { background:#fff8e1;color:#e65100;font-size:12px;border-left:3px solid #ff9800; }
+.chat-msg .bubble.tool-result { background:#e8f5e9;color:#1a7a42;font-size:12px;border-left:3px solid #4caf50; }
+.chat-msg .bubble.error { background:#fde8e8;color:#c0392b;border-left:3px solid #e74c3c; }
+.chat-footer { padding:10px 12px;border-top:1px solid #eee;display:flex;gap:8px; }
+.chat-footer input { flex:1;padding:8px 12px;border:1px solid #ddd;border-radius:20px;font-size:13px;outline:none; }
+.chat-footer input:focus { border-color:#667eea; }
+.chat-footer button { padding:8px 16px;border:none;border-radius:20px;background:linear-gradient(135deg,#667eea,#764ba2);
+                      color:#fff;font-size:13px;cursor:pointer;white-space:nowrap; }
+.chat-footer button:disabled { opacity:.5;cursor:not-allowed; }
+.chat-loading { display:flex;gap:4px;padding:4px 0; }
+.chat-loading span { width:6px;height:6px;border-radius:50%;background:#667eea;animation:bounce 1.2s ease-in-out infinite; }
+.chat-loading span:nth-child(2) { animation-delay:.2s; }
+.chat-loading span:nth-child(3) { animation-delay:.4s; }
+@keyframes bounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-8px)} }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .tab-bar .tab { padding: 10px 14px; font-size: 12px; }
+  .form-row label { min-width: 100px; font-size: 12px; }
+  .form-row input[type="number"] { width: 80px; }
+  .emo-grid { grid-template-columns: 1fr; }
+  .container { padding: 10px; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>⚙ 权重配置管理面板</h1>
+    <div class="subtitle">专注度判断 · 情绪影响 · 综合评分 · 瞌睡检测</div>
+  </div>
+  <div style="font-size:12px;opacity:0.7;" id="headerStatus"></div>
+</div>
+
+<div class="container">
+
+  <div class="tab-bar" id="tabBar">
+    <span class="tab-group">⚙ 权重配置</span>
+    <div class="tab active" data-tab="tab-overview">📊 总览</div>
+    <div class="tab" data-tab="tab-attention">🎯 注意力追踪</div>
+    <div class="tab" data-tab="tab-emotion">😊 情绪映射</div>
+    <div class="tab" data-tab="tab-bridge">📈 综合评分</div>
+    <div class="tab" data-tab="tab-gaze">👁 瞌睡检测</div>
+    <div class="tab" data-tab="tab-ranking">🏆 排行榜权重</div>
+    <span class="tab-group">📦 资源管理</span>
+    <div class="tab" data-tab="tab-theory">📝 理论题</div>
+    <div class="tab" data-tab="tab-practice">💻 编程题</div>
+    <div class="tab" data-tab="tab-videos">🎬 视频</div>
+    <div class="tab" data-tab="tab-video-files">📁 媒体素材</div>
+    <div class="tab" data-tab="tab-agents">🤖 Agent 画像</div>
+    <div class="tab" data-tab="tab-kb">📚 知识库</div>
+    <span class="tab-group">🔧 系统</span>
+    <div class="tab" data-tab="tab-reset">🔄 重置</div>
+  </div>
+
+  <!-- ==================== 总览 ==================== -->
+  <div class="tab-content active" id="tab-overview">
+    <div class="card">
+      <div class="toolbar">
+        <button class="btn btn-primary" onclick="loadOverview()">🔄 刷新</button>
+        <span style="font-size:12px;color:#999;" id="ovUpdateTime"></span>
+      </div>
+      <div id="ovStatus" class="status"></div>
+      <div id="ovContent" style="min-height:100px;">点击「刷新」加载配置概览</div>
+    </div>
+  </div>
+
+  <!-- ==================== 注意力追踪 ==================== -->
+  <div class="tab-content" id="tab-attention">
+    <div class="card" id="attnForm">
+      <div class="alert-card">修改将立即生效并持久化到磁盘。</div>
+      <div id="attnLoading" style="text-align:center;padding:40px;color:#999;">加载中...</div>
+      <div id="attnBody" style="display:none;"></div>
+      <div id="attnStatus" class="status"></div>
+    </div>
+  </div>
+
+  <!-- ==================== 情绪映射 ==================== -->
+  <div class="tab-content" id="tab-emotion">
+    <div class="card" id="emoForm">
+      <div class="alert-card">修改将立即生效并持久化到磁盘。</div>
+      <div id="emoLoading" style="text-align:center;padding:40px;color:#999;">加载中...</div>
+      <div id="emoBody" style="display:none;"></div>
+      <div id="emoStatus" class="status"></div>
+    </div>
+  </div>
+
+  <!-- ==================== 全局排行榜权重 ==================== -->
+  <div class="tab-content" id="tab-ranking">
+    <div class="card">
+      <div class="alert-card">修改将立即生效，重新计算排行榜。权重总和必须为 1.0。</div>
+      <div class="toolbar">
+        <button class="btn btn-primary" onclick="loadRankingWeights()">🔄 刷新</button>
+        <span style="font-size:12px;color:#999;" id="rkUpdateTime"></span>
+        <span style="flex:1"></span>
+        <span id="rkTotalWeight" style="font-size:13px;color:#667eea;font-weight:600;"></span>
+      </div>
+      <div id="rkStatus" class="status"></div>
+      <div id="rkBody" style="padding:10px 0;">
+        <div id="rkLoading" style="text-align:center;padding:40px;color:#999;">加载中...</div>
+        <div id="rkForm" style="display:none;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 综合评分 ==================== -->
+  <div class="tab-content" id="tab-bridge">
+    <div class="card" id="bridgeForm">
+      <div class="alert-card">修改将立即生效并持久化到磁盘。</div>
+      <div id="bridgeLoading" style="text-align:center;padding:40px;color:#999;">加载中...</div>
+      <div id="bridgeBody" style="display:none;"></div>
+      <div id="bridgeStatus" class="status"></div>
+    </div>
+  </div>
+
+  <!-- ==================== 瞌睡检测 ==================== -->
+  <div class="tab-content" id="tab-gaze">
+    <div class="card" id="gazeForm">
+      <div class="alert-card">修改将立即生效并持久化到磁盘。</div>
+      <div id="gazeLoading" style="text-align:center;padding:40px;color:#999;">加载中...</div>
+      <div id="gazeBody" style="display:none;"></div>
+      <div id="gazeStatus" class="status"></div>
+    </div>
+  </div>
+
+  <!-- ==================== 理论题管理 ==================== -->
+  <div class="tab-content" id="tab-theory">
+    <div class="card">
+      <div class="toolbar">
+        <button class="btn btn-primary" onclick="loadTheoryQuestions()">🔄 刷新</button>
+        <button class="btn btn-success" onclick="showAddQuestion('theory')">➕ 新增理论题</button>
+        <span style="font-size:12px;color:#999;" id="thTotalLabel"></span>
+        <span style="flex:1"></span>
+        <label>主题</label>
+        <select id="thFilterTopic" onchange="loadTheoryQuestions()"><option value="">全部</option></select>
+        <label>难度</label>
+        <select id="thFilterDifficulty" onchange="loadTheoryQuestions()">
+          <option value="">全部</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option>
+        </select>
+        <input type="text" id="thFilterKeyword" placeholder="搜索..." style="padding:5px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;outline:none;width:120px;" onkeydown="if(event.key==='Enter') loadTheoryQuestions()">
+        <button class="btn btn-sm btn-primary" onclick="loadTheoryQuestions()">搜索</button>
+      </div>
+      <div id="thStatus" class="status"></div>
+      <div id="thContent" style="min-height:80px;">加载中...</div>
+      <div id="thPagination" style="margin-top:10px;display:flex;align-items:center;justify-content:center;gap:12px;font-size:13px;color:#666;"></div>
+    </div>
+  </div>
+
+  <!-- ==================== 编程题管理 ==================== -->
+  <div class="tab-content" id="tab-practice">
+    <div class="card">
+      <div class="toolbar">
+        <button class="btn btn-primary" onclick="loadPracticeQuestions()">🔄 刷新</button>
+        <button class="btn btn-success" onclick="showAddQuestion('practice')">➕ 新增编程题</button>
+        <span style="font-size:12px;color:#999;" id="prTotalLabel"></span>
+        <span style="flex:1"></span>
+        <label>主题</label>
+        <select id="prFilterTopic" onchange="loadPracticeQuestions()"><option value="">全部</option></select>
+        <label>难度</label>
+        <select id="prFilterDifficulty" onchange="loadPracticeQuestions()">
+          <option value="">全部</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option>
+        </select>
+        <input type="text" id="prFilterKeyword" placeholder="搜索..." style="padding:5px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;outline:none;width:120px;" onkeydown="if(event.key==='Enter') loadPracticeQuestions()">
+        <button class="btn btn-sm btn-primary" onclick="loadPracticeQuestions()">搜索</button>
+      </div>
+      <div id="prStatus" class="status"></div>
+      <div id="prContent" style="min-height:80px;">加载中...</div>
+      <div id="prPagination" style="margin-top:10px;display:flex;align-items:center;justify-content:center;gap:12px;font-size:13px;color:#666;"></div>
+    </div>
+  </div>
+
+  <!-- ==================== 视频（共享资源库）==================== -->
+  <div class="tab-content" id="tab-videos">
+    <div class="card">
+      <div class="toolbar">
+        <button class="btn btn-primary" onclick="loadVideos()">🔄 刷新</button>
+        <button class="btn btn-success" onclick="showAddVideo()">➕ 新增视频</button>
+        <span style="font-size:12px;color:#999;" id="vdTotalLabel"></span>
+        <span style="flex:1"></span>
+        <label>主题</label>
+        <select id="vdFilterTopic" onchange="loadVideos()"><option value="">全部</option></select>
+        <label>难度</label>
+        <select id="vdFilterDifficulty" onchange="loadVideos()">
+          <option value="">全部</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option>
+        </select>
+        <input type="text" id="vdFilterKeyword" placeholder="搜索..." style="padding:5px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;outline:none;width:120px;" onkeydown="if(event.key==='Enter') loadVideos()">
+        <button class="btn btn-sm btn-primary" onclick="loadVideos()">搜索</button>
+      </div>
+      <div id="vdStatus" class="status"></div>
+      <div id="vdContent" style="min-height:80px;">加载中...</div>
+      <div id="vdPagination" style="margin-top:10px;display:flex;align-items:center;justify-content:center;gap:12px;font-size:13px;color:#666;"></div>
+    </div>
+  </div>
+
+  <!-- ==================== 媒体素材（OSS/本地上传）==================== -->
+  <div class="tab-content" id="tab-video-files">
+    <div class="card">
+      <div class="toolbar">
+        <button class="btn btn-primary" onclick="loadVideoFiles()">🔄 刷新</button>
+        <button class="btn btn-success" onclick="document.getElementById('vfUploadInput').click()">📤 上传素材</button>
+        <input type="file" id="vfUploadInput" style="display:none" accept=".mp4,.avi,.mov,.wmv,.flv,.mkv,.webm" onchange="uploadVideoFile(this)">
+        <span style="flex:1"></span>
+        <span id="vfStats" style="font-size:12px;color:#999;"></span>
+      </div>
+      <div id="vfStatus" class="status"></div>
+      <div id="vfContent" style="min-height:60px;">加载中...</div>
+    </div>
+  </div>
+
+  <!-- ==================== Agent 画像 ==================== -->
+  <div class="tab-content" id="tab-agents">
+    <div class="card">
+      <div style="margin-bottom:14px;font-size:13px;color:#666;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <span>系统中负责资源生成的 AI Agent 一览，鼠标悬浮查看详情</span>
+        <button class="btn btn-sm btn-primary" onclick="loadAgentPortraits()">🔄 刷新</button>
+        <span style="flex:1"></span>
+        <span id="agentStatusSummary" style="font-size:12px;color:#999;"></span>
+      </div>
+      <!-- 状态图例 -->
+      <div style="display:flex;gap:16px;margin-bottom:12px;font-size:12px;color:#666;align-items:center;">
+        <span><span class="agent-status-dot working" style="vertical-align:middle;"></span> 工作中</span>
+        <span><span class="agent-status-dot idle" style="vertical-align:middle;"></span> 休息中</span>
+        <span style="color:#ccc;">|</span>
+        <span id="agentLiveCount" style="color:#667eea;font-weight:500;"></span>
+      </div>
+      <div id="agentGrid" class="agent-grid">加载中...</div>
+
+      <!-- 排行统计 -->
+      <details id="agentRankingSection" style="margin-top:16px;">
+        <summary style="cursor:pointer;font-size:13px;font-weight:600;color:#667eea;padding:6px 0;">📊 查看 Agent 调用排行</summary>
+        <div style="margin-top:8px;">
+          <div style="display:flex;gap:16px;margin-bottom:10px;flex-wrap:wrap;">
+            <span style="font-size:12px;color:#888;">🔄 总调用: <strong id="rankTotalCalls">0</strong></span>
+            <span style="font-size:12px;color:#888;">🏆 排行根据调用次数降序</span>
+            <span style="flex:1"></span>
+            <button class="btn btn-sm btn-danger" onclick="resetAgentStats()" style="font-size:11px;">重置统计</button>
+          </div>
+          <div id="agentRankingContent" style="font-size:12px;color:#666;">暂无数据</div>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- ==================== 知识库管理 ==================== -->
+  <div class="tab-content" id="tab-kb">
+    <div class="card">
+      <div class="toolbar">
+        <button class="btn btn-primary" onclick="loadKnowledgeFiles()">🔄 刷新</button>
+        <button class="btn btn-success" onclick="document.getElementById('kbUploadInput').click()">📤 上传文件</button>
+        <input type="file" id="kbUploadInput" style="display:none" multiple onchange="uploadKnowledgeFiles(this)">
+        <button class="btn" style="background:linear-gradient(135deg,#8e44ad,#9b59b6);color:#fff;" onclick="syncKnowledgeBase()">📦 同步到向量库</button>
+        <span style="flex:1"></span>
+        <span id="kbStats" style="font-size:12px;color:#999;"></span>
+      </div>
+      <div id="kbStatus" class="status"></div>
+      <div id="kbContent" style="min-height:80px;">加载中...</div>
+    </div>
+  </div>
+
+  <!-- ==================== 题目编辑弹窗 ==================== -->
+  <div class="modal-overlay" id="questionModal" style="display:none;">
+    <div class="modal-box">
+      <div class="modal-header">
+        <span id="qModalTitle">📝 题目</span>
+        <span class="modal-close" onclick="closeQuestionModal()">&times;</span>
+      </div>
+      <div class="modal-body" id="qModalBody">
+        <input type="hidden" id="qEditId">
+        <input type="hidden" id="qEditType">
+        <div class="form-row"><label style="min-width:80px;">主题 *</label>
+          <input type="text" id="qFormTopic" style="flex:1;" placeholder="例如: Python基础"></div>
+        <div class="form-row"><label style="min-width:80px;">子主题</label>
+          <input type="text" id="qFormSubTopic" style="flex:1;" placeholder="理论题: single_choice/multiple_choice/judge/fill_blank/short_answer"></div>
+        <div class="form-row"><label style="min-width:80px;">难度 *</label>
+          <select id="qFormDifficulty" style="padding:5px 10px;border:1px solid #ddd;border-radius:6px;">
+            <option value="1">1 - 简单</option><option value="2">2 - 中等偏易</option>
+            <option value="3" selected>3 - 中等</option><option value="4">4 - 中等偏难</option><option value="5">5 - 困难</option>
+          </select></div>
+        <div class="form-row"><label style="min-width:80px;">标题</label>
+          <input type="text" id="qFormTitle" style="flex:1;" placeholder="题目标题（可选）"></div>
+        <div class="form-row"><label style="min-width:80px;">知识点</label>
+          <input type="text" id="qFormKP" style="flex:1;" placeholder="逗号分隔，例如: 循环,条件判断"></div>
+        <div class="form-row" style="align-items:flex-start;"><label style="min-width:80px;">题干 *</label>
+          <textarea id="qFormContent" style="flex:1;min-height:80px;padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;font-family:inherit;resize:vertical;" placeholder="题目内容/题干"></textarea></div>
+        <div class="form-row" style="align-items:flex-start;"><label style="min-width:80px;">选项</label>
+          <textarea id="qFormOptions" style="flex:1;min-height:50px;padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;font-family:inherit;resize:vertical;" placeholder="选择题选项，每行一个（非选择题留空）"></textarea></div>
+        <div class="form-row" style="align-items:flex-start;"><label style="min-width:80px;">答案 *</label>
+          <textarea id="qFormSolution" style="flex:1;min-height:60px;padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;font-family:inherit;resize:vertical;" placeholder="正确答案/解析"></textarea></div>
+        <div class="form-row" style="align-items:flex-start;"><label style="min-width:80px;">提示</label>
+          <textarea id="qFormHints" style="flex:1;min-height:40px;padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;font-family:inherit;resize:vertical;" placeholder="提示信息，每行一条"></textarea></div>
+      </div>
+      <div class="modal-footer">
+        <span id="qModalStatus" style="font-size:12px;color:#999;"></span>
+        <button class="btn btn-success" onclick="saveQuestion()">💾 保存</button>
+        <button class="btn" style="background:#eee;color:#666;" onclick="closeQuestionModal()">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 视频编辑弹窗 ==================== -->
+  <div class="modal-overlay" id="videoModal" style="display:none;">
+    <div class="modal-box">
+      <div class="modal-header">
+        <span id="vModalTitle">🎬 视频</span>
+        <span class="modal-close" onclick="closeVideoModal()">&times;</span>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="vEditId">
+        <div class="form-row"><label style="min-width:80px;">标题 *</label>
+          <input type="text" id="vFormTitle" style="flex:1;" placeholder="视频标题"></div>
+        <div class="form-row"><label style="min-width:80px;">主题 *</label>
+          <input type="text" id="vFormTopic" style="flex:1;" placeholder="例如: Python基础"></div>
+        <div class="form-row"><label style="min-width:80px;">平台</label>
+          <select id="vFormPlatform" style="padding:5px 10px;border:1px solid #ddd;border-radius:6px;">
+            <option value="bilibili">bilibili</option><option value="youtube">youtube</option><option value="other">other</option>
+          </select></div>
+        <div class="form-row"><label style="min-width:80px;">难度</label>
+          <select id="vFormDifficulty" style="padding:5px 10px;border:1px solid #ddd;border-radius:6px;">
+            <option value="1">1</option><option value="2">2</option><option value="3" selected>3</option>
+            <option value="4">4</option><option value="5">5</option>
+          </select></div>
+        <div class="form-row"><label style="min-width:80px;">时长（秒）</label>
+          <input type="number" id="vFormDuration" style="width:120px;padding:5px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;" value="0"></div>
+        <div class="form-row"><label style="min-width:80px;">链接</label>
+          <input type="text" id="vFormUrl" style="flex:1;" placeholder="视频URL"></div>
+        <div class="form-row"><label style="min-width:80px;">知识点</label>
+          <input type="text" id="vFormKP" style="flex:1;" placeholder="逗号分隔"></div>
+      </div>
+      <div class="modal-footer">
+        <span id="vModalStatus" style="font-size:12px;color:#999;"></span>
+        <button class="btn btn-success" onclick="saveVideo()">💾 保存</button>
+        <button class="btn" style="background:#eee;color:#666;" onclick="closeVideoModal()">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 重置 ==================== -->
+  <div class="tab-content" id="tab-reset">
+    <div class="card">
+      <div class="alert-card danger">⚠ 重置将丢弃所有自定义修改，恢复到系统默认值。</div>
+      <div class="toolbar">
+        <label for="resetCat">重置范围：</label>
+        <select id="resetCat">
+          <option value="">全部重置</option>
+          <option value="attention_tracker">🎯 注意力追踪</option>
+          <option value="emotion_state_mapper">😊 情绪映射</option>
+          <option value="attention_bridge">📈 综合评分</option>
+          <option value="gaze_detector">👁 瞌睡检测</option>
+        </select>
+        <button class="btn btn-danger" onclick="doReset()">🔄 执行重置</button>
+      </div>
+      <div id="resetStatus" class="status"></div>
+      <div id="resetResult" style="margin-top:10px;"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ==================== 工具函数 ====================
+const CAT_MAP = {
+  attention_tracker: 'attention_tracker',
+  emotion_state_mapper: 'emotion_state_mapper',
+  attention_bridge: 'attention_bridge',
+  gaze_detector: 'gaze_detector'
+};
+
+function showStatus(el, type, msg) {
+  el.className = 'status ' + type;
+  el.textContent = msg;
+}
+
+function timestamp() {
+  return new Date().toLocaleTimeString('zh-CN', { hour12: false });
+}
+
+async function apiGet(url) {
+  const resp = await fetch(url);
+  const data = await resp.json();
+  if (!resp.ok) throw new Error(data.detail || `HTTP ${resp.status}`);
+  return data;
+}
+
+async function apiPost(url, body) {
+  const resp = await fetch(url, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+  });
+  const data = await resp.json();
+  if (!resp.ok) throw new Error(data.detail || `HTTP ${resp.status}`);
+  return data;
+}
+
+function buildUpdates(formEl) {
+  const inputs = formEl.querySelectorAll('[data-path]');
+  const updates = {};
+  inputs.forEach(inp => {
+    const path = inp.dataset.path.split('.');
+    let val = inp.value;
+    if (inp.type === 'number') val = inp.step && inp.step.includes('.') ? parseFloat(val) : parseInt(val, 10);
+    let cur = updates;
+    for (let i = 0; i < path.length - 1; i++) {
+      if (!cur[path[i]]) cur[path[i]] = {};
+      cur = cur[path[i]];
+    }
+    cur[path[path.length - 1]] = val;
+  });
+  return updates;
+}
+
+// ==================== Tab 切换 ====================
+document.getElementById('tabBar').addEventListener('click', function(e) {
+  const tab = e.target.closest('.tab');
+  if (!tab) return;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  tab.classList.add('active');
+  document.getElementById(tab.dataset.tab).classList.add('active');
+  // 进入分类 tab 时自动加载
+  const cat = { 'tab-attention': 'attention_tracker', 'tab-emotion': 'emotion_state_mapper',
+    'tab-bridge': 'attention_bridge', 'tab-gaze': 'gaze_detector' }[tab.dataset.tab];
+  if (cat) loadCategory(cat);
+  if (tab.dataset.tab === 'tab-ranking') loadRankingWeights();
+  if (tab.dataset.tab === 'tab-theory') loadTheoryQuestions();
+  if (tab.dataset.tab === 'tab-practice') loadPracticeQuestions();
+  if (tab.dataset.tab === 'tab-videos') loadVideos();
+  if (tab.dataset.tab === 'tab-video-files') loadVideoFiles();
+  if (tab.dataset.tab === 'tab-agents') { loadAgentPortraits(); startAgentStatusRefresh(); }
+  if (tab.dataset.tab === 'tab-kb') loadKnowledgeFiles();
+  // 离开 agent 标签时停止刷新
+  if (!tab.dataset.tab.startsWith('tab-agent')) stopAgentStatusRefresh();
+});
+
+// ==================== 总览 ====================
+async function loadOverview() {
+  const s = document.getElementById('ovStatus');
+  const c = document.getElementById('ovContent');
+  showStatus(s, 'info', '加载中...');
+  try {
+    const r = await apiGet('/admin/weights');
+    if (!r.success) throw new Error(r.detail);
+    const cats = {
+      attention_tracker: { label: '🎯 注意力追踪', desc: '沉浸信号分权重' },
+      emotion_state_mapper: { label: '😊 情绪映射', desc: '情绪影响权重' },
+      attention_bridge: { label: '📈 综合评分', desc: '综合专注度评分权重' },
+      gaze_detector: { label: '👁 瞌睡检测', desc: '瞌睡检测权重' }
+    };
+    let html = '<div class="ov-grid">';
+    for (const [key, info] of Object.entries(cats)) {
+      const data = r.data[key] || {};
+      const fieldCount = Object.keys(data).length;
+      const subFields = Object.keys(data).filter(k => typeof data[k] === 'object').join(', ');
+      html += `<div class="ov-card" onclick="switchToCat('${key}')">
+        <div class="ov-name">${info.label}</div>
+        <div class="ov-desc">${info.desc}</div>
+        <div class="ov-fields">共 ${fieldCount} 个字段 <span>${subFields}</span></div>
+      </div>`;
+    }
+    html += '</div>';
+    c.innerHTML = html;
+    document.getElementById('ovUpdateTime').textContent = '上次更新: ' + timestamp();
+    showStatus(s, 'success', `✅ 加载成功`);
+  } catch(e) {
+    c.textContent = '加载失败';
+    showStatus(s, 'error', '❌ ' + e.message);
+  }
+}
+
+function switchToCat(cat) {
+  const tabMap = { attention_tracker: 'tab-attention', emotion_state_mapper: 'tab-emotion',
+    attention_bridge: 'tab-bridge', gaze_detector: 'tab-gaze' };
+  const tabId = tabMap[cat];
+  if (!tabId) return;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelector(`.tab[data-tab="${tabId}"]`).classList.add('active');
+  document.getElementById(tabId).classList.add('active');
+  loadCategory(cat);
+}
+
+// ==================== 按分类加载表单 ====================
+async function loadCategory(cat) {
+  const tabMap = {
+    attention_tracker: { loading: 'attnLoading', body: 'attnBody', status: 'attnStatus', form: 'attnForm' },
+    emotion_state_mapper: { loading: 'emoLoading', body: 'emoBody', status: 'emoStatus', form: 'emoForm' },
+    attention_bridge: { loading: 'bridgeLoading', body: 'bridgeBody', status: 'bridgeStatus', form: 'bridgeForm' },
+    gaze_detector: { loading: 'gazeLoading', body: 'gazeBody', status: 'gazeStatus', form: 'gazeForm' }
+  };
+  const el = tabMap[cat];
+  document.getElementById(el.loading).style.display = 'block';
+  document.getElementById(el.body).style.display = 'none';
+  showStatus(document.getElementById(el.status), 'info', '加载中...');
+
+  try {
+    const r = await apiGet('/admin/weights/' + cat);
+    if (!r.success) throw new Error(r.detail);
+    document.getElementById(el.loading).style.display = 'none';
+    document.getElementById(el.body).style.display = 'block';
+    document.getElementById(el.body).innerHTML = renderForm(cat, r.data);
+    showStatus(document.getElementById(el.status), 'success', `✅ 已加载`);
+  } catch(e) {
+    document.getElementById(el.loading).textContent = '❌ 加载失败: ' + e.message;
+    showStatus(document.getElementById(el.status), 'error', e.message);
+  }
+}
+
+// ==================== 渲染表单 ====================
+function renderForm(cat, data) {
+  const renderers = {
+    attention_tracker: renderAttentionTracker,
+    emotion_state_mapper: renderEmotionMapper,
+    attention_bridge: renderAttentionBridge,
+    gaze_detector: renderGazeDetector
+  };
+  const fn = renderers[cat];
+  if (!fn) return '<p>未知分类</p>';
+  return fn(data);
+}
+
+// --- 注意力追踪 ---
+function renderAttentionTracker(d) {
+  let html = '';
+  // immersion_weights
+  if (d.immersion_weights) {
+    html += `<div class="form-section">
+      <div class="form-section-title">📊 沉浸信号分权重（应总和为 1.0）</div>
+      <div class="sub-group">`;
+    for (const [k, v] of Object.entries(d.immersion_weights)) {
+      const labels = { focus_score: '注视专注度', distraction_penalty: '分心负分', head_stability: '头部稳定性', duration_score: '时长分' };
+      html += `<div class="form-row">
+        <label>${labels[k] || k}</label>
+        <input type="number" step="0.01" min="0" max="1" value="${v}" data-path="immersion_weights.${k}">
+        <span class="current-val">当前: ${v}</span>
+      </div>`;
+    }
+    html += `</div></div>`;
+  }
+  // 其他标量字段
+  const fields = [
+    { key: 'distraction_additional_penalty', label: '额外分心扣分系数', step: 0.01, min: 0, max: 1 },
+    { key: 'meaningful_distraction_threshold', label: '有意义分心阈值（帧）', step: 1, min: 0 },
+    { key: 'max_deviation_for_focus', label: '专注归一化阈值', step: 0.01, min: 0, max: 1 },
+    { key: 'duration_seconds_for_full_score', label: '满分所需时长（秒）', step: 1, min: 0 }
+  ];
+  html += `<div class="form-section"><div class="form-section-title">⚙ 其他参数</div>`;
+  for (const f of fields) {
+    if (d[f.key] === undefined) continue;
+    html += `<div class="form-row">
+      <label>${f.label}</label>
+      <input type="number" step="${f.step}" min="${f.min}" ${f.max !== undefined ? `max="${f.max}"` : ''}
+             value="${d[f.key]}" data-path="${f.key}" class="wide">
+      <span class="current-val">当前: ${d[f.key]}</span>
+    </div>`;
+  }
+  html += `</div>`;
+  html += `<button class="btn btn-success" onclick="saveCategory('attention_tracker')">💾 保存修改</button>`;
+  return html;
+}
+
+// --- 情绪映射 ---
+function renderEmotionMapper(d) {
+  let html = '';
+  const emoLabels = { happy: '开心', neutral: '中性', surprise: '惊讶', sad: '悲伤', angry: '愤怒', fear: '恐惧', disgust: '厌恶' };
+  const dimLabels = { interest_level: '兴趣', frustration_tolerance: '挫折容忍', anxiety_level: '焦虑', confidence_level: '自信' };
+  // emotion_impact_weights
+  if (d.emotion_impact_weights) {
+    html += `<div class="form-section">
+      <div class="form-section-title">😊 情绪影响权重</div>
+      <div class="emo-grid">`;
+    for (const [emo, weights] of Object.entries(d.emotion_impact_weights)) {
+      html += `<div class="emo-card">
+        <div class="emo-name">${emoLabels[emo] || emo}</div>`;
+      for (const [dim, val] of Object.entries(weights)) {
+        html += `<div class="form-row">
+          <label>${dimLabels[dim] || dim}</label>
+          <input type="number" step="0.1" min="-1" max="1" value="${val}"
+                 data-path="emotion_impact_weights.${emo}.${dim}">
+          <span class="current-val">${val}</span>
+        </div>`;
+      }
+      html += `</div>`;
+    }
+    html += `</div></div>`;
+  }
+  // impact_multiplier
+  if (d.impact_multiplier !== undefined) {
+    html += `<div class="form-section"><div class="form-section-title">⚙ 全局参数</div>
+      <div class="form-row"><label>情绪影响倍数</label>
+        <input type="number" step="1" min="0" value="${d.impact_multiplier}" data-path="impact_multiplier" class="wide">
+        <span class="current-val">当前: ${d.impact_multiplier}</span></div>`;
+  }
+  // dimension_bounds
+  if (d.dimension_bounds) {
+    html += `<div class="form-row"><label>子维度范围</label>
+      <span style="font-size:12px;color:#888;">最小值</span>
+      <input type="number" step="1" value="${d.dimension_bounds.min}" data-path="dimension_bounds.min" style="width:80px;">
+      <span style="font-size:12px;color:#888;">最大值</span>
+      <input type="number" step="1" value="${d.dimension_bounds.max}" data-path="dimension_bounds.max" style="width:80px;">
+      <span class="current-val">[${d.dimension_bounds.min}, ${d.dimension_bounds.max}]</span></div>`;
+  }
+  // score_delta_weights
+  if (d.score_delta_weights) {
+    html += `<div class="form-section"><div class="form-section-title">📊 评分变化量权重</div><div style="display:flex;gap:12px;flex-wrap:wrap;">`;
+    const sdl = { interest: '兴趣', frustration: '挫折', anxiety: '焦虑', confidence: '自信' };
+    for (const [k, v] of Object.entries(d.score_delta_weights)) {
+      html += `<div class="form-row" style="margin:0;">
+        <label style="min-width:60px;">${sdl[k] || k}</label>
+        <input type="number" step="0.1" min="0" max="1" value="${v}" data-path="score_delta_weights.${k}" style="width:80px;">
+        <span class="current-val">${v}</span>
+      </div>`;
+    }
+    html += `</div></div>`;
+  }
+  // emotion_baseline
+  if (d.emotion_baseline) {
+    html += `<div class="form-section">
+      <div class="form-section-title">📋 情绪基准值</div>
+      <div class="emo-grid">`;
+    const bLabels = { interest: '兴趣', frustration: '挫折', anxiety: '焦虑', confidence: '自信' };
+    for (const [emo, vals] of Object.entries(d.emotion_baseline)) {
+      html += `<div class="emo-card">
+        <div class="emo-name">${emoLabels[emo] || emo}</div>`;
+      for (const [k, v] of Object.entries(vals)) {
+        html += `<div class="form-row">
+          <label style="min-width:60px;">${bLabels[k] || k}</label>
+          <input type="number" step="1" value="${v}" data-path="emotion_baseline.${emo}.${k}" style="width:70px;">
+          <span class="current-val">${v}</span>
+        </div>`;
+      }
+      html += `</div>`;
+    }
+    html += `</div></div>`;
+  }
+  if (d.impact_multiplier !== undefined) html += `</div>`;
+  html += `<div style="margin-top:12px;"><button class="btn btn-success" onclick="saveCategory('emotion_state_mapper')">💾 保存修改</button></div>`;
+  return html;
+}
+
+// --- 综合评分 ---
+function renderAttentionBridge(d) {
+  let html = `<div class="form-section"><div class="form-section-title">⚙ 评分参数</div>`;
+  const fields = [
+    { key: 'composite_score_max', label: '综合评分最大值', step: 1 },
+    { key: 'base_score', label: '基础分', step: 1 },
+    { key: 'immersion_max_contribution', label: '沉浸信号最大贡献', step: 1 },
+    { key: 'distraction_max_contribution', label: '分心最大贡献', step: 1 },
+    { key: 'valence_positive_bonus', label: '积极情绪加分', step: 1 },
+    { key: 'valence_negative_penalty', label: '消极情绪减分', step: 1 },
+    { key: 'confidence_min_multiplier', label: '置信度最小乘数', step: 0.1, min: 0, max: 1 },
+    { key: 'confidence_max_multiplier_factor', label: '置信度最大乘数因子', step: 0.1, min: 0, max: 1 },
+    { key: 'valence_positive_ratio', label: '积极判定阈值倍数', step: 0.1, min: 0 },
+    { key: 'valence_negative_ratio', label: '消极判定阈值倍数', step: 0.1, min: 0 }
+  ];
+  for (const f of fields) {
+    if (d[f.key] === undefined) continue;
+    html += `<div class="form-row">
+      <label>${f.label}</label>
+      <input type="number" step="${f.step}" ${f.min !== undefined ? `min="${f.min}"` : ''}
+             ${f.max !== undefined ? `max="${f.max}"` : ''} value="${d[f.key]}" data-path="${f.key}" class="wide">
+      <span class="current-val">当前: ${d[f.key]}</span>
+    </div>`;
+  }
+  html += `</div>`;
+  // score_levels
+  if (d.score_levels) {
+    html += `<div class="form-section"><div class="form-section-title">📊 评分等级</div>
+      <div class="level-list">`;
+    for (const lv of d.score_levels) {
+      html += `<div class="level-tag"><span class="th">≥${lv.threshold}</span> ${lv.label}</div>`;
+    }
+    html += `</div><div style="margin-top:8px;font-size:12px;color:#999;">评分等级为只读展示，可通过 JSON 编辑器修改</div></div>`;
+  }
+  html += `<button class="btn btn-success" onclick="saveCategory('attention_bridge')">💾 保存修改</button>`;
+  return html;
+}
+
+// --- 瞌睡检测 ---
+function renderGazeDetector(d) {
+  let html = '';
+  if (d.drowsiness_weights) {
+    html += `<div class="form-section">
+      <div class="form-section-title">😴 瞌睡检测权重（应总和为 1.0）</div>
+      <div class="sub-group">`;
+    const dl = { head_down: '低头时间', recent_yawn: '打哈欠', abnormal_blink: '异常眨眼' };
+    for (const [k, v] of Object.entries(d.drowsiness_weights)) {
+      html += `<div class="form-row">
+        <label>${dl[k] || k}</label>
+        <input type="number" step="0.1" min="0" max="1" value="${v}" data-path="drowsiness_weights.${k}">
+        <span class="current-val">当前: ${v}</span>
+      </div>`;
+    }
+    html += `</div></div>`;
+  }
+  const fields = [
+    { key: 'head_down_angle_threshold', label: '低头判定角度（度）', step: 1, min: 0 },
+    { key: 'yawn_cooldown_seconds', label: '哈欠冷却时间（秒）', step: 1, min: 0 },
+    { key: 'blink_rate_low_threshold', label: '眨眼频率下限（次/分钟）', step: 1, min: 0 },
+    { key: 'blink_rate_high_threshold', label: '眨眼频率上限（次/分钟）', step: 1, min: 0 },
+    { key: 'drowsiness_score_threshold', label: '瞌睡判定阈值', step: 0.01, min: 0, max: 1 }
+  ];
+  html += `<div class="form-section"><div class="form-section-title">⚙ 检测参数</div>`;
+  for (const f of fields) {
+    if (d[f.key] === undefined) continue;
+    html += `<div class="form-row">
+      <label>${f.label}</label>
+      <input type="number" step="${f.step}" min="${f.min}" ${f.max !== undefined ? `max="${f.max}"` : ''}
+             value="${d[f.key]}" data-path="${f.key}" class="wide">
+      <span class="current-val">当前: ${d[f.key]}</span>
+    </div>`;
+  }
+  html += `</div>`;
+  html += `<button class="btn btn-success" onclick="saveCategory('gaze_detector')">💾 保存修改</button>`;
+  return html;
+}
+
+// ==================== 保存 ====================
+async function saveCategory(cat) {
+  const tabMap = {
+    attention_tracker: { status: 'attnStatus', form: 'attnForm' },
+    emotion_state_mapper: { status: 'emoStatus', form: 'emoForm' },
+    attention_bridge: { status: 'bridgeStatus', form: 'bridgeForm' },
+    gaze_detector: { status: 'gazeStatus', form: 'gazeForm' }
+  };
+  const el = tabMap[cat];
+  const statusEl = document.getElementById(el.status);
+  const formEl = document.getElementById(el.form);
+
+  const updates = buildUpdates(formEl);
+  showStatus(statusEl, 'info', '正在保存...');
+  try {
+    const r = await apiPost('/admin/weights/' + cat, { updates });
+    if (r.success) {
+      showStatus(statusEl, 'success', '✅ ' + r.message);
+      // 刷新表单显示新值
+      setTimeout(() => loadCategory(cat), 800);
+    }
+  } catch(e) {
+    showStatus(statusEl, 'error', '❌ ' + e.message);
+  }
+}
+
+// ==================== 全局排行榜权重 ====================
+async function loadRankingWeights() {
+  const loading = document.getElementById('rkLoading');
+  const form = document.getElementById('rkForm');
+  const status = document.getElementById('rkStatus');
+  const totalWeight = document.getElementById('rkTotalWeight');
+  
+  loading.style.display = 'block';
+  form.style.display = 'none';
+  showStatus(status, 'info', '加载中...');
+  
+  try {
+    const r = await apiGet('/admin/global-ranking/weights');
+    if (!r.success) throw new Error(r.detail);
+    
+    loading.style.display = 'none';
+    form.style.display = 'block';
+    form.innerHTML = renderRankingWeightsForm(r.data, r.description, r.formula);
+    document.getElementById('rkUpdateTime').textContent = '上次更新: ' + timestamp();
+    updateRankingTotalWeight();
+    showStatus(status, 'success', '✅ 已加载');
+  } catch(e) {
+    loading.textContent = '❌ 加载失败: ' + e.message;
+    showStatus(status, 'error', e.message);
+  }
+}
+
+function renderRankingWeightsForm(data, desc, formula) {
+  const fields = [
+    { key: 'coding_score', label: '编程能力分', desc: desc['coding_score'] },
+    { key: 'accuracy_score', label: '准确率分', desc: desc['accuracy_score'] },
+    { key: 'learning_time_score', label: '学习时长分', desc: desc['learning_time_score'] },
+    { key: 'problem_count_score', label: '做题数量分', desc: desc['problem_count_score'] },
+    { key: 'overall_feature_score', label: '综合特征分', desc: desc['overall_feature_score'] }
+  ];
+  
+  let html = `<div class="form-section">
+    <div class="form-section-title">📊 排行榜权重配置</div>
+    <div style="font-size:12px;color:#888;margin-bottom:10px;">${formula}</div>`;
+  
+  for (const f of fields) {
+    html += `<div class="form-row">
+      <label>${f.label}</label>
+      <input type="number" step="0.01" min="0" max="1" value="${data[f.key]}" 
+             data-path="${f.key}" class="wide" oninput="updateRankingTotalWeight()">
+      <span class="current-val">${(data[f.key] * 100).toFixed(0)}%</span>
+      <span style="font-size:11px;color:#999;margin-left:8px;">${f.desc}</span>
+    </div>`;
+  }
+  
+  html += `</div>`;
+  html += `<button class="btn btn-success" onclick="saveRankingWeights()">💾 保存修改</button>`;
+  return html;
+}
+
+function updateRankingTotalWeight() {
+  const inputs = document.querySelectorAll('#rkForm input[data-path]');
+  let total = 0;
+  inputs.forEach(inp => {
+    total += parseFloat(inp.value) || 0;
+  });
+  const el = document.getElementById('rkTotalWeight');
+  el.textContent = `权重总和: ${total.toFixed(2)}`;
+  el.style.color = Math.abs(total - 1.0) < 0.01 ? '#2ecc71' : '#e74c3c';
+}
+
+async function saveRankingWeights() {
+  const status = document.getElementById('rkStatus');
+  const inputs = document.querySelectorAll('#rkForm input[data-path]');
+  
+  const weights = {};
+  let total = 0;
+  inputs.forEach(inp => {
+    const val = parseFloat(inp.value) || 0;
+    weights[inp.dataset.path] = val;
+    total += val;
+  });
+  
+  if (Math.abs(total - 1.0) > 0.01) {
+    showStatus(status, 'error', '❌ 权重总和必须为 1.0，当前: ' + total.toFixed(2));
+    return;
+  }
+  
+  showStatus(status, 'info', '正在保存...');
+  try {
+    const r = await apiPost('/admin/global-ranking/weights', weights);
+    if (r.success) {
+      showStatus(status, 'success', '✅ ' + r.message);
+      setTimeout(() => loadRankingWeights(), 800);
+    }
+  } catch(e) {
+    showStatus(status, 'error', '❌ ' + e.message);
+  }
+}
+
+// ==================== 重置 ====================
+async function doReset() {
+  if (!confirm('确定要重置权重配置吗？此操作不可撤销！')) return;
+  const cat = document.getElementById('resetCat').value;
+  const s = document.getElementById('resetStatus');
+  const r = document.getElementById('resetResult');
+  showStatus(s, 'info', '正在重置...');
+  r.innerHTML = '';
+  try {
+    const body = {};
+    if (cat) body.category = cat;
+    const result = await apiPost('/admin/weights/reset', body);
+    if (result.success) {
+      showStatus(s, 'success', '✅ ' + result.message);
+      r.innerHTML = `<div class="json-display" style="background:#1e1e2e;color:#cdd6f4;border-radius:8px;padding:14px;font-family:monospace;font-size:12px;max-height:400px;overflow:auto;white-space:pre-wrap;">${JSON.stringify(result.data, null, 2)}</div>`;
+    }
+  } catch(e) {
+    showStatus(s, 'error', '❌ ' + e.message);
+  }
+}
+
+// ==================== 初始化 ====================
+document.addEventListener('DOMContentLoaded', loadOverview);
+
+
+// ==================== 通用题目管理（理论题+编程题）====================
+let thPage = 1, prPage = 1;
+
+function getQuestionEndpoint(type) {
+  return type === 'theory' ? '/admin/theory-questions' : '/admin/practice-questions';
+}
+
+function getQuestionRefreshFn(type) {
+  return type === 'theory' ? loadTheoryQuestions : loadPracticeQuestions;
+}
+
+// --- 加载列表 ---
+async function loadTheoryQuestions() { await loadQList('theory'); }
+async function loadPracticeQuestions() { await loadQList('practice'); }
+
+async function loadQList(type) {
+  const prefix = type === 'theory' ? 'th' : 'pr';
+  const page = type === 'theory' ? thPage : prPage;
+  const contentEl = document.getElementById(prefix + 'Content');
+  const statusEl = document.getElementById(prefix + 'Status');
+  const labelEl = document.getElementById(prefix + 'TotalLabel');
+  const paginationEl = document.getElementById(prefix + 'Pagination');
+  contentEl.innerHTML = '加载中...';
+  showStatus(statusEl, 'info', '加载中...');
+  const topic = document.getElementById(prefix + 'FilterTopic').value;
+  const diff = document.getElementById(prefix + 'FilterDifficulty').value;
+  const kw = document.getElementById(prefix + 'FilterKeyword').value;
+  try {
+    let url = `${getQuestionEndpoint(type)}?page=${page}&page_size=20`;
+    if (topic) url += `&topic=${encodeURIComponent(topic)}`;
+    if (diff) url += `&difficulty=${diff}`;
+    if (kw) url += `&keyword=${encodeURIComponent(kw)}`;
+    const r = await apiGet(url);
+    if (!r.success) throw new Error(r.detail);
+    renderQTable(r, contentEl, paginationEl, type, page);
+    labelEl.textContent = `共 ${r.total} 题`;
+    showStatus(statusEl, 'success', '✅ 加载成功');
+    loadQFilterTopics(type);
+  } catch(e) {
+    contentEl.textContent = '加载失败';
+    showStatus(statusEl, 'error', '❌ ' + e.message);
+  }
+}
+
+function renderQTable(r, contentEl, paginationEl, type, page) {
+  const items = r.items || [];
+  if (items.length === 0) {
+    contentEl.innerHTML = '<div style="text-align:center;padding:40px;color:#999;">暂无题目</div>';
+  } else {
+    let html = `<table class="q-table"><thead><tr>
+      <th style="width:60px;">ID</th>
+      <th style="width:100px;">主题</th>
+      <th style="width:50px;">难度</th>
+      <th>题干</th>
+      <th style="width:80px;">操作</th>
+    </tr></thead><tbody>`;
+    for (const q of items) {
+      const d = q.difficulty || 3;
+      const title = q.title || '';
+      const content = (q.content || '').substring(0, 80);
+      html += `<tr>
+        <td style="font-family:monospace;font-size:11px;color:#999;" title="${q.id}">${q.id.slice(0,10)}</td>
+        <td><span class="q-topic-tag">${q.topic || '--'}</span></td>
+        <td><span class="q-diff q-diff-${d}">${d}</span></td>
+        <td><div class="q-title" title="${title}">${title || '(无标题)'}</div><div class="q-content-preview">${content}</div></td>
+        <td style="white-space:nowrap;">
+          <button class="btn btn-sm btn-primary" onclick="showEditQuestion('${q.id}','${type}')" style="padding:3px 8px;font-size:11px;">编辑</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteQuestion('${q.id}','${type}')" style="padding:3px 8px;font-size:11px;">删除</button>
+        </td>
+      </tr>`;
+    }
+    html += '</tbody></table>';
+    contentEl.innerHTML = html;
+  }
+  const totalPages = Math.ceil(r.total / r.page_size);
+  const pageVar = type === 'theory' ? 'thPage' : 'prPage';
+  const refreshFn = type === 'theory' ? 'loadTheoryQuestions' : 'loadPracticeQuestions';
+  paginationEl.innerHTML = `
+    <button class="btn btn-sm btn-primary" onclick="${pageVar}=${Math.max(1,page-1)};${refreshFn}()" ${page<=1?'disabled':''}>上一页</button>
+    <span>第 ${r.page}/${totalPages} 页</span>
+    <button class="btn btn-sm btn-primary" onclick="${pageVar}=${Math.min(totalPages,page+1)};${refreshFn}()" ${page>=totalPages?'disabled':''}>下一页</button>`;
+}
+
+async function loadQFilterTopics(type) {
+  const prefix = type === 'theory' ? 'th' : 'pr';
+  const sel = document.getElementById(prefix + 'FilterTopic');
+  if (sel.options.length > 1) return;
+  try {
+    const r = await apiGet('/admin/questions/topics');
+    if (r.success) for (const t of r.data) { const o = document.createElement('option'); o.value=t; o.textContent=t; sel.appendChild(o); }
+  } catch(e) {}
+}
+
+// --- 新增题目前设置类型 ---
+function showAddQuestion(type) {
+  document.getElementById('qEditType').value = type;
+  document.getElementById('qEditId').value = '';
+  document.getElementById('qModalTitle').textContent = type === 'theory' ? '📝 新增理论题' : '💻 新增编程题';
+  document.getElementById('qFormTopic').value = '';
+  document.getElementById('qFormSubTopic').value = '';
+  document.getElementById('qFormDifficulty').value = '3';
+  document.getElementById('qFormTitle').value = '';
+  document.getElementById('qFormKP').value = '';
+  document.getElementById('qFormContent').value = '';
+  document.getElementById('qFormOptions').value = '';
+  document.getElementById('qFormSolution').value = '';
+  document.getElementById('qFormHints').value = '';
+  document.getElementById('qModalStatus').textContent = '';
+  document.getElementById('questionModal').style.display = 'flex';
+}
+
+// --- 编辑题目 ---
+async function showEditQuestion(qid, type) {
+  document.getElementById('qEditType').value = type;
+  document.getElementById('qEditId').value = qid;
+  document.getElementById('qModalTitle').textContent = '✏️ 编辑题目';
+  document.getElementById('qModalStatus').textContent = '加载中...';
+  document.getElementById('questionModal').style.display = 'flex';
+  try {
+    const r = await apiGet('/admin/questions/' + qid);
+    if (r.success) {
+      const d = r.data;
+      document.getElementById('qFormTopic').value = d.topic || '';
+      document.getElementById('qFormSubTopic').value = d.sub_topic || '';
+      document.getElementById('qFormDifficulty').value = d.difficulty || 3;
+      document.getElementById('qFormTitle').value = d.title || '';
+      document.getElementById('qFormKP').value = (d.knowledge_points || '').split(',').filter(Boolean).join(', ');
+      document.getElementById('qFormContent').value = d.content || '';
+      const opts = Array.isArray(d.options) ? d.options.join('\n') : (d.options || '');
+      document.getElementById('qFormOptions').value = opts;
+      document.getElementById('qFormSolution').value = d.solution || '';
+      const hints = Array.isArray(d.hints) ? d.hints.join('\n') : (d.hints || '');
+      document.getElementById('qFormHints').value = hints;
+      document.getElementById('qModalStatus').textContent = '';
+    }
+  } catch(e) {
+    document.getElementById('qModalStatus').textContent = '❌ ' + e.message;
+  }
+}
+
+function closeQuestionModal() { document.getElementById('questionModal').style.display = 'none'; }
+
+// --- 保存题目 ---
+async function saveQuestion() {
+  const qid = document.getElementById('qEditId').value;
+  const type = document.getElementById('qEditType').value;
+  const isNew = !qid;
+  const data = {
+    topic: document.getElementById('qFormTopic').value.trim(),
+    sub_topic: document.getElementById('qFormSubTopic').value.trim(),
+    difficulty: parseInt(document.getElementById('qFormDifficulty').value),
+    title: document.getElementById('qFormTitle').value.trim(),
+    knowledge_points: document.getElementById('qFormKP').value.split(/[,，]/).map(s=>s.trim()).filter(Boolean),
+    content: document.getElementById('qFormContent').value.trim(),
+    options: document.getElementById('qFormOptions').value.split('\n').map(s=>s.trim()).filter(Boolean),
+    solution: document.getElementById('qFormSolution').value.trim(),
+    hints: document.getElementById('qFormHints').value.split('\n').map(s=>s.trim()).filter(Boolean)
+  };
+  if (!data.topic) { alert('请输入主题'); return; }
+  if (!data.content) { alert('请输入题干'); return; }
+  if (!data.solution) { alert('请输入答案'); return; }
+
+  const s = document.getElementById('qModalStatus');
+  s.textContent = '保存中...';
+  try {
+    let r;
+    if (isNew) {
+      r = await apiPost('/admin/questions', data);
+    } else {
+      r = await fetch('/admin/questions/' + qid, { method: 'PUT',
+        headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
+      }).then(resp => resp.json());
+      if (!r.success) throw new Error(r.detail);
+    }
+    s.textContent = '✅ ' + (r.message || '保存成功');
+    closeQuestionModal();
+    getQuestionRefreshFn(type)();
+  } catch(e) { s.textContent = '❌ ' + e.message; }
+}
+
+// --- 删除题目 ---
+async function deleteQuestion(qid, type) {
+  if (!confirm('确定要永久删除该题目吗？')) return;
+  const prefix = type === 'theory' ? 'th' : 'pr';
+  const s = document.getElementById(prefix + 'Status');
+  showStatus(s, 'info', '删除中...');
+  try {
+    const r = await fetch('/admin/questions/' + qid, { method: 'DELETE' }).then(resp => resp.json());
+    if (r.success) { showStatus(s, 'success', '✅ ' + r.message); getQuestionRefreshFn(type)(); }
+    else throw new Error(r.detail);
+  } catch(e) { showStatus(s, 'error', '❌ ' + e.message); }
+}
+
+
+// ==================== 视频文件管理 ====================
+
+async function loadVideoFiles() {
+  const c = document.getElementById('vfContent');
+  const s = document.getElementById('vfStatus');
+  c.innerHTML = '加载中...';
+  showStatus(s, 'info', '加载中...');
+  try {
+    const r = await apiGet('/admin/video/files');
+    if (!r.success) throw new Error(r.detail);
+    renderVideoFiles(r.data);
+    document.getElementById('vfStats').textContent = `共 ${r.total} 个文件`;
+    showStatus(s, 'success', `✅ 共 ${r.total} 个文件`);
+  } catch(e) {
+    c.innerHTML = '<div style="text-align:center;padding:30px;color:#c0392b;">加载失败</div>';
+    showStatus(s, 'error', '❌ ' + e.message);
+  }
+}
+
+function renderVideoFiles(files) {
+  const c = document.getElementById('vfContent');
+  if (!files || files.length === 0) {
+    c.innerHTML = '<div style="text-align:center;padding:30px;color:#999;">暂无视频文件，点击「上传视频」添加</div>';
+    return;
+  }
+
+  let html = `<table class="q-table"><thead><tr>
+    <th style="width:40px;"></th><th>文件名</th><th style="width:70px;">大小</th>
+    <th style="width:60px;">格式</th><th style="width:80px;">操作</th>
+  </tr></thead><tbody>`;
+  for (const f of files) {
+    const icons = { '.mp4': '🎬', '.avi': '🎥', '.mov': '🎥', '.wmv': '🎥', '.flv': '🎬', '.mkv': '🎬', '.webm': '🎬' };
+    const icon = icons[f.ext] || '🎬';
+    const sizeStr = f.size > 1024*1024 ? (f.size/1024/1024).toFixed(1)+' MB' : (f.size/1024).toFixed(1)+' KB';
+    const videoUrl = f.url || ('/video-data/' + encodeURIComponent(f.filename));
+    const sourceBadge = f.source === 'oss' ? '<span style="font-size:10px;color:#667eea;margin-left:4px;">☁️</span>' : '';
+    html += `<tr>
+      <td style="font-size:18px;">${icon}</td>
+      <td><strong>${f.filename}</strong>${sourceBadge}</td>
+      <td style="font-size:12px;color:#888;">${sizeStr}</td>
+      <td style="font-size:12px;color:#888;">${f.ext || '--'}</td>
+      <td style="white-space:nowrap;">
+        <button class="btn btn-sm btn-primary" onclick="previewVideoFile('${encodeURIComponent(f.filename)}', '${videoUrl}')" style="padding:3px 8px;font-size:11px;">▶ 预览</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteVideoFile('${f.filename}')" style="padding:3px 8px;font-size:11px;">删除</button>
+      </td>
+    </tr>`;
+  }
+  html += '</tbody></table>';
+  c.innerHTML = html;
+}
+
+async function uploadVideoFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const s = document.getElementById('vfStatus');
+  showStatus(s, 'info', `正在上传 ${file.name}...`);
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    const resp = await fetch('/admin/video/upload', { method: 'POST', body: formData });
+    const result = await resp.json();
+    if (!result.success) throw new Error(result.detail || `上传失败`);
+    showStatus(s, 'success', '✅ ' + (result.message || '上传成功'));
+    input.value = '';
+    loadVideoFiles();
+  } catch(e) {
+    showStatus(s, 'error', '❌ ' + e.message);
+    input.value = '';
+  }
+}
+
+async function deleteVideoFile(filename) {
+  if (!confirm(`确定要删除视频文件「${filename}」吗？\n删除后无法恢复。`)) return;
+  const s = document.getElementById('vfStatus');
+  showStatus(s, 'info', '删除中...');
+  try {
+    const r = await fetch('/admin/video/files/' + encodeURIComponent(filename), { method: 'DELETE' }).then(r => r.json());
+    if (r.success) { showStatus(s, 'success', '✅ ' + r.message); loadVideoFiles(); }
+    else throw new Error(r.detail);
+  } catch(e) { showStatus(s, 'error', '❌ ' + e.message); }
+}
+
+function previewVideoFile(filename, videoUrl) {
+  const title = decodeURIComponent(filename);
+  // 创建预览弹窗
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:2000;display:flex;align-items:center;justify-content:center;';
+  overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+
+  const box = document.createElement('div');
+  box.style.cssText = 'background:#fff;border-radius:12px;width:90%;max-width:800px;max-height:90vh;overflow:hidden;box-shadow:0 12px 48px rgba(0,0,0,0.3);animation:modalIn .2s ease;';
+
+  box.innerHTML = `
+    <div style="padding:12px 16px;border-bottom:1px solid #eee;display:flex;align-items:center;justify-content:space-between;font-size:15px;font-weight:600;">
+      <span>🎬 ${title}</span>
+      <span style="font-size:24px;cursor:pointer;color:#999;padding:0 4px;" onclick="this.closest('.modal-overlay').remove()">&times;</span>
+    </div>
+    <div style="padding:16px;text-align:center;">
+      <video controls autoplay preload="auto" playsinline
+        style="width:100%; max-height:70vh; border-radius:8px; background:#000;">
+        <source src="${videoUrl}" type="video/mp4">
+        您的浏览器不支持视频播放
+      </video>
+    </div>`;
+
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+}
+
+// ==================== Agent 画像 ====================
+const AGENT_DATA = [
+  { icon: '🧩', name: 'SuperAgent', file: 'super_agent.py', desc: '超级智能体(ReAct) — 自主分析复杂问题并调度子Agent',
+    badges: ['复合任务', '调度'], store: '无存储（动态调用子Agent）',
+    detail: '基于 LangGraph ReAct 模式的超级智能体，自主分析复杂/复合学习问题，拆解为多步计划，动态调用子Agent工具（练习/视频/文档等），支持顺序和并行执行，思维链可见。' },
+  { icon: '💻', name: 'PracticeAgent', file: 'practice_agent.py', desc: '生成编程练习题，支持代码评判和算法可视化',
+    badges: ['编程题', '评判', '可视化'], store: 'ResourceDB + SemanticStore + ContentStore',
+    detail: '根据知识点和难度生成个性化编程练习题。支持代码提交评判、测试用例验证、多维度评分。可生成算法可视化 HTML。' },
+  { icon: '📝', name: 'QuestionGeneratorAgent', file: 'question_generator_agent.py', desc: '生成 5 类理论题：单选、多选、判断、填空、简答',
+    badges: ['理论题', '5种题型'], store: 'ResourceDB + SemanticStore + ContentStore',
+    detail: '针对知识点生成个性化理论题，自动判题（精确匹配），答题后更新用户特征画像，答错自动记入错题本。' },
+  { icon: '📚', name: 'CourseDocAgent', file: 'course_doc_agent_ali.py', desc: '生成结构化 Word 课程讲解文档',
+    badges: ['文档', 'Word'], store: 'ResourceDB + SemanticStore + OSS + 文件系统',
+    detail: '基于课程名称生成完整课程文档，包含知识点讲解、案例分析和总结。支持 OSS 上传和本地文件导出。' },
+  { icon: '📖', name: 'ExtensionReadingAgent', file: 'extension_reading_agent.py', desc: '生成个性化拓展阅读材料，含 6 大板块',
+    badges: ['拓展阅读', '个性化'], store: 'ResourceDB + SemanticStore + ContentStore',
+    detail: '围绕知识点生成背景溯源、易混淆辨析、底层原理、避坑建议、应用场景、个性化建议六个板块的拓展阅读。' },
+  { icon: '🎬', name: 'VideoSearchAgent', file: 'video_search_agent.py', desc: '搜索 B 站教学视频并自动入库',
+    badges: ['视频', 'B站'], store: 'ResourceDB + SemanticStore + ContentStore',
+    detail: '根据知识点在 Bilibili 搜索相关教学视频，按质量评分排序，自动将搜索结果（标题/链接/时长/UP主）入库供推荐系统使用。' },
+  { icon: '🧠', name: 'MindMapAgent', file: 'mindmap_agent.py', desc: '生成层级化知识点思维导图',
+    badges: ['思维导图', 'JSON'], store: 'ResourceDB + SemanticStore + ContentStore',
+    detail: '围绕核心知识点生成多级思维导图 JSON，包含主题关联和层级关系，帮助学生建立知识体系。' },
+  { icon: '📊', name: 'PPTCreationAgent', file: 'ppt_agent.py', desc: '6 步流水线生成 PPT 课件',
+    badges: ['PPT', '课件'], store: 'ResourceDB + SemanticStore + OSS + 文件系统',
+    detail: '包含大纲生成、配色设计、图片描述、背景图生成、视频嵌入、PPTX 合成 6 个步骤，自动设计配色方案和背景图。' },
+  { icon: '🎨', name: 'AnimationAgent', file: 'wx_html_create.py', desc: '生成带动画效果的教育 HTML 内容',
+    badges: ['动画', 'HTML'], store: 'ResourceDB + SemanticStore + ContentStore',
+    detail: '针对知识点生成交互式动画 HTML 页面，支持 TTS 语音讲解，视觉效果丰富。' },
+  { icon: '📋', name: 'StudyPlanAgent', file: 'study_plan_agent.py', desc: '生成分阶段学习计划，支持版本管理',
+    badges: ['学习计划', '阶段'], store: 'MemoryHub(StudyPlanner)',
+    detail: '根据用户画像和目标生成个性化分阶段学习计划，每阶段含知识点、任务和里程碑，支持动态调整和重规划。' },
+  { icon: '⚖️', name: 'JudgeAgent', file: 'judge_agent.py', desc: '代码评判打分，支持测试用例验证',
+    badges: ['评判', '测试'], store: 'FeatureUpdater',
+    detail: '对用户提交的编程代码进行评判，运行测试用例验证，编译错误/运行结果/评分。' },
+  { icon: '💬', name: 'ChatAgent', file: 'super_agent_tools.py', desc: '日常对话问答 — SuperAgent 内部兜底工具',
+    badges: ['问答', '兜底'], store: '无存储（LLM 直接回答）',
+    detail: 'SuperAgent 调用的通用知识问答工具，当用户问一般性知识问题、概念解释、学习方法建议且不需要专门子Agent时使用。不处理视频/编程题等需要专门工具的任务。' }
+];
+
+async function loadAgentPortraits() {
+  const grid = document.getElementById('agentGrid');
+
+  // 先立即渲染（不用加载中，数据已在 AGENT_DATA）
+  let initialHtml = '';
+  for (const a of AGENT_DATA) {
+    initialHtml += `<span class="agent-icon-wrap" style="display:flex;flex-direction:column;align-items:center;">
+      <span class="agent-icon idle">${a.icon}</span>
+      <span class="agent-status-label idle">💤 休息中</span>
+      <span class="agent-tip">
+        <div class="at-icon">${a.icon}</div>
+        <div class="at-name">${a.name}</div>
+        <div class="at-file">${a.file}</div>
+        <div class="at-badges">${a.badges.map(b => `<span class="at-badge">${b}</span>`).join('')}${a.store.includes('ResourceDB') ? '<span class="at-badge db">DB</span>' : ''}</div>
+        <div class="at-desc">${a.desc}</div>
+        <div class="at-detail">📦 ${a.store}<br>${a.detail}</div>
+      </span>
+    </span>`;
+  }
+  grid.innerHTML = initialHtml;
+  document.getElementById('agentStatusSummary').textContent = `共 ${AGENT_DATA.length} 个 Agent`;
+  document.getElementById('agentLiveCount').textContent = `⚡ 0 个工作中 · ${AGENT_DATA.length} 个休息中`;
+
+  // 后台获取状态，只更新状态文字和边框，不重建整个 DOM
+  try {
+    const r = await apiGet('/admin/agent-monitor/stats');
+    if (r.success && r.data.ranking) {
+      const statusMap = {};
+      for (const a of r.data.ranking) {
+        statusMap[a.agent_key] = a.status;
+        statusMap[a.name] = a.status;
+      }
+      let workingCount = 0;
+      const cards = grid.querySelectorAll('.agent-icon-wrap');
+      AGENT_DATA.forEach((a, i) => {
+        const status = statusMap[a.name] || 'idle';
+        if (status === 'working') workingCount++;
+        const isWorking = status === 'working';
+        if (cards[i]) {
+          const icon = cards[i].querySelector('.agent-icon');
+          const label = cards[i].querySelector('.agent-status-label');
+          if (icon) { icon.className = 'agent-icon ' + (isWorking ? 'working' : 'idle'); }
+          if (label) { label.className = 'agent-status-label ' + (isWorking ? 'working' : 'idle');
+                       label.textContent = isWorking ? '⚡ 工作中' : '💤 休息中'; }
+        }
+      });
+      document.getElementById('agentLiveCount').textContent =
+        `⚡ ${workingCount} 个工作中 · ${AGENT_DATA.length - workingCount} 个休息中`;
+
+      // 渲染排行（折叠区内容）
+      const totalCalls = r.data.total_calls || 0;
+      const rankingData = r.data.ranking || [];
+      document.getElementById('rankTotalCalls').textContent = totalCalls;
+      const rankEl = document.getElementById('agentRankingContent');
+      if (rankingData.length === 0) {
+        rankEl.innerHTML = '<span style="color:#ccc;">暂无调用数据，Agent 被调用后自动生成</span>';
+      } else {
+        let rh = '<table class="monitor-table" style="font-size:12px;"><thead><tr>' +
+          '<th style="width:30px;">#</th><th style="width:30px;"></th><th>Agent</th>' +
+          '<th style="width:60px;">状态</th><th style="width:60px;">调用</th><th style="width:70px;">平均耗时</th></tr></thead><tbody>';
+        rankingData.forEach((a, i) => {
+          const rc = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : 'rank-other';
+          const sd = a.status === 'working' ? 'working' : 'idle';
+          const sl = a.status === 'working' ? '工作中' : '空闲';
+          const ad = a.avg_duration > 0 ? a.avg_duration + 's' : '--';
+          rh += `<tr><td><span class="rank-num ${rc}" style="width:18px;height:18px;line-height:18px;font-size:10px;">${i+1}</span></td>` +
+            `<td style="font-size:16px;">${a.icon || '🤖'}</td>` +
+            `<td><strong>${a.name}</strong><br><span style="font-size:10px;color:#999;">${a.desc || ''}</span></td>` +
+            `<td><span class="agent-status-dot ${sd}" style="vertical-align:middle;"></span>${sl}</td>` +
+            `<td><strong>${a.call_count}</strong></td><td>${ad}</td></tr>`;
+        });
+        rh += '</tbody></table>';
+        rankEl.innerHTML = rh;
+      }
+    }
+  } catch(e) { /* 状态刷新失败不影响已有显示 */ }
+}
+
+// 自动每 5 秒刷新 Agent 状态
+let agentStatusTimer = null;
+function startAgentStatusRefresh() {
+  stopAgentStatusRefresh();
+  agentStatusTimer = setInterval(loadAgentPortraits, 5000);
+}
+function stopAgentStatusRefresh() {
+  if (agentStatusTimer) { clearInterval(agentStatusTimer); agentStatusTimer = null; }
+}
+
+// 重置统计
+async function resetAgentStats() {
+  if (!confirm('确定要重置所有 Agent 统计数据吗？')) return;
+  try {
+    const r = await fetch('/admin/agent-monitor/reset', { method: 'POST' }).then(r => r.json());
+    if (r.success) loadAgentPortraits();
+  } catch(e) { alert('重置失败: ' + e.message); }
+}
+
+// ==================== 管理助手聊天 ====================
+
+function initHelperChat() {
+  const el = document.getElementById('helperGreeting');
+  if (el) {
+    el.textContent =
+      '你好！我是管理助手，可以帮你：\n\n' +
+      '📋 解答操作问题 — 字段含义、功能说明\n' +
+      '📝 执行管理操作 — 增删改题目/视频/知识库\n' +
+      '⚙ 查看和修改权重配置\n' +
+      '📊 查看 Agent 运行状态\n\n' +
+      '直接说你想做什么即可。';
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initHelperChat);
+} else {
+  initHelperChat();
+}
+
+function toggleHelperChat() {
+  const panel = document.getElementById('helperChatPanel');
+  const btn = document.getElementById('helperChatBtn');
+  const open = panel.classList.toggle('open');
+  btn.textContent = open ? '✕' : '🤖';
+  if (open) document.getElementById('helperChatInput').focus();
+}
+
+function addChatMessage(type, content, extraClass = '') {
+  const body = document.getElementById('helperChatBody');
+  const div = document.createElement('div');
+  div.className = `chat-msg ${type}`;
+  const bubble = document.createElement('div');
+  bubble.className = `bubble ${extraClass}`;
+  bubble.textContent = content;
+  div.appendChild(bubble);
+  body.appendChild(div);
+  body.scrollTop = body.scrollHeight;
+}
+
+function showChatLoading() {
+  const body = document.getElementById('helperChatBody');
+  const div = document.createElement('div');
+  div.className = 'chat-msg assistant';
+  div.id = 'chatLoading';
+  div.innerHTML = '<div class="chat-loading"><span></span><span></span><span></span></div>';
+  body.appendChild(div);
+  body.scrollTop = body.scrollHeight;
+}
+
+function hideChatLoading() {
+  const el = document.getElementById('chatLoading');
+  if (el) el.remove();
+}
+
+async function sendHelperMessage() {
+  const input = document.getElementById('helperChatInput');
+  const btn = document.getElementById('helperChatSendBtn');
+  const msg = input.value.trim();
+  if (!msg) return;
+
+  input.value = '';
+  btn.disabled = true;
+  addChatMessage('user', msg);
+  showChatLoading();
+
+  try {
+    const resp = await fetch('/admin/helper/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: msg })
+    });
+
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const data = line.slice(6).trim();
+        if (data === '[DONE]') continue;
+
+        try {
+          const event = JSON.parse(data);
+          hideChatLoading();
+
+          if (event.type === 'thinking' || event.type === 'answer') {
+            addChatMessage('assistant', event.content);
+          } else if (event.type === 'tool_call') {
+            console.log('[DEBUG] Received tool_call:', event);
+          } else if (event.type === 'tool_result') {
+            console.log('[DEBUG] Received tool_result:', event);
+            autoNavigateByTool(event.tool, event.args, event.result);
+          } else if (event.type === 'error') {
+            console.log('[DEBUG] Received error:', event);
+            addChatMessage('assistant', `❌ ${event.content}`, 'error');
+          } else {
+            console.log('[DEBUG] Received unknown event:', event);
+          }
+        } catch(e) { /* ignore parse errors */ }
+      }
+    }
+    hideChatLoading();
+  } catch(e) {
+    hideChatLoading();
+    addChatMessage('assistant', `❌ 连接失败: ${e.message}`, 'error');
+  } finally {
+    btn.disabled = false;
+    input.focus();
+  }
+}
+
+function autoNavigateByTool(toolName, toolArgs, toolResult) {
+  const toolTabMap = {
+    get_weight_config: (args) => {
+      const cat = args?.category || args?.Category || '';
+      console.log('[DEBUG] get_weight_config category:', cat);
+      const tabMap = { attention_tracker: 'tab-attention', emotion_state_mapper: 'tab-emotion',
+        attention_bridge: 'tab-bridge', gaze_detector: 'tab-gaze' };
+      const result = tabMap[cat];
+      console.log('[DEBUG] get_weight_config tab:', result);
+      return result;
+    },
+    update_weight: (args) => {
+      const cat = args?.category || '';
+      const tabMap = { attention_tracker: 'tab-attention', emotion_state_mapper: 'tab-emotion',
+        attention_bridge: 'tab-bridge', gaze_detector: 'tab-gaze' };
+      return tabMap[cat];
+    },
+    list_knowledge_files: () => 'tab-kb',
+    sync_knowledge_base: () => 'tab-kb',
+    delete_knowledge_file: () => 'tab-kb',
+    list_questions: (args) => {
+      const type = args?.question_type === 'practice' ? 'practice' : 'theory';
+      const prefix = type === 'theory' ? 'th' : 'pr';
+      if (args?.difficulty) document.getElementById(prefix + 'FilterDifficulty').value = args.difficulty;
+      if (args?.topic) document.getElementById(prefix + 'FilterTopic').value = args.topic;
+      if (args?.keyword) document.getElementById(prefix + 'FilterKeyword').value = args.keyword;
+      return type === 'practice' ? 'tab-practice' : 'tab-theory';
+    },
+    add_question: (args) => {
+      return args?.sub_topic ? 'tab-theory' : 'tab-practice';
+    },
+    delete_question: () => 'tab-theory',
+    get_question_detail: () => 'tab-theory',
+    list_videos: (args) => {
+      if (args?.difficulty) document.getElementById('vdFilterDifficulty').value = args.difficulty;
+      if (args?.topic) document.getElementById('vdFilterTopic').value = args.topic;
+      if (args?.keyword) document.getElementById('vdFilterKeyword').value = args.keyword;
+      return 'tab-videos';
+    },
+    add_video: () => 'tab-videos',
+    delete_video: () => 'tab-videos',
+    list_video_files: () => 'tab-video-files',
+    upload_video_file: () => 'tab-video-files',
+    delete_video_file: () => 'tab-video-files',
+    get_agent_stats: () => 'tab-agents',
+    get_global_ranking_weights: () => 'tab-ranking',
+    update_global_ranking_weights: () => 'tab-ranking',
+  };
+
+  const getTabId = toolTabMap[toolName];
+  if (!getTabId) return;
+
+  const tabId = typeof getTabId === 'function' ? getTabId(toolArgs) : getTabId;
+  if (!tabId) return;
+
+  const tab = document.querySelector(`.tab[data-tab="${tabId}"]`);
+  if (!tab) return;
+
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  tab.classList.add('active');
+  document.getElementById(tabId).classList.add('active');
+
+  const cat = { 'tab-attention': 'attention_tracker', 'tab-emotion': 'emotion_state_mapper',
+    'tab-bridge': 'attention_bridge', 'tab-gaze': 'gaze_detector' }[tabId];
+  if (cat) loadCategory(cat);
+  if (tabId === 'tab-theory') loadTheoryQuestions();
+  if (tabId === 'tab-practice') loadPracticeQuestions();
+  if (tabId === 'tab-videos') loadVideos();
+  if (tabId === 'tab-video-files') loadVideoFiles();
+  if (tabId === 'tab-agents') { loadAgentPortraits(); startAgentStatusRefresh(); }
+  if (tabId === 'tab-kb') loadKnowledgeFiles();
+  if (!tabId.startsWith('tab-agent')) stopAgentStatusRefresh();
+
+  // list_video_files 跳转到媒体素材页面
+  if (toolName === 'list_video_files') {
+    setTimeout(() => {
+      loadVideoFiles();
+    }, 200);
+  }
+
+  if (toolName === 'add_question') {
+    const type = toolArgs?.sub_topic ? 'theory' : 'practice';
+    openQuestionModalWithData(type, toolArgs);
+  } else if (toolName === 'add_video') {
+    openVideoModalWithData(toolArgs);
+  } else if (toolName === 'delete_question') {
+    confirmDelete('题目', toolArgs?.qid, () => loadTheoryQuestions());
+  } else if (toolName === 'delete_video') {
+    confirmDelete('视频', toolArgs?.vid, () => loadVideos());
+  } else if (toolName === 'delete_knowledge_file') {
+    confirmDelete('文件', toolArgs?.filename, () => loadKnowledgeFiles());
+  } else if (toolName === 'get_question_detail') {
+    showEditQuestion(toolArgs?.qid, toolArgs?.sub_topic ? 'theory' : 'practice');
+  } else if (toolName === 'get_video_detail') {
+    showEditVideo(toolArgs?.vid);
+  } else if (toolName === 'update_question') {
+    showEditQuestion(toolArgs?.qid, toolArgs?.sub_topic ? 'theory' : 'practice');
+  } else if (toolName === 'update_video') {
+    showEditVideo(toolArgs?.vid);
+  } else if (toolName === 'reset_weights') {
+    showConfirmDialog({
+      title: '⚠️ 确认重置权重',
+      message: '确定要将所有权重重置为默认值吗？<br><br>此操作无法撤销！',
+      confirmText: '🔄 确认重置',
+      cancelText: '❌ 取消',
+      danger: true,
+      onConfirm: () => {
+        fetch('/admin/weights/reset', { method: 'POST' }).then(() => {
+          loadCategory('attention_tracker');
+          showToast('✅ 权重已重置为默认值');
+        });
+      }
+    });
+  }
+}
+
+function openQuestionModalWithData(type, data) {
+  document.getElementById('qEditType').value = type;
+  document.getElementById('qEditId').value = '';
+  document.getElementById('qModalTitle').textContent = type === 'theory' ? '📝 新增理论题' : '💻 新增编程题';
+  document.getElementById('qFormTopic').value = data?.topic || '';
+  document.getElementById('qFormSubTopic').value = data?.sub_topic || '';
+  document.getElementById('qFormDifficulty').value = String(data?.difficulty || '3');
+  document.getElementById('qFormTitle').value = data?.title || '';
+  document.getElementById('qFormKP').value = Array.isArray(data?.knowledge_points) ? data.knowledge_points.join(', ') : (data?.knowledge_points || '');
+  document.getElementById('qFormContent').value = data?.content || '';
+  document.getElementById('qFormOptions').value = data?.options || '';
+  document.getElementById('qFormSolution').value = data?.solution || '';
+  document.getElementById('qFormHints').value = data?.hints || '';
+  document.getElementById('qModalStatus').textContent = '';
+  document.getElementById('questionModal').style.display = 'flex';
+
+  setTimeout(() => {
+    showConfirmDialog({
+      title: '📝 确认保存题目',
+      message: `AI 已为您填写以下题目信息：<br><br>` +
+        `<strong>主题</strong>：${escapeHtml(data?.topic || '')}<br>` +
+        `<strong>难度</strong>：${data?.difficulty || 3}<br>` +
+        `<strong>标题</strong>：${escapeHtml(data?.title || '(无)')}<br>` +
+        `<strong>知识点</strong>：${escapeHtml(Array.isArray(data?.knowledge_points) ? data.knowledge_points.join(', ') : (data?.knowledge_points || '(无)'))}<br>` +
+        `<strong>题型</strong>：${type === 'theory' ? '理论题' : '编程题'}`,
+      confirmText: '✅ 确认保存',
+      cancelText: '❌ 取消（手动修改）',
+      onConfirm: () => saveQuestion()
+    });
+  }, 300);
+}
+
+function openVideoModalWithData(data) {
+  document.getElementById('vEditId').value = '';
+  document.getElementById('vModalTitle').textContent = '🎬 新增视频';
+  document.getElementById('vFormTitle').value = data?.title || '';
+  document.getElementById('vFormTopic').value = data?.topic || '';
+  document.getElementById('vFormPlatform').value = data?.platform || 'bilibili';
+  document.getElementById('vFormDifficulty').value = String(data?.difficulty || '3');
+  document.getElementById('vFormDuration').value = data?.duration_sec || 0;
+  document.getElementById('vFormUrl').value = data?.url || '';
+  document.getElementById('vFormKP').value = Array.isArray(data?.knowledge_points) ? data.knowledge_points.join(', ') : (data?.knowledge_points || '');
+  document.getElementById('vModalStatus').textContent = '';
+  document.getElementById('videoModal').style.display = 'flex';
+
+  setTimeout(() => {
+    showConfirmDialog({
+      title: '📝 确认保存视频',
+      message: `AI 已为您填写以下视频信息：<br><br>` +
+        `<strong>标题</strong>：${escapeHtml(data?.title || '')}<br>` +
+        `<strong>主题</strong>：${escapeHtml(data?.topic || '')}<br>` +
+        `<strong>平台</strong>：${escapeHtml(data?.platform || 'bilibili')}<br>` +
+        `<strong>难度</strong>：${data?.difficulty || 3}<br>` +
+        `<strong>链接</strong>：${escapeHtml(data?.url || '(无)')}`,
+      confirmText: '✅ 确认保存',
+      cancelText: '❌ 取消（手动修改）',
+      onConfirm: () => saveVideo()
+    });
+  }, 300);
+}
+
+function confirmDelete(type, id, onSuccess) {
+  showConfirmDialog({
+    title: '⚠️ 确认删除',
+    message: `确定要删除 ${type} <strong>${escapeHtml(id || '')}</strong> 吗？<br><br>此操作无法撤销！`,
+    confirmText: '🗑️ 确认删除',
+    cancelText: '❌ 取消',
+    danger: true,
+    onConfirm: onSuccess
+  });
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function showConfirmDialog({ title, message, confirmText, cancelText, danger = false, onConfirm }) {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.style.display = 'flex';
+  
+  const box = document.createElement('div');
+  box.className = 'modal-box';
+  box.style.maxWidth = '480px';
+  
+  box.innerHTML = `
+    <div class="modal-header">
+      <span>${title}</span>
+      <span class="modal-close" onclick="this.closest('.modal-overlay').remove()">&times;</span>
+    </div>
+    <div class="modal-body" style="padding:20px;">
+      <div style="font-size:14px;line-height:1.6;color:#555;">${message}</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" style="background:#eee;color:#666;" onclick="this.closest('.modal-overlay').remove()">${cancelText}</button>
+      <button class="btn ${danger ? 'btn-danger' : 'btn-success'}" onclick="this.closest('.modal-overlay').remove(); window.__confirmCallback && window.__confirmCallback()">${confirmText}</button>
+    </div>
+  `;
+  
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+  
+  window.__confirmCallback = onConfirm;
+  
+  box.querySelector('.btn-success, .btn-danger').focus();
+}
+
+function showToast(message) {
+  const toast = document.createElement('div');
+  toast.style.cssText = `
+    position: fixed; top: 20px; right: 20px; padding: 12px 24px;
+    background: #27ae60; color: white; border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    font-size: 14px; z-index: 9999; animation: slideIn 0.3s ease;
+  `;
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.style.animation = 'slideOut 0.3s ease';
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+
+
+// ==================== Agent 画像 ====================
+
+async function loadKnowledgeFiles() {
+  const c = document.getElementById('kbContent');
+  const s = document.getElementById('kbStatus');
+  c.innerHTML = '加载中...';
+  showStatus(s, 'info', '加载中...');
+  try {
+    const [filesRes, statsRes] = await Promise.all([
+      apiGet('/admin/knowledge/files'),
+      apiGet('/admin/knowledge/stats')
+    ]);
+    if (!filesRes.success) throw new Error(filesRes.detail);
+    renderKnowledgeFiles(filesRes.data, statsRes.data?.data);
+    showStatus(s, 'success', `✅ 共 ${filesRes.total} 个文件`);
+  } catch(e) {
+    c.innerHTML = '<div style="text-align:center;padding:30px;color:#c0392b;">加载失败</div>';
+    showStatus(s, 'error', '❌ ' + e.message);
+  }
+}
+
+function renderKnowledgeFiles(files, stats) {
+  const c = document.getElementById('kbContent');
+  // 更新统计
+  const totalChunks = stats?.total_chunks || 0;
+  document.getElementById('kbStats').textContent = totalChunks > 0 ? `🧩 ${totalChunks} 个向量片段` : '';
+
+  if (!files || files.length === 0) {
+    c.innerHTML = '<div style="text-align:center;padding:40px;color:#999;">暂无文件，点击「上传文件」添加知识库文档</div>';
+    return;
+  }
+
+  const SUPPORTED_ICONS = {
+    '.md': '📝', '.markdown': '📝', '.pdf': '📄', '.docx': '📃', '.doc': '📃',
+    '.xmind': '🧠'
+  };
+
+  let html = `<table class="q-table"><thead><tr>
+    <th style="width:40px;"></th><th>文件名</th><th style="width:70px;">大小</th>
+    <th style="width:80px;">类型</th><th style="width:60px;">状态</th><th style="width:80px;">操作</th>
+  </tr></thead><tbody>`;
+  for (const f of files) {
+    const icon = SUPPORTED_ICONS[f.ext] || '📎';
+    const sizeStr = f.size > 1024*1024 ? (f.size/1024/1024).toFixed(1)+'MB' : (f.size/1024).toFixed(1)+'KB';
+    const statusIcon = f.supported ? '✅' : '⚠️';
+    const statusTip = f.supported ? '可导入' : '不支持导入';
+    html += `<tr>
+      <td style="font-size:18px;">${icon}</td>
+      <td><strong>${f.filename}</strong></td>
+      <td style="font-size:12px;color:#888;">${sizeStr}</td>
+      <td style="font-size:12px;color:#888;">${f.ext || '--'}</td>
+      <td><span style="font-size:11px;" title="${statusTip}">${statusIcon}</span></td>
+      <td>
+        <button class="btn btn-sm btn-danger" onclick="deleteKnowledgeFile('${f.filename}')" style="padding:3px 8px;font-size:11px;">删除</button>
+      </td>
+    </tr>`;
+  }
+  html += '</tbody></table>';
+  c.innerHTML = html;
+}
+
+async function uploadKnowledgeFiles(input) {
+  const files = input.files;
+  if (!files || files.length === 0) return;
+  const s = document.getElementById('kbStatus');
+  showStatus(s, 'info', `正在上传 ${files.length} 个文件...`);
+  try {
+    for (const file of files) {
+      const formData = new FormData();
+      formData.append('file', file);
+      const resp = await fetch('/admin/knowledge/upload', { method: 'POST', body: formData });
+      const result = await resp.json();
+      if (!result.success) throw new Error(result.detail || `上传 ${file.name} 失败`);
+    }
+    showStatus(s, 'success', `✅ 成功上传 ${files.length} 个文件`);
+    input.value = '';
+    loadKnowledgeFiles();
+  } catch(e) {
+    showStatus(s, 'error', '❌ ' + e.message);
+    input.value = '';
+  }
+}
+
+async function deleteKnowledgeFile(filename) {
+  if (!confirm(`确定要删除「${filename}」吗？`)) return;
+  const s = document.getElementById('kbStatus');
+  showStatus(s, 'info', '删除中...');
+  try {
+    const r = await fetch('/admin/knowledge/files/' + encodeURIComponent(filename), { method: 'DELETE' }).then(r => r.json());
+    if (r.success) { showStatus(s, 'success', '✅ ' + r.message); loadKnowledgeFiles(); }
+    else throw new Error(r.detail);
+  } catch(e) { showStatus(s, 'error', '❌ ' + e.message); }
+}
+
+async function syncKnowledgeBase() {
+  if (!confirm('将 rag_knowledge 目录下的所有文件同步到向量库，继续吗？')) return;
+  const s = document.getElementById('kbStatus');
+  showStatus(s, 'info', '正在同步到向量库，请稍候...');
+  try {
+    const formData = new FormData();
+    formData.append('user_id', 'admin');
+    formData.append('recreate', 'true');
+    const r = await fetch('/admin/knowledge/sync', { method: 'POST', body: formData }).then(r => r.json());
+    if (r.success) { showStatus(s, 'success', '✅ ' + r.message); loadKnowledgeFiles(); }
+    else throw new Error(r.detail);
+  } catch(e) { showStatus(s, 'error', '❌ ' + e.message); }
+}
+
+
+// ==================== 视频管理 ====================
+let vdPage = 1;
+
+async function loadVideos() {
+  const contentEl = document.getElementById('vdContent');
+  const statusEl = document.getElementById('vdStatus');
+  const labelEl = document.getElementById('vdTotalLabel');
+  const paginationEl = document.getElementById('vdPagination');
+  contentEl.innerHTML = '加载中...';
+  showStatus(statusEl, 'info', '加载中...');
+  const topic = document.getElementById('vdFilterTopic').value;
+  const diff = document.getElementById('vdFilterDifficulty').value;
+  const kw = document.getElementById('vdFilterKeyword').value;
+  try {
+    let url = `/admin/videos?page=${vdPage}&page_size=20`;
+    if (topic) url += `&topic=${encodeURIComponent(topic)}`;
+    if (diff) url += `&difficulty=${diff}`;
+    if (kw) url += `&keyword=${encodeURIComponent(kw)}`;
+    const r = await apiGet(url);
+    if (!r.success) throw new Error(r.detail);
+    renderVideoTable(r, contentEl, paginationEl);
+    labelEl.textContent = `共 ${r.total} 个视频`;
+    showStatus(statusEl, 'success', '✅ 加载成功');
+    loadVideoFilterTopics();
+  } catch(e) {
+    contentEl.textContent = '加载失败';
+    showStatus(statusEl, 'error', '❌ ' + e.message);
+  }
+}
+
+function renderVideoTable(r, contentEl, paginationEl) {
+  const items = r.items || [];
+  if (items.length === 0) {
+    contentEl.innerHTML = '<div style="text-align:center;padding:40px;color:#999;">暂无视频</div>';
+  } else {
+    let html = `<table class="q-table"><thead><tr>
+      <th>标题</th><th style="width:80px;">平台</th><th style="width:100px;">主题</th>
+      <th style="width:50px;">难度</th><th style="width:70px;">时长</th><th style="width:100px;">操作</th>
+    </tr></thead><tbody>`;
+    for (const v of items) {
+      const dur = v.duration_sec ? Math.floor(v.duration_sec/60) + ':' + String(v.duration_sec%60).padStart(2,'0') : '--';
+      const d = v.difficulty || 3;
+      html += `<tr>
+        <td><div class="q-title" title="${v.title}">${v.title || '(无标题)'}</div></td>
+        <td><span style="font-size:11px;color:#888;">${v.platform || '--'}</span></td>
+        <td><span class="q-topic-tag">${v.topic || '--'}</span></td>
+        <td><span class="q-diff q-diff-${d}">${d}</span></td>
+        <td style="font-size:12px;color:#888;">${dur}</td>
+        <td style="white-space:nowrap;">
+          <button class="btn btn-sm btn-primary" onclick="showEditVideo('${v.id}')" style="padding:3px 8px;font-size:11px;">编辑</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteVideo('${v.id}')" style="padding:3px 8px;font-size:11px;">删除</button>
+        </td>
+      </tr>`;
+    }
+    html += '</tbody></table>';
+    contentEl.innerHTML = html;
+  }
+  const totalPages = Math.ceil(r.total / r.page_size);
+  paginationEl.innerHTML = `
+    <button class="btn btn-sm btn-primary" onclick="vdPage=${Math.max(1,vdPage-1)};loadVideos()" ${vdPage<=1?'disabled':''}>上一页</button>
+    <span>第 ${r.page}/${totalPages} 页</span>
+    <button class="btn btn-sm btn-primary" onclick="vdPage=${Math.min(totalPages,vdPage+1)};loadVideos()" ${vdPage>=totalPages?'disabled':''}>下一页</button>`;
+}
+
+async function loadVideoFilterTopics() {
+  const sel = document.getElementById('vdFilterTopic');
+  if (sel.options.length > 1) return;
+  try {
+    const r = await apiGet('/admin/videos/topics');
+    if (r.success) for (const t of r.data) { const o = document.createElement('option'); o.value=t; o.textContent=t; sel.appendChild(o); }
+  } catch(e) {}
+}
+
+// --- 视频表单 ---
+function showAddVideo() {
+  document.getElementById('vEditId').value = '';
+  document.getElementById('vModalTitle').textContent = '🎬 新增视频';
+  document.getElementById('vFormTitle').value = '';
+  document.getElementById('vFormTopic').value = '';
+  document.getElementById('vFormPlatform').value = 'bilibili';
+  document.getElementById('vFormDifficulty').value = '3';
+  document.getElementById('vFormDuration').value = 0;
+  document.getElementById('vFormUrl').value = '';
+  document.getElementById('vFormKP').value = '';
+  document.getElementById('vModalStatus').textContent = '';
+  document.getElementById('videoModal').style.display = 'flex';
+}
+
+async function showEditVideo(vid) {
+  document.getElementById('vEditId').value = vid;
+  document.getElementById('vModalTitle').textContent = '✏️ 编辑视频';
+  document.getElementById('vModalStatus').textContent = '加载中...';
+  document.getElementById('videoModal').style.display = 'flex';
+  try {
+    const r = await apiGet('/admin/videos/' + vid);
+    if (r.success) {
+      const d = r.data;
+      document.getElementById('vFormTitle').value = d.title || '';
+      document.getElementById('vFormTopic').value = d.topic || '';
+      document.getElementById('vFormPlatform').value = d.platform || 'bilibili';
+      document.getElementById('vFormDifficulty').value = d.difficulty || 3;
+      document.getElementById('vFormDuration').value = d.duration_sec || 0;
+      document.getElementById('vFormUrl').value = d.url || '';
+      document.getElementById('vFormKP').value = (d.knowledge_points || '').split(',').filter(Boolean).join(', ');
+      document.getElementById('vModalStatus').textContent = '';
+    }
+  } catch(e) { document.getElementById('vModalStatus').textContent = '❌ ' + e.message; }
+}
+
+function closeVideoModal() { document.getElementById('videoModal').style.display = 'none'; }
+
+async function saveVideo() {
+  const vid = document.getElementById('vEditId').value;
+  const isNew = !vid;
+  const data = {
+    title: document.getElementById('vFormTitle').value.trim(),
+    topic: document.getElementById('vFormTopic').value.trim(),
+    platform: document.getElementById('vFormPlatform').value,
+    difficulty: parseInt(document.getElementById('vFormDifficulty').value),
+    duration_sec: parseInt(document.getElementById('vFormDuration').value) || 0,
+    url: document.getElementById('vFormUrl').value.trim(),
+    knowledge_points: document.getElementById('vFormKP').value.split(/[,，]/).map(s=>s.trim()).filter(Boolean)
+  };
+  if (!data.title) { alert('请输入视频标题'); return; }
+  if (!data.topic) { alert('请输入主题'); return; }
+
+  const s = document.getElementById('vModalStatus');
+  s.textContent = '保存中...';
+  try {
+    let r;
+    if (isNew) {
+      r = await apiPost('/admin/videos', data);
+    } else {
+      r = await fetch('/admin/videos/' + vid, { method: 'PUT',
+        headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
+      }).then(resp => resp.json());
+      if (!r.success) throw new Error(r.detail);
+    }
+    s.textContent = '✅ ' + (r.message || '保存成功');
+    closeVideoModal();
+    loadVideos();
+  } catch(e) { s.textContent = '❌ ' + e.message; }
+}
+
+async function deleteVideo(vid) {
+  if (!confirm('确定要永久删除该视频吗？')) return;
+  const s = document.getElementById('vdStatus');
+  showStatus(s, 'info', '删除中...');
+  try {
+    const r = await fetch('/admin/videos/' + vid, { method: 'DELETE' }).then(resp => resp.json());
+    if (r.success) { showStatus(s, 'success', '✅ ' + r.message); loadVideos(); }
+    else throw new Error(r.detail);
+  } catch(e) { showStatus(s, 'error', '❌ ' + e.message); }
+}
+</script>
+
+<!-- 管理助手浮动聊天组件 -->
+<button class="chat-btn" id="helperChatBtn" onclick="toggleHelperChat()" title="管理助手">🤖</button>
+<div class="chat-panel" id="helperChatPanel">
+  <div class="chat-header">
+    <span>🤖 管理助手</span>
+    <span style="font-size:11px;font-weight:400;opacity:.8;">自然语言操作管理端</span>
+    <button class="close-btn" onclick="toggleHelperChat()">&times;</button>
+  </div>
+  <div class="chat-body" id="helperChatBody">
+    <div class="chat-msg assistant">
+      <div class="bubble" id="helperGreeting"></div>
+    </div>
+  </div>
+  <div class="chat-footer">
+    <input type="text" id="helperChatInput" placeholder="输入指令或问题..." onkeydown="if(event.key==='Enter') sendHelperMessage()">
+    <button id="helperChatSendBtn" onclick="sendHelperMessage()">发送</button>
+  </div>
+</div>
+
+</body>
+</html>

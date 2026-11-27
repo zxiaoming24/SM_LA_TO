@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>学习社区</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+       background: #f5f7fa; color: #1a1a2e; min-height: 100vh; }
+
+/* Header */
+.header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+           color: #fff; padding: 20px 40px; display: flex; align-items: center;
+           justify-content: space-between; }
+.header h1 { font-size: 24px; font-weight: 600; }
+.header .user-info { display: flex; align-items: center; gap: 12px; }
+.header .user-info input { padding: 8px 14px; border: none; border-radius: 8px;
+                           background: rgba(255,255,255,0.2); color: #fff;
+                           font-size: 14px; width: 160px; outline: none; }
+.header .user-info input::placeholder { color: rgba(255,255,255,0.6); }
+
+.container { max-width: 960px; margin: 0 auto; padding: 24px 16px; }
+
+/* New Post Button */
+.toolbar { display: flex; justify-content: space-between; align-items: center;
+           margin-bottom: 24px; }
+.toolbar .btn-new { background: #667eea; color: #fff; border: none;
+                    padding: 10px 24px; border-radius: 10px; font-size: 15px;
+                    cursor: pointer; font-weight: 500; transition: all .2s; }
+.toolbar .btn-new:hover { background: #5a6fd6; transform: translateY(-1px); }
+
+/* Post Card */
+.post-card { background: #fff; border-radius: 12px; padding: 20px 24px;
+             margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+             cursor: pointer; transition: all .2s; }
+.post-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+                   transform: translateY(-2px); }
+.post-card .title { font-size: 18px; font-weight: 600; color: #1a1a2e;
+                    margin-bottom: 8px; }
+.post-card .meta { display: flex; align-items: center; gap: 16px;
+                   font-size: 13px; color: #888; margin-bottom: 10px; }
+.post-card .meta span { display: flex; align-items: center; gap: 4px; }
+.post-card .tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.post-card .tags .tag { background: #f0f2ff; color: #667eea; padding: 2px 10px;
+                          border-radius: 8px; font-size: 12px; }
+.practice-btn { padding: 4px 14px; background: #667eea; color: #fff; border: none;
+                border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; }
+.practice-btn:hover { background: #5a6fd6; }
+
+/* Post Detail */
+.detail-overlay { display: none; position: fixed; top: 0; left: 0; right: 0;
+                  bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000;
+                  overflow-y: auto; }
+.detail-overlay.active { display: block; }
+.detail-box { background: #fff; max-width: 720px; margin: 60px auto;
+              border-radius: 16px; padding: 32px; position: relative; }
+.detail-box .close { position: absolute; top: 16px; right: 20px;
+                     background: none; border: none; font-size: 24px;
+                     cursor: pointer; color: #888; }
+.detail-box .close:hover { color: #333; }
+.detail-box .detail-title { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+.detail-box .detail-meta { color: #888; font-size: 13px; margin-bottom: 16px; }
+.detail-box .detail-content { font-size: 15px; line-height: 1.8;
+                              color: #333; margin-bottom: 24px;
+                              white-space: pre-wrap; }
+.detail-box .detail-tags { margin-bottom: 24px; }
+
+/* Reply Section - Chat Style */
+.reply-section { border-top: 1px solid #eee; padding-top: 20px; }
+.reply-section h3 { font-size: 16px; margin-bottom: 16px; color: #444; }
+
+/* Chat Messages Container */
+.chat-messages { max-height: 400px; overflow-y: auto; padding: 10px 0; margin-bottom: 16px; }
+.chat-messages::-webkit-scrollbar { width: 6px; }
+.chat-messages::-webkit-scrollbar-thumb { background: #ddd; border-radius: 3px; }
+
+/* Chat Bubble */
+.chat-bubble { display: flex; margin-bottom: 12px; align-items: flex-start; }
+.chat-bubble.mine { flex-direction: row-reverse; }
+.chat-bubble .avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                       color: #fff; display: flex; align-items: center; justify-content: center;
+                       font-size: 14px; font-weight: 600; flex-shrink: 0; }
+.chat-bubble.mine .avatar { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+.chat-bubble .bubble-content { margin: 0 10px; max-width: 70%; }
+.chat-bubble .bubble-user { font-size: 12px; color: #888; margin-bottom: 2px; }
+.chat-bubble.mine .bubble-user { text-align: right; }
+.chat-bubble .bubble-text { padding: 10px 14px; border-radius: 16px; font-size: 14px;
+                            line-height: 1.5; word-break: break-word; }
+.chat-bubble:not(.mine) .bubble-text { background: #f0f2ff; color: #333; border-top-left-radius: 4px; }
+.chat-bubble.mine .bubble-text { background: #667eea; color: #fff; border-top-right-radius: 4px; }
+.chat-bubble .bubble-time { font-size: 11px; color: #bbb; margin-top: 2px; }
+.chat-bubble.mine .bubble-time { text-align: right; }
+
+.reply-form { display: flex; gap: 8px; margin-top: 16px; }
+.reply-form textarea { flex: 1; padding: 10px 14px; border: 1px solid #ddd;
+                       border-radius: 8px; font-size: 14px; resize: none;
+                       height: 44px; outline: none; font-family: inherit; }
+.reply-form textarea:focus { border-color: #667eea; }
+.reply-form button { background: #667eea; color: #fff; border: none;
+                     padding: 0 20px; border-radius: 8px; cursor: pointer;
+                     font-size: 14px; white-space: nowrap; }
+.reply-form button:hover { background: #5a6fd6; }
+
+/* Modal (New Post) */
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0;
+                 bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; }
+.modal-overlay.active { display: block; }
+.modal-box { background: #fff; max-width: 560px; margin: 100px auto;
+             border-radius: 16px; padding: 32px; position: relative; }
+.modal-box h2 { font-size: 20px; margin-bottom: 20px; }
+.modal-box input, .modal-box textarea { width: 100%; padding: 10px 14px;
+              border: 1px solid #ddd; border-radius: 8px; font-size: 14px;
+              outline: none; margin-bottom: 14px; font-family: inherit; }
+.modal-box textarea { height: 140px; resize: vertical; }
+.modal-box input:focus, .modal-box textarea:focus { border-color: #667eea; }
+.modal-box .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+.modal-box .modal-actions button { padding: 8px 20px; border-radius: 8px;
+              border: none; cursor: pointer; font-size: 14px; }
+.modal-box .modal-actions .btn-cancel { background: #f0f0f0; color: #666; }
+.modal-box .modal-actions .btn-submit { background: #667eea; color: #fff; }
+
+.empty { text-align: center; color: #999; padding: 60px 0; font-size: 15px; }
+
+.page-nav { display: flex; justify-content: center; align-items: center;
+            gap: 12px; margin-top: 24px; }
+.page-nav button { background: #fff; border: 1px solid #ddd; padding: 6px 14px;
+                   border-radius: 8px; cursor: pointer; font-size: 14px; }
+.page-nav button:hover { border-color: #667eea; color: #667eea; }
+.page-nav button:disabled { opacity: 0.4; cursor: default; }
+.page-nav .page-info { font-size: 14px; color: #666; }
+
+/* Upload Button */
+.upload-btn { display: inline-flex; align-items: center; justify-content: center;
+              width: 44px; height: 44px; border: 1px solid #ddd; border-radius: 8px;
+              background: #fff; cursor: pointer; font-size: 18px; color: #888;
+              transition: all .2s; flex-shrink: 0; }
+.upload-btn:hover { border-color: #667eea; color: #667eea; background: #f8f9ff; }
+.upload-btn:active { transform: scale(0.95); }
+
+/* File Preview in content */
+.content-img { max-width: 100%; border-radius: 8px; margin: 8px 0;
+               box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+.content-file-link { display: inline-flex; align-items: center; gap: 6px;
+                     padding: 8px 16px; background: #f8f9ff; border: 1px solid #e0e3f0;
+                     border-radius: 8px; text-decoration: none; color: #667eea;
+                     font-size: 13px; margin: 4px 0; }
+.content-file-link:hover { background: #eef0ff; }
+
+/* Upload progress overlay */
+.upload-progress { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+                   background: rgba(0,0,0,0.3); z-index: 2000;
+                   align-items: center; justify-content: center; }
+.upload-progress.active { display: flex; }
+.upload-progress .spinner { padding: 24px 40px; background: #fff; border-radius: 12px;
+                            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+                            font-size: 14px; color: #333;
+                            display: flex; align-items: center; gap: 12px; }
+.upload-progress .spinner::before { content: ''; width: 20px; height: 20px;
+                  border: 2px solid #e0e0e0; border-top-color: #667eea;
+                  border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Upload preview chips */
+.upload-preview { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px;
+                  min-height: 0; }
+.upload-preview:empty { display: none; }
+.upload-chip { display: inline-flex; align-items: center; gap: 4px;
+               padding: 4px 10px; background: #f0f2ff; border: 1px solid #d0d5f0;
+               border-radius: 6px; font-size: 12px; color: #444; }
+.upload-chip img { width: 28px; height: 28px; border-radius: 4px; object-fit: cover; }
+.upload-chip .remove-chip { cursor: pointer; color: #999; font-size: 14px;
+                            margin-left: 2px; line-height: 1; }
+.upload-chip .remove-chip:hover { color: #d32f2f; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📚 学习社区</h1>
+  <div class="user-info">
+    <input id="userId" placeholder="输入用户ID" value="user_001">
+    <span>👤</span>
+  </div>
+</div>
+
+<div class="container">
+  <div class="toolbar">
+    <span id="postCount" style="color:#888;font-size:14px;"></span>
+    <button class="btn-new" onclick="openNewPost()">+ 发布</button>
+  </div>
+
+  <!-- ★★★ 区域标签页 ★★★ -->
+  <div class="zone-tabs" style="display:flex;gap:4px;margin-bottom:16px;background:#fff;padding:6px;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06);">
+    <button class="zone-tab active" data-zone="all" onclick="switchZone('all')" style="flex:1;padding:8px 12px;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;transition:all .2s;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;">📌 全部</button>
+    <button class="zone-tab" data-zone="learning" onclick="switchZone('learning')" style="flex:1;padding:8px 12px;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;transition:all .2s;background:#f5f5f5;color:#666;">📚 学习区</button>
+    <button class="zone-tab" data-zone="life" onclick="switchZone('life')" style="flex:1;padding:8px 12px;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;transition:all .2s;background:#f5f5f5;color:#666;">🌱 生活区</button>
+    <button class="zone-tab" data-zone="resource" onclick="switchZone('resource')" style="flex:1;padding:8px 12px;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;transition:all .2s;background:#f5f5f5;color:#666;">📦 资源区</button>
+    <button class="zone-tab" data-zone="feedback" onclick="switchZone('feedback')" style="flex:1;padding:8px 12px;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;transition:all .2s;background:#f5f5f5;color:#666;">💬 反馈区</button>
+  </div>
+
+  <div id="postList"></div>
+  <div class="page-nav" id="pageNav"></div>
+</div>
+
+<!-- New Post Modal -->
+<div class="modal-overlay" id="newPostModal">
+  <div class="modal-box">
+    <h2>📝 发布新帖</h2>
+    <input id="postTitle" placeholder="标题（如：递归函数怎么理解？）">
+    <textarea id="postContent" placeholder="描述你想讨论的内容..."></textarea>
+    <div class="upload-preview" id="postUploadPreview"></div>
+    <div style="display:flex;gap:6px;margin-bottom:14px;">
+      <button type="button" class="upload-btn" onclick="document.getElementById('fileInput').click()" title="上传图片或文件">📎</button>
+      <span style="font-size:12px;color:#999;line-height:44px;">支持图片、Word、PDF等</span>
+    </div>
+    <input id="postTags" placeholder="标签，用逗号分隔（如：递归,函数,算法）">
+    <select id="postZone" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;font-size:14px;outline:none;margin-bottom:14px;">
+      <option value="learning">📚 学习区</option>
+      <option value="life">🌱 生活区</option>
+      <option value="resource">📦 资源共享区</option>
+      <option value="feedback">💬 反馈建议区</option>
+    </select>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeNewPost()">取消</button>
+      <button class="btn-submit" onclick="submitPost()">发布</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Post Modal -->
+<div class="modal-overlay" id="editPostModal">
+  <div class="modal-box">
+    <h2>✏️ 编辑帖子</h2>
+    <input id="editPostTitle" placeholder="标题">
+    <textarea id="editPostContent" placeholder="内容"></textarea>
+    <div class="upload-preview" id="editUploadPreview"></div>
+    <div style="display:flex;gap:6px;margin-bottom:14px;">
+      <button type="button" class="upload-btn" onclick="document.getElementById('editFileInput').click()" title="上传图片或文件">📎</button>
+      <span style="font-size:12px;color:#999;line-height:44px;">支持图片、Word、PDF等</span>
+    </div>
+    <input id="editPostTags" placeholder="标签，用逗号分隔">
+    <select id="editPostZone" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;font-size:14px;outline:none;margin-bottom:14px;">
+      <option value="learning">📚 学习区</option>
+      <option value="life">🌱 生活区</option>
+      <option value="resource">📦 资源共享区</option>
+      <option value="feedback">💬 反馈建议区</option>
+    </select>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeEditPost()">取消</button>
+      <button class="btn-submit" onclick="submitEdit()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Hidden file inputs for upload -->
+<input type="file" id="fileInput" style="display:none" accept=".jpg,.jpeg,.png,.gif,.webp,.doc,.docx,.pdf,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar" onchange="handleUpload(this, 'postContent', 'postUploadPreview')">
+<input type="file" id="editFileInput" style="display:none" accept=".jpg,.jpeg,.png,.gif,.webp,.doc,.docx,.pdf,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar" onchange="handleUpload(this, 'editPostContent', 'editUploadPreview')">
+
+<!-- Upload Progress Overlay -->
+<div class="upload-progress" id="uploadProgress">
+  <div class="spinner">上传中...</div>
+</div>
+
+<!-- Post Detail Overlay -->
+<div class="detail-overlay" id="detailOverlay">
+  <div class="detail-box">
+    <button class="close" onclick="closeDetail()">&times;</button>
+    <div class="detail-title" id="detailTitle"></div>
+    <div class="detail-meta" id="detailMeta"></div>
+    <div class="detail-tags" id="detailTags"></div>
+    <div class="detail-content" id="detailContent"></div>
+    <div id="detailActions" style="display:flex;gap:10px;justify-content:flex-end;margin-bottom:16px;"></div>
+    <div class="reply-section">
+      <h3>💬 回复（<span id="replyCount">0</span>）</h3>
+      <div class="chat-messages" id="replyList"></div>
+      <div class="reply-form">
+        <textarea id="replyInput" placeholder="写下你的建议..."></textarea>
+        <button type="button" class="upload-btn" onclick="document.getElementById('replyFileInput').click()" title="上传图片或文件">📎</button>
+        <button onclick="submitReply()">发送</button>
+      </div>
+      <div class="upload-preview" id="replyUploadPreview"></div>
+      <input type="file" id="replyFileInput" style="display:none" accept=".jpg,.jpeg,.png,.gif,.webp,.doc,.docx,.pdf" onchange="handleUpload(this, 'replyInput', 'replyUploadPreview')">
+    </div>
+  </div>
+</div>
+
+<script>
+let currentPage = 1;
+let currentPostId = null;
+let currentZone = 'all';
+let detailPollTimer = null;
+const BASE = '';
+
+function getUser() { return document.getElementById('userId').value || 'anonymous'; }
+
+async function api(url, opts = {}) {
+  const res = await fetch(BASE + url, {
+    headers: { 'Content-Type': 'application/json', ...opts.headers },
+    ...opts
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.detail || `请求失败 (${res.status})`);
+  }
+  return data;
+}
+
+function switchZone(zone) {
+  currentZone = zone;
+  currentPage = 1;
+  document.querySelectorAll('.zone-tab').forEach(tab => {
+    const isActive = tab.dataset.zone === zone;
+    tab.style.background = isActive ? 'linear-gradient(135deg,#667eea,#764ba2)' : '#f5f5f5';
+    tab.style.color = isActive ? '#fff' : '#666';
+  });
+  loadPosts(1);
+}
+
+async function loadPosts(page = 1) {
+  currentPage = page;
+  let url = `/community/posts?page=${page}&page_size=10`;
+  if (currentZone !== 'all') {
+    url += `&zone=${currentZone}`;
+  }
+  const data = await api(url);
+  const list = document.getElementById('postList');
+  const nav = document.getElementById('pageNav');
+  const zoneNames = {'all':'全部','learning':'📚 学习区','life':'🌱 生活区','resource':'📦 资源区','feedback':'💬 反馈区'};
+  document.getElementById('postCount').textContent = data.total ? `${zoneNames[currentZone] || ''} 共 ${data.total} 条` : '';
+
+  if (!data.posts || data.posts.length === 0) {
+    const zoneName = zoneNames[currentZone] || '';
+    list.innerHTML = `<div class="empty">${currentZone === 'all' ? '还没有人发布讨论，快来发起第一个吧 🎉' : zoneName + '还没有内容，快来发布第一条吧 🎉'}</div>`;
+    nav.innerHTML = '';
+    return;
+  }
+
+  list.innerHTML = data.posts.map(p => {
+    const tags = p.tags || [];
+    const contentLower = (p.content || '').toLowerCase();
+    const hasProblem = (contentLower.includes('资源id:') || contentLower.includes('💻')) && tags.includes('practice');
+    const ridMatch = (p.content || '').match(/资源ID:\s*(\S+)/);
+    const sharerMatch = (p.content || '').match(/分享者:\s*(\S+)/);
+    const problemId = ridMatch ? ridMatch[1] : null;
+    const sharerId = sharerMatch ? sharerMatch[1] : '';
+    // ★★★ doc/ppt 资源显示下载标签 ★★★
+    const hasDoc = tags.includes('doc') || tags.includes('document');
+    const hasPpt = tags.includes('ppt');
+    const resourceBadge = hasDoc ? '<span style="display:inline-block;padding:1px 8px;border-radius:6px;font-size:11px;background:#e8f5e9;color:#2e7d32;font-weight:500;margin-left:6px">📄 文档</span>' :
+                           hasPpt ? '<span style="display:inline-block;padding:1px 8px;border-radius:6px;font-size:11px;background:#ede7f6;color:#4527a0;font-weight:500;margin-left:6px">📊 PPT</span>' : '';
+    return `
+    <div class="post-card" onclick="openDetail('${p.post_id}')">
+      <div class="title">${escape(p.title)}${resourceBadge}</div>
+      <div class="meta">
+        <span>👤 ${p.user_id}</span>
+        <span>🕐 ${formatTime(p.created_at)}</span>
+        <span>💬 ${p.reply_count}</span>
+        <span class="zone-badge" style="background:#e8f5e9;color:#2e7d32;padding:2px 10px;border-radius:12px;font-size:12px;">${escape(p.zone_name || '学习区')}</span>
+      </div>
+      <div class="tags">${(p.tags || []).map(t => `<span class="tag">${t}</span>`).join('')}</div>
+      ${hasProblem && problemId ? `<div style="margin-top:8px"><button class="practice-btn" data-pid="${problemId}" data-sid="${sharerId}" onclick="event.stopPropagation();startPractice('${problemId}','${sharerId}')">💻 同练</button></div>` : ''}
+    </div>`;
+  }).join('');
+
+  nav.innerHTML = `
+    <button onclick="loadPosts(${currentPage - 1})" ${currentPage <= 1 ? 'disabled' : ''}>上一页</button>
+    <span class="page-info">${currentPage} / ${data.total_pages || 1}</span>
+    <button onclick="loadPosts(${currentPage + 1})" ${currentPage >= (data.total_pages || 1) ? 'disabled' : ''}>下一页</button>
+  `;
+}
+
+function openNewPost() {
+  document.getElementById('newPostModal').classList.add('active');
+  document.getElementById('postTitle').value = '';
+  document.getElementById('postContent').value = '';
+  document.getElementById('postTags').value = '';
+  document.getElementById('postZone').value = currentZone !== 'all' ? currentZone : 'learning';
+  clearUploadPreviews('postUploadPreview');
+}
+
+function closeNewPost() {
+  document.getElementById('newPostModal').classList.remove('active');
+}
+
+async function submitPost() {
+  const title = document.getElementById('postTitle').value.trim();
+  var content = document.getElementById('postContent').value.trim();
+  const tags = document.getElementById('postTags').value.split(',').map(s => s.trim()).filter(Boolean);
+  const zone = document.getElementById('postZone').value;
+  if (!title) { alert('标题不能为空'); return; }
+
+  // 附加上传的文件 URL
+  var fileUrls = getUploadedUrls('postUploadPreview');
+  if (fileUrls.length > 0) {
+    content += (content ? '\n\n' : '') + fileUrls.join('\n');
+  }
+  if (!content) { alert('内容不能为空'); return; }
+
+  try {
+    const data = await api('/community/post', {
+      method: 'POST',
+      body: JSON.stringify({ user_id: getUser(), title, content, tags, zone })
+    });
+    if (data.success) {
+      closeNewPost();
+      loadPosts(1);
+    }
+  } catch (e) {
+    alert(e.message || '发布失败');
+  }
+}
+
+async function deletePost(postId) {
+  if (!confirm('确定要删除这个帖子吗？')) return;
+  try {
+    const data = await api(`/community/post/${postId}/${getUser()}`, { method: 'DELETE' });
+    if (data.success) {
+      closeDetail();
+      loadPosts(currentPage);
+    }
+  } catch (e) {
+    alert(e.message || '删除失败');
+  }
+}
+
+let editPostId = null;
+
+function openEditPost(postId) {
+  editPostId = postId;
+  const title = document.getElementById('detailTitle').textContent;
+  const content = document.getElementById('detailContent').textContent;
+  const tagsEl = document.getElementById('detailTags');
+  const tags = Array.from(tagsEl.querySelectorAll('.tag')).map(t => t.textContent).join(', ');
+  const zoneEl = document.getElementById('detailMeta').querySelector('span[style*="background:#e8f5e9"]');
+  const zone = zoneEl ? zoneEl.textContent.trim() : '学习区';
+  const zoneMap = { '📚 学习区': 'learning', '🌱 生活区': 'life', '📦 资源共享区': 'resource', '💬 反馈建议区': 'feedback' };
+
+  document.getElementById('editPostTitle').value = title;
+  document.getElementById('editPostContent').value = content;
+  document.getElementById('editPostTags').value = tags;
+  document.getElementById('editPostZone').value = zoneMap[zone] || 'learning';
+  document.getElementById('editPostModal').classList.add('active');
+  clearUploadPreviews('editUploadPreview');
+}
+
+function closeEditPost() {
+  document.getElementById('editPostModal').classList.remove('active');
+  editPostId = null;
+}
+
+async function submitEdit() {
+  if (!editPostId) return;
+  const title = document.getElementById('editPostTitle').value.trim();
+  var content = document.getElementById('editPostContent').value.trim();
+  const tags = document.getElementById('editPostTags').value.split(',').map(s => s.trim()).filter(Boolean);
+  const zone = document.getElementById('editPostZone').value;
+  if (!title) { alert('标题不能为空'); return; }
+
+  // 附加上传的文件 URL
+  var fileUrls = getUploadedUrls('editUploadPreview');
+  if (fileUrls.length > 0) {
+    content += (content ? '\n\n' : '') + fileUrls.join('\n');
+  }
+  if (!content) { alert('内容不能为空'); return; }
+
+  try {
+    const data = await api(`/community/post/${editPostId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ user_id: getUser(), title, content, tags, zone })
+    });
+    if (data.success) {
+      closeEditPost();
+      openDetail(editPostId);
+      loadPosts(currentPage);
+    }
+  } catch (e) {
+    alert(e.message || '编辑失败');
+  }
+}
+
+async function openDetail(postId) {
+  currentPostId = postId;
+  const data = await api(`/community/post/${postId}`);
+  if (!data.success) { alert('获取详情失败'); return; }
+  const p = data.post;
+
+  document.getElementById('detailOverlay').classList.add('active');
+  document.getElementById('detailTitle').textContent = p.title;
+  document.getElementById('detailMeta').innerHTML = `👤 ${p.user_id} &nbsp; 🕐 ${formatTime(p.created_at)} &nbsp; 💬 ${data.reply_count} &nbsp; <span style="background:#e8f5e9;color:#2e7d32;padding:2px 10px;border-radius:12px;font-size:12px;">${escape(p.zone_name || '学习区')}</span>`;
+  document.getElementById('detailTags').innerHTML = (p.tags || []).map(t => `<span class="tag" style="display:inline-block;background:#f0f2ff;color:#667eea;padding:2px 10px;border-radius:12px;font-size:12px;margin-right:6px;">${t}</span>`).join('');
+  document.getElementById('detailContent').innerHTML = linkify(p.content);
+  document.getElementById('replyCount').textContent = data.reply_count;
+
+  const currentUser = getUser();
+
+  // Show edit/delete buttons only if current user is the author
+  const detailActions = document.getElementById('detailActions');
+  if (p.user_id === currentUser) {
+    detailActions.style.display = 'flex';
+    detailActions.innerHTML = `
+      <button onclick="openEditPost('${p.post_id}')" style="padding:6px 14px;background:#f0f0f0;color:#333;border:none;border-radius:8px;cursor:pointer;font-size:13px;">✏️ 编辑</button>
+      <button onclick="deletePost('${p.post_id}')" style="padding:6px 14px;background:#fff0f0;color:#d32f2f;border:none;border-radius:8px;cursor:pointer;font-size:13px;">🗑️ 删除</button>
+    `;
+  } else {
+    detailActions.style.display = 'none';
+  }
+
+  const rlist = document.getElementById('replyList');
+  if (data.replies && data.replies.length > 0) {
+    rlist.innerHTML = data.replies.map(r => {
+      const isMine = r.user_id === currentUser;
+      const initial = r.user_id.slice(-2).toUpperCase();
+      return `
+        <div class="chat-bubble ${isMine ? 'mine' : ''}">
+          <div class="avatar">${initial}</div>
+          <div class="bubble-content">
+            <div class="bubble-user">${isMine ? '' : r.user_id}</div>
+            <div class="bubble-text">${linkify(r.content)}</div>
+            <div class="bubble-time">${formatTime(r.created_at)}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+    // Scroll to bottom
+    rlist.scrollTop = rlist.scrollHeight;
+  } else {
+    rlist.innerHTML = '<div style="color:#999;font-size:13px;padding:8px 0;text-align:center;">还没有回复，快来参与讨论 �</div>';
+  }
+  document.getElementById('replyInput').value = '';
+  clearUploadPreviews('replyUploadPreview');
+
+  // ★★★ 启动轮询：每 3 秒自动刷新回复（让其他用户看到新回复）★★★
+  if (detailPollTimer) clearInterval(detailPollTimer);
+  detailPollTimer = setInterval(function() {
+    if (!currentPostId) return;
+    fetch(BASE + '/community/post/' + currentPostId)
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (!data.success) return;
+        document.getElementById('replyCount').textContent = data.reply_count;
+        var rlist = document.getElementById('replyList');
+        if (data.replies && data.replies.length > 0) {
+          var currentUser = getUser();
+          rlist.innerHTML = data.replies.map(function(r) {
+            var isMine = r.user_id === currentUser;
+            var initial = r.user_id.slice(-2).toUpperCase();
+            return '<div class="chat-bubble ' + (isMine ? 'mine' : '') + '">'
+              + '<div class="avatar">' + initial + '</div>'
+              + '<div class="bubble-content">'
+              + '<div class="bubble-user">' + (isMine ? '' : r.user_id) + '</div>'
+              + '<div class="bubble-text">' + linkify(r.content) + '</div>'
+              + '<div class="bubble-time">' + formatTime(r.created_at) + '</div>'
+              + '</div></div>';
+          }).join('');
+        }
+      })
+      .catch(function() {});
+  }, 3000);
+}
+
+function closeDetail() {
+  document.getElementById('detailOverlay').classList.remove('active');
+  currentPostId = null;
+  // 停止轮询
+  if (detailPollTimer) {
+    clearInterval(detailPollTimer);
+    detailPollTimer = null;
+  }
+}
+
+async function submitReply() {
+  if (!currentPostId) return;
+  var content = document.getElementById('replyInput').value.trim();
+  // 附加上传的文件 URL
+  var fileUrls = getUploadedUrls('replyUploadPreview');
+  if (fileUrls.length > 0) {
+    content += (content ? '\n\n' : '') + fileUrls.join('\n');
+  }
+  if (!content) { alert('回复内容不能为空'); return; }
+  try {
+    const data = await api('/community/reply', {
+      method: 'POST',
+      body: JSON.stringify({ user_id: getUser(), post_id: currentPostId, content })
+    });
+    if (data.success) {
+      clearUploadPreviews('replyUploadPreview');
+      openDetail(currentPostId);
+      loadPosts(currentPage);
+    }
+  } catch (e) {
+    alert(e.message || '回复失败');
+  }
+}
+
+async function uploadFile(file) {
+  // Show progress
+  document.getElementById('uploadProgress').classList.add('active');
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await fetch(BASE + '/community/upload', {
+      method: 'POST',
+      body: formData
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || '上传失败');
+    return data;
+  } finally {
+    document.getElementById('uploadProgress').classList.remove('active');
+  }
+}
+
+async function handleUpload(input, targetTextareaId, previewContainerId) {
+  const file = input.files[0];
+  if (!file) return;
+  const result = await uploadFile(file);
+  if (result.success) {
+    const url = result.url;
+    const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(file.name);
+    const container = document.getElementById(previewContainerId);
+    // Create preview chip
+    var chip = document.createElement('div');
+    chip.className = 'upload-chip';
+    chip.dataset.url = url;
+    if (isImage) {
+      chip.innerHTML = '<img src="' + url + '" alt=""> ' + file.name +
+        ' <span class="remove-chip" onclick="this.parentElement.remove()">&times;</span>';
+    } else {
+      chip.innerHTML = '📄 ' + file.name +
+        ' <span class="remove-chip" onclick="this.parentElement.remove()">&times;</span>';
+    }
+    container.appendChild(chip);
+  }
+  input.value = '';
+}
+
+function getUploadedUrls(previewContainerId) {
+  var chips = document.getElementById(previewContainerId).querySelectorAll('.upload-chip');
+  var urls = [];
+  for (var i = 0; i < chips.length; i++) {
+    urls.push(chips[i].dataset.url);
+  }
+  return urls;
+}
+
+function clearUploadPreviews(previewContainerId) {
+  document.getElementById(previewContainerId).innerHTML = '';
+}
+
+function formatTime(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return `${d.getMonth()+1}/${d.getDate()} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+}
+
+function escape(s) {
+  const div = document.createElement('div');
+  div.textContent = s;
+  return div.innerHTML;
+}
+
+function linkify(text) {
+  const escaped = escape(text);
+  let html = escaped;
+  // ★★★ 社区上传文件 URL → 图片显示，其他文件显示下载链接 ★★★
+  // URL 格式: /community/uploads/{_temp|post_xxx|reply_xxx}/{文件名}.ext
+  html = html.replace(/\/community\/uploads\/[\w-]+\/([^<>\s&]+)/ig, function(m, fullName) {
+    var lastDot = fullName.lastIndexOf('.');
+    if (lastDot === -1) return m;
+    var ext = fullName.substring(lastDot);
+    if (/^\.(jpg|jpeg|png|gif|webp)$/i.test(ext)) {
+      return '<img src="' + m + '" alt="' + fullName + '" class="content-img" onclick="window.open(this.src)" style="cursor:zoom-in">';
+    } else {
+      return '<a href="' + m + '" target="_blank" class="content-file-link">📄 ' + fullName + '</a>';
+    }
+  });
+  // ★★★ doc/ppt 资源链接 → 下载按钮 ★★★
+  html = html.replace(/📄\s*(\/document\/download\/[^\s<]+)/g, '<div style="margin-top:12px"><a href="$1" target="_blank" style="display:inline-block;padding:10px 28px;background:linear-gradient(135deg,#11998e,#38ef7d);color:#fff;border-radius:10px;text-decoration:none;font-size:14px;font-weight:600">⬇️ 下载Word文档</a></div>');
+  html = html.replace(/📊\s*(\/ppt\/download\/[^\s<]+)/g, '<div style="margin-top:12px"><a href="$1" target="_blank" style="display:inline-block;padding:10px 28px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border-radius:10px;text-decoration:none;font-size:14px;font-weight:600">⬇️ 下载PPT文件</a></div>');
+  // ★★★ 裸链接转为普通链接 ★★★
+  html = html.replace(/(^|[\s>])(https?:\/\/[^\s<]+)/g, '$1<a href="$2" target="_blank" style="color:#667eea;text-decoration:underline">$2</a>');
+  return html;
+}
+
+// Init
+loadPosts(1);
+
+// Edit modal background click to close
+document.addEventListener('DOMContentLoaded', function() {
+  const editModal = document.getElementById('editPostModal');
+  if (editModal) {
+    editModal.addEventListener('click', function(e) {
+      if (e.target === editModal) closeEditPost();
+    });
+  }
+});
+</script>
+<script>
+function startPractice(problemId, sharerId) {
+  try {
+    window.parent.postMessage({ type: 'startPractice', problemId: problemId, sharerId: sharerId || '' }, '*');
+  } catch(e) {}
+}
+window.addEventListener('message', function(e){if(e.data&&e.data.type==='setUserId'){var inp=document.getElementById('userId');if(inp)inp.value=e.data.userId;}});
+</script>
+<script>
+(function(){try{window.parent.postMessage({type:'pageContext',page:'community',title:'学习社区',action:'viewing',detail:''},'*');}catch(e){}})();
+</script>
+</body>
+</html>

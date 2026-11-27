@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.dhi.wha.mapper.ChatMapper">
+
+    <resultMap id="ChatResultMap" type="com.dhi.wha.entity.Chat">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="task_id" property="taskId"/>
+        <result column="type" property="type"/>
+        <result column="content" property="content"/>
+        <result column="status" property="status"/>
+        <result column="rs_type" property="rsType"/>
+        <result column="resource" property="resource" typeHandler="com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <update id="updateStatusByTaskIdAndUserIdAndRsType">
+        UPDATE chat
+        <set>
+            <if test="status != null">
+                status = #{status},
+            </if>
+            <if test="content != null">
+                content = #{content},
+            </if>
+            <if test="resource != null">
+                resource = #{resource, typeHandler=com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler},
+            </if>
+        </set>
+        WHERE user_id = #{userId}
+        AND task_id = #{taskId}
+        AND rs_type = #{rsType}
+    </update>
+
+
+    <select id="selectChatByUserId" resultMap="ChatResultMap">
+        SELECT id,user_id,task_id,type,content,status,rs_type,resource,create_time,is_batch_generate
+        FROM chat
+        WHERE user_id = #{userId}
+        <if test="lastId != null">
+            AND id &lt; #{lastId}
+        </if>
+        ORDER BY id DESC
+        LIMIT #{pageSize}
+    </select>
+    <select id="getTextByUserIdAndRsTypeAndTaskId" resultType="java.lang.Long">
+        select id
+        from chat
+        where user_id = #{userId}
+          and rs_type = #{rsType}
+          and type = 'ai'
+          and task_id = #{taskId}
+    </select>
+
+
+</mapper>

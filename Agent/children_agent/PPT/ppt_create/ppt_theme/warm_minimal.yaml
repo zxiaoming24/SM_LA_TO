@@ -1,0 +1,49 @@
+# warm_minimal.yaml 简约温馨风格
+layout:
+  slide_width_emu: 12192000
+  slide_height_emu: 6858000
+  floating_shadow_blur: "2pt"
+  floating_shadow_dist: "1pt"
+  floating_shadow_alpha: "35000"
+  floating_title_box_height_emu: 1400000
+  cover_title_separator: "："
+  cover_main_title_top_emu: 900000
+  cover_subtitle_top_emu: 1950000
+  cover_section_start_top_emu: 2700000
+  cover_section_gap_emu: 220000
+  section_title_box_height_emu: 340000
+  section_title_to_content_gap_emu: 300000
+  section_content_box_height_emu: 500000
+  content_margin_left_emu: 450000
+  content_margin_top_emu: 400000
+  content_width_emu: 5700000
+  content_title_box_height_emu: 720000
+  content_title_to_points_gap_emu: 1100000
+  content_shadow_blur: "8pt"
+  content_shadow_dist: "4pt"
+  content_shadow_alpha: "25000"
+  point_bullet: "◦"
+  point_box_height_emu: 420000
+  point_to_detail_gap_emu: 320000
+  detail_indent_emu: 260000
+  detail_box_height_emu: 620000
+  point_vertical_gap_emu: 950000
+
+font_size:
+  cover_main_title_pt: 64
+  cover_subtitle_pt: 20
+  section_title_pt: 22
+  section_content_pt: 14
+  content_title_pt: 32
+  point_pt: 18
+  detail_pt: 14
+  code_pt: 12
+
+color:
+  cover_main_title_color: "#8B6F47"
+  cover_subtitle_color: "#A0826D"
+  section_title_color: "#8B6F47"
+  section_content_color: "#5D5D5D"
+  content_title_color: "#8B6F47"
+  accent: "#D4A574"
+  text_body: "#4A4A4A"
