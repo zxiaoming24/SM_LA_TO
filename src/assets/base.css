@@ -1,0 +1,270 @@
+/* —————————— 聚智优学 · 亮色模式 —————————— */
+:root {
+  /* 主色：高级静谧柔蓝（推荐） */
+  --primary: #2D7DDB;
+  --primary-light: #EFF6FF;
+  --primary-fade: #DBEAFE;
+
+  /* 按钮 */
+  /* 悬停色：比主色稍亮，确保白色文字可见 */
+  --primary-hv: #4A90E2;
+  /* 激活色：比主色深，模拟按压 */
+  --primary-act: #1E6BB8;
+  /* 禁用背景：极浅的蓝色 */
+  --primary-disa-bgc: #E6F0FA;
+  /* 禁用边框：浅蓝色 */
+  --primary-disa-border: #D0E0F5;
+
+  /* 功能色 */
+  --text-gray: #64748B;
+  --highlight: #F97316;
+
+  /* 文字 */
+  --text-title: #1E293B;
+  --text-body: #334155;
+
+  /* 透明黑背景 */
+  --bgc-light: rgba(51, 65, 85, 0.05);
+  --bgc-mid: rgba(51, 65, 85, 0.25);
+  --bgc-dark: rgba(51, 65, 85, 0.5);
+
+  /* 透明白背景 */
+  --bgc-transparent: rgba(104, 104, 104, 0.078);
+
+  /* 背景 & 边框 */
+  --bg-page: #F8FAFC;
+  --bg-card: #ffffff;
+  --bg-hover: #F1F5F9;
+  --bg-input: #ffffff;
+  --border-color: #E2E8F0;
+  --nav: #ffffff;
+
+
+  /* 渐变 */
+  --grad-primary: linear-gradient(135deg, #2D7DDB 0%, #5094E4 100%);
+  --grad-light: linear-gradient(135deg, #EFF6FF 0%, #F6FAFF 100%);
+
+  /* 阴影 */
+  --shadow-color: rgba(0, 0, 0, 0.1);
+  --shadow-brand: 0 4px 12px rgba(45, 125, 219, 0.3);
+  --shadow-normal: 0 2px 8px rgba(0, 0, 0, 0.2);
+
+  /* 圆角 */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  /* 侧边栏 */
+  --aside-text-color: #fff;
+  --aside-bg-color: #2d3a4b;
+  --aside-hover-bg-color: #293545;
+  --aside-active-text-color: #4c8eda;
+  --aside-border-color: #293544;
+
+  /* 删除按钮/报警状态 */
+  --main-delete: #F56C6C;
+  --main-shadow: #f3b4b4;
+  --main-delete-hover: #DD4B39;
+  --main-fail-status: #FEF0F0;
+  --main-fail-status-hover: #fcd5d5;
+
+  /* 下载按钮颜色 */
+  --download-btn-bg: #466dea;
+  --download-btn-hover: #1E3A8A;
+  --download-btn-text: #ffffff;
+
+
+  /* 通过-绿色 */
+  --pass: #67C23A;
+  --pass-hover: #5dae2f;
+  --pass-shadow: #c7e3c7;
+  --pass-shadow-hover: #b2dbb2;
+  --pass-bg-color: #effbe8;
+
+  /* 加油-橘色 */
+  --coming: #E6A23C;
+  --coming-hover: #c77c0c;
+  --coming-shadow: #f5e1c7;
+  --coming-shadow-hover: #e5c08c;
+  --coming-bg-color: #fcf4e8;
+
+  /* 树状图颜色 */
+  --tree-stroke: #c5d0e0;
+  --tree-dot-fill: #a0b2cc;
+  --tree-card-bg: #ffffff;
+  --tree-card-border: #e9edf4;
+  --tree-card-hover-border: #b8c8dd;
+  --tree-node-version: #0b1a2e;
+  --tree-node-trigger-bg: #f2f5fc;
+  --tree-node-trigger-text: #4d5f7a;
+  --tree-phase-dot-bg: #eef2f7;
+  --tree-phase-dot-border: #d6dfe9;
+  --tree-phase-dot-text: #8899b4;
+  --tree-meta-text: #7b8aa3;
+  --tree-meta-bg: #f4f7fd;
+  --tree-empty-text: #7b8aa3;
+
+  /* 成功状态 */
+  --success: #00b894;
+  --success-hover: #00a381;
+
+  /* 警告状态 */
+  --warning: #f39c12;
+  --warning-hover: #c97d0a;
+
+  /* 紫色 */
+  --purple: #A855F7;
+  --purple-hover: #9333EA;
+  --purple-text: #a851f5;
+  --purple-bg: #eaeafc;
+  --purple-shadow: 0 4px 12px rgba(168, 85, 247, 0.3);
+
+  /* 画布 */
+  --canvas-bg: rgba(15, 12, 41, 0.85);
+  --canvas-empty-text: rgba(255, 255, 255, 0.3);
+  --canvas-hint-bg: rgba(0, 0, 0, 0.4);
+  --canvas-hint-text: rgba(255, 255, 255, 0.6);
+
+  /* 按钮文字 */
+  --btn-text: #ffffff;
+
+}
+
+
+/* —————————— 聚智优学 · 暗色模式 —————————— */
+.dark {
+  /* 主色 */
+  --primary: #3B82F6;
+  --primary-light: #1E293B;
+  --primary-fade: #334155;
+
+  /* 按钮 */
+  --primary-hv: #60A5FA;
+  --primary-act: #2563EB;
+  --primary-disa-bgc: #1E3A5F;
+  --primary-disa-border: #334155;
+
+  /* 功能色 */
+  --text-gray: #94A3B8;
+  --highlight: #FB923C;
+
+  /* 文字 */
+  --text-title: #ffffff;
+  --text-body: #E2E8F0;
+
+  /* 透明背景 */
+  --bgc-light: rgba(255, 255, 255, 0.05);
+  --bgc-mid: rgba(255, 255, 255, 0.15);
+  --bgc-dark: rgba(255, 255, 255, 0.3);
+  --bgc-transparent: rgba(255, 255, 255, 0.05);
+
+  /* 背景 & 边框 */
+  --bg-page: #0F172A;
+  --bg-card: #1E293B;
+  --bg-hover: #334155;
+  --bg-input: #0F172A;
+  --border-color: #334155;
+  --nav: #1E293B;
+
+  /* 渐变 */
+  --grad-primary: linear-gradient(135deg, #3B82F6 0%, #60A5FA 100%);
+  --grad-light: linear-gradient(135deg, #1E293B 0%, #334155 100%);
+
+  /* 阴影 */
+  --shadow-color: rgba(0, 0, 0, 0.3);
+  --shadow-brand: 0 4px 12px rgba(59, 130, 246, 0.25);
+  --shadow-normal: 0 2px 8px rgba(0, 0, 0, 0.4);
+
+  /* 侧边栏 */
+  --aside-text-color: #E2E8F0;
+  --aside-bg-color: #1E293B;
+  --aside-hover-bg-color: #334155;
+  --aside-active-text-color: #60A5FA;
+  --aside-border-color: #334155;
+
+  /* 通过-绿色 */
+  --pass: #4ADE80;
+  --pass-hover: #22C55E;
+  --pass-shadow: rgba(74, 222, 128, 0.2);
+  --pass-shadow-hover: rgba(34, 197, 94, 0.3);
+  --pass-bg-color: rgba(74, 222, 128, 0.1);
+
+  /* 加油-橘色 */
+  --coming: #FB923C;
+  --coming-hover: #F97316;
+  --coming-shadow: rgba(251, 146, 60, 0.2);
+  --coming-shadow-hover: rgba(249, 115, 22, 0.3);
+  --coming-bg-color: rgba(251, 146, 60, 0.1);
+
+  /* 树状图颜色 */
+  --tree-stroke: #475569;
+  --tree-dot-fill: #64748B;
+  --tree-card-bg: #1E293B;
+  --tree-card-border: #334155;
+  --tree-card-hover-border: #475569;
+  --tree-node-version: #F1F5F9;
+  --tree-node-trigger-bg: #334155;
+  --tree-node-trigger-text: #94A3B8;
+  --tree-phase-dot-bg: #334155;
+  --tree-phase-dot-border: #475569;
+  --tree-phase-dot-text: #94A3B8;
+  --tree-meta-text: #94A3B8;
+  --tree-meta-bg: #334155;
+  --tree-empty-text: #64748B;
+
+  /* 成功状态 */
+  --success: #4ADE80;
+  --success-hover: #22C55E;
+
+  /* 警告状态 */
+  --warning: #FB923C;
+  --warning-hover: #F97316;
+
+  /* 紫色 */
+  --purple: #A855F7;
+  --purple-hover: #9333EA;
+  --purple-text: #c084fc;
+  --purple-bg: rgba(168, 85, 247, 0.15);
+  --purple-shadow: 0 4px 12px rgba(168, 85, 247, 0.25);
+
+  /* 画布 */
+  --canvas-bg: rgba(15, 23, 42, 0.85);
+  --canvas-empty-text: rgba(255, 255, 255, 0.3);
+  --canvas-hint-bg: rgba(0, 0, 0, 0.5);
+  --canvas-hint-text: rgba(255, 255, 255, 0.7);
+
+  /* 按钮文字 */
+  --btn-text: #ffffff;
+
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  position: relative;
+  font-weight: normal;
+}
+
+body {
+  min-height: 100vh;
+  color: var(--text-body);
+  background-color: var(--bg-page);
+  transition: color 0.5s, background-color 0.5s;
+  line-height: 1.6;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu,
+    Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  font-size: 15px;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 阻止移动端表单聚焦时页面放大 */
+input,
+textarea,
+select {
+  font-size: 16px !important;
+}

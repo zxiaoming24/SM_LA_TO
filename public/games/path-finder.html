@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>PathFinder · 迷宫导航</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@500&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{--bg:#0d1117;--panel:#161b22;--line:#30363d;--txt:#e6edf3;--mut:#7d8590;--acc:#58a6ff;--good:#3fb950;--bad:#f85149;--warn:#d29922;--visited:#6e40c9;--path:#ffd166}
+  body{background:var(--bg);color:var(--txt);font-family:'Space Grotesk',sans-serif;min-height:100vh;display:flex;flex-direction:column;overflow:hidden}
+  header{padding:18px 28px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;background:linear-gradient(180deg,#0d1117,#0a0d12)}
+  header h1{font-size:22px;letter-spacing:3px;font-weight:700}
+  header h1 span{color:var(--acc)}
+  header .info{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--mut);letter-spacing:1px}
+  main{flex:1;display:grid;grid-template-columns:260px 1fr;gap:0;overflow:hidden}
+  aside{background:var(--panel);border-right:1px solid var(--line);padding:20px;display:flex;flex-direction:column;gap:18px;overflow-y:auto}
+  .group h3{font-size:11px;letter-spacing:3px;color:var(--mut);text-transform:uppercase;margin-bottom:10px;font-weight:700}
+  .tools{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .tool{background:#0d1117;border:1px solid var(--line);color:var(--txt);padding:12px 8px;font-size:12px;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:6px;font-family:inherit}
+  .tool:hover{border-color:var(--acc)}
+  .tool.active{border-color:var(--acc);background:rgba(88,166,255,.1);color:var(--acc);box-shadow:0 0 0 1px var(--acc) inset}
+  .tool .ico{width:22px;height:22px;display:flex;align-items:center;justify-content:center}
+  .swatch{width:18px;height:18px;border-radius:3px}
+  button.run{width:100%;background:var(--good);color:#0d1117;border:none;padding:14px;font-family:inherit;font-weight:700;letter-spacing:2px;cursor:pointer;font-size:13px;transition:all .2s}
+  button.run:hover{filter:brightness(1.15);box-shadow:0 0 20px rgba(63,185,80,.4)}
+  button.run:disabled{background:var(--line);color:var(--mut);cursor:not-allowed}
+  .btns{display:flex;gap:8px}
+  .btns button{flex:1;background:transparent;border:1px solid var(--line);color:var(--txt);padding:10px;font-size:11px;letter-spacing:1px;cursor:pointer;font-family:inherit;transition:all .15s}
+  .btns button:hover{border-color:var(--acc);color:var(--acc)}
+  .stats{font-family:'JetBrains Mono',monospace;font-size:12px;line-height:2}
+  .stats .row{display:flex;justify-content:space-between;border-bottom:1px dashed var(--line);padding:4px 0}
+  .stats .row span:last-child{color:var(--acc);font-weight:700}
+  .levels{display:flex;flex-direction:column;gap:6px}
+  .lvl{background:#0d1117;border:1px solid var(--line);color:var(--txt);padding:10px 12px;cursor:pointer;text-align:left;font-family:inherit;font-size:12px;transition:all .15s}
+  .lvl:hover{border-color:var(--warn)}
+  .lvl.active{border-color:var(--warn);color:var(--warn)}
+  .lvl small{display:block;color:var(--mut);font-size:10px;margin-top:3px;letter-spacing:1px}
+  #stage{position:relative;overflow:hidden;background:#0a0d12;display:flex;align-items:center;justify-content:center;padding:20px}
+  canvas{background:#0d1117;border:1px solid var(--line);cursor:crosshair;image-rendering:crisp-edges}
+  .toast{position:absolute;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--panel);border:1px solid var(--acc);padding:12px 24px;font-size:13px;letter-spacing:1px;opacity:0;transition:all .35s;pointer-events:none;font-family:'JetBrains Mono',monospace}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .legend{display:flex;flex-wrap:wrap;gap:8px;font-size:10px;color:var(--mut);font-family:'JetBrains Mono',monospace}
+  .legend span{display:flex;align-items:center;gap:5px}
+  .legend i{width:10px;height:10px;display:inline-block}
+</style>
+</head>
+<body>
+<header>
+  <h1>PATH<span>FINDER</span></h1>
+  <div class="info">DIJKSTRA · 最短路径可视化</div>
+</header>
+<main>
+  <aside>
+    <div class="group">
+      <h3>工具</h3>
+      <div class="tools">
+        <div class="tool active" data-tool="wall"><div class="swatch" style="background:#30363d"></div>墙壁</div>
+        <div class="tool" data-tool="erase"><div class="swatch" style="background:transparent;border:1px dashed #7d8590"></div>橡皮</div>
+        <div class="tool" data-tool="start"><div class="swatch" style="background:#3fb950"></div>起点</div>
+        <div class="tool" data-tool="end"><div class="swatch" style="background:#f85149"></div>终点</div>
+      </div>
+    </div>
+    <div class="group">
+      <h3>操作</h3>
+      <button class="run" id="runBtn">▶ 运行 DIJKSTRA</button>
+      <div class="btns" style="margin-top:8px">
+        <button id="clearPath">清路径</button>
+        <button id="clearAll">清全部</button>
+      </div>
+      <div class="btns">
+        <button id="randBtn">随机墙</button>
+        <button id="mazeBtn">生成迷宫</button>
+      </div>
+    </div>
+    <div class="group">
+      <h3>统计</h3>
+      <div class="stats">
+        <div class="row"><span>路径长度</span><span id="statLen">—</span></div>
+        <div class="row"><span>访问节点</span><span id="statVis">—</span></div>
+        <div class="row"><span>网格规模</span><span id="statGrid">—</span></div>
+      </div>
+    </div>
+    <div class="group">
+      <h3>挑战关卡</h3>
+      <div class="levels" id="levels"></div>
+    </div>
+    <div class="group">
+      <h3>图例</h3>
+      <div class="legend">
+        <span><i style="background:#3fb950"></i>起点</span>
+        <span><i style="background:#f85149"></i>终点</span>
+        <span><i style="background:#6e40c9"></i>已访问</span>
+        <span><i style="background:#ffd166"></i>路径</span>
+        <span><i style="background:#30363d"></i>墙</span>
+      </div>
+    </div>
+  </aside>
+  <section id="stage">
+    <canvas id="cv"></canvas>
+    <div class="toast" id="toast"></div>
+  </section>
+</main>
+
+<script>
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+const COLS = 41, ROWS = 25, CELL = 24;
+cv.width = COLS*CELL; cv.height = ROWS*CELL;
+document.getElementById('statGrid').textContent = COLS+'×'+ROWS;
+
+const EMPTY=0, WALL=1, START=2, END=3;
+let grid = Array.from({length:ROWS},()=>Array(COLS).fill(EMPTY));
+let start = {x:3,y:12}, end = {x:37,y:12};
+grid[start.y][start.x] = START;
+grid[end.y][end.x] = END;
+let tool = 'wall';
+let isDown = false;
+let visited = new Map();
+let pathArr = [];
+let running = false;
+let animQueue = [];
+let animTimer = 0;
+
+const tools = document.querySelectorAll('.tool');
+tools.forEach(t=>t.onclick=()=>{
+  tools.forEach(x=>x.classList.remove('active'));
+  t.classList.add('active');
+  tool = t.dataset.tool;
+});
+
+function key(x,y){return x+','+y}
+function inBounds(x,y){return x>=0&&x<COLS&&y>=0&&y<ROWS}
+
+function drawCell(x,y,color,borderColor){
+  ctx.fillStyle = color;
+  ctx.fillRect(x*CELL,y*CELL,CELL,CELL);
+  if(borderColor){
+    ctx.strokeStyle = borderColor;
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x*CELL+0.5,y*CELL+0.5,CELL-1,CELL-1);
+  }
+}
+
+function render(){
+  ctx.fillStyle = '#0d1117';
+  ctx.fillRect(0,0,cv.width,cv.height);
+  ctx.strokeStyle = '#1a1f26';
+  ctx.lineWidth = 1;
+  for(let x=0;x<=COLS;x++){ctx.beginPath();ctx.moveTo(x*CELL+0.5,0);ctx.lineTo(x*CELL+0.5,cv.height);ctx.stroke()}
+  for(let y=0;y<=ROWS;y++){ctx.beginPath();ctx.moveTo(0,y*CELL+0.5);ctx.lineTo(cv.width,y*CELL+0.5);ctx.stroke()}
+  visited.forEach((d,k)=>{
+    const [x,y] = k.split(',').map(Number);
+    const t = Math.min(1, d/100);
+    const r=110+t*40, g=64+t*30, b=201;
+    drawCell(x,y,`rgba(${r|0},${g|0},${b},0.55)`);
+    ctx.fillStyle='rgba(255,255,255,0.35)';
+    ctx.font='9px JetBrains Mono';
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(d, x*CELL+CELL/2, y*CELL+CELL/2);
+  });
+  pathArr.forEach((p,i)=>{
+    const pulse = 0.7 + 0.3*Math.sin(Date.now()/200 + i*0.3);
+    drawCell(p.x,p.y,`rgba(255,209,102,${pulse})`,'#ffd166');
+  });
+  for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
+    if(grid[y][x]===WALL) drawCell(x,y,'#30363d','#444c56');
+    else if(grid[y][x]===START) drawCell(x,y,'#3fb950','#56d364');
+    else if(grid[y][x]===END) drawCell(x,y,'#f85149','#ff7b72');
+  }
+  ctx.fillStyle='#fff';ctx.font='bold 14px Space Grotesk';
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('S', start.x*CELL+CELL/2, start.y*CELL+CELL/2);
+  ctx.fillText('E', end.x*CELL+CELL/2, end.y*CELL+CELL/2);
+}
+
+function handlePaint(cx,cy){
+  if(!inBounds(cx,cy)) return;
+  if(running) return;
+  if(tool==='wall'){
+    if(grid[cy][cx]===START||grid[cy][cx]===END) return;
+    grid[cy][cx]=WALL;
+  } else if(tool==='erase'){
+    if(grid[cy][cx]===START||grid[cy][cx]===END) return;
+    grid[cy][cx]=EMPTY;
+  } else if(tool==='start'){
+    grid[start.y][start.x]=EMPTY;
+    start={x:cx,y:cy};
+    grid[cy][cx]=START;
+  } else if(tool==='end'){
+    grid[end.y][end.x]=EMPTY;
+    end={x:cx,y:cy};
+    grid[cy][cx]=END;
+  }
+  clearPath();
+}
+function pxToCell(e){
+  const r = cv.getBoundingClientRect();
+  const sx = cv.width/r.width, sy = cv.height/r.height;
+  const x = Math.floor((e.clientX-r.left)*sx/CELL);
+  const y = Math.floor((e.clientY-r.top)*sy/CELL);
+  return {x,y};
+}
+cv.onmousedown=e=>{isDown=true;const{x,y}=pxToCell(e);handlePaint(x,y)};
+cv.onmousemove=e=>{if(isDown){const{x,y}=pxToCell(e);handlePaint(x,y)}};
+window.onmouseup=()=>isDown=false;
+cv.oncontextmenu=e=>e.preventDefault();
+
+function clearPath(){
+  visited.clear(); pathArr=[]; animQueue=[];
+  document.getElementById('statLen').textContent='—';
+  document.getElementById('statVis').textContent='—';
+}
+
+function dijkstra(){
+  const dist = new Map();
+  const prev = new Map();
+  const pq = [];
+  const visitedOrder = [];
+  dist.set(key(start.x,start.y),0);
+  pq.push({x:start.x,y:start.y,d:0});
+  while(pq.length){
+    pq.sort((a,b)=>a.d-b.d);
+    const cur = pq.shift();
+    const k = key(cur.x,cur.y);
+    if(dist.has(k) && dist.get(k) < cur.d) continue;
+    if(cur.x===end.x && cur.y===end.y) break;
+    visitedOrder.push({x:cur.x,y:cur.y,d:cur.d});
+    const dirs=[[1,0],[-1,0],[0,1],[0,-1]];
+    for(const [dx,dy] of dirs){
+      const nx=cur.x+dx, ny=cur.y+dy;
+      if(!inBounds(nx,ny)) continue;
+      if(grid[ny][nx]===WALL) continue;
+      const nk = key(nx,ny);
+      const nd = cur.d + 1;
+      if(!dist.has(nk) || nd < dist.get(nk)){
+        dist.set(nk,nd);
+        prev.set(nk,k);
+        pq.push({x:nx,y:ny,d:nd});
+      }
+    }
+  }
+  const path=[];
+  let cur = key(end.x,end.y);
+  if(!dist.has(cur)) return {visitedOrder, path:[]};
+  while(cur){
+    const [x,y]=cur.split(',').map(Number);
+    path.unshift({x,y});
+    cur = prev.get(cur);
+  }
+  return {visitedOrder, path};
+}
+
+async function runDijkstra(){
+  if(running) return;
+  clearPath();
+  running = true;
+  document.getElementById('runBtn').disabled = true;
+  const {visitedOrder, path} = dijkstra();
+  for(const v of visitedOrder){
+    visited.set(key(v.x,v.y), v.d);
+    document.getElementById('statVis').textContent = visited.size;
+    render();
+    await sleep(8);
+  }
+  if(path.length){
+    for(const p of path){
+      pathArr.push(p);
+      document.getElementById('statLen').textContent = pathArr.length-1;
+      render();
+      await sleep(30);
+    }
+    toast(`找到路径！长度 ${path.length-1}，访问 ${visited.size} 节点`);
+  } else {
+    toast('无法到达终点！');
+  }
+  running = false;
+  document.getElementById('runBtn').disabled = false;
+}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+function toast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('show'),2500);
+}
+
+document.getElementById('runBtn').onclick=runDijkstra;
+document.getElementById('clearPath').onclick=()=>{clearPath();render()};
+document.getElementById('clearAll').onclick=()=>{
+  grid=Array.from({length:ROWS},()=>Array(COLS).fill(EMPTY));
+  grid[start.y][start.x]=START; grid[end.y][end.x]=END;
+  clearPath(); render();
+};
+document.getElementById('randBtn').onclick=()=>{
+  for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
+    if(grid[y][x]===START||grid[y][x]===END) continue;
+    grid[y][x] = Math.random()<0.28 ? WALL : EMPTY;
+  }
+  clearPath(); render();
+};
+document.getElementById('mazeBtn').onclick=()=>{
+  for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
+    if(grid[y][x]===START||grid[y][x]===END) continue;
+    if(x%2===0 || y%2===0){
+      grid[y][x] = Math.random()<0.55 ? WALL : EMPTY;
+    } else {
+      grid[y][x] = EMPTY;
+    }
+  }
+  [[start.x,start.y],[end.x,end.y]].forEach(([x,y])=>{
+    for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
+      const nx=x+dx,ny=y+dy;
+      if(inBounds(nx,ny)&&grid[ny][nx]===WALL) grid[ny][nx]=EMPTY;
+    }
+  });
+  clearPath(); render();
+};
+
+const levels = [
+  {name:'空旷', desc:'无障碍直行', build:()=>{}},
+  {name:'十字墙', desc:'中间一道墙留口', build:()=>{
+    for(let y=0;y<ROWS;y++){
+      if(Math.abs(y-12)>2) grid[y][20]=WALL;
+    }
+  }},
+  {name:'迷宫螺旋', desc:'复杂路径', build:()=>{
+    for(let y=4;y<20;y++) grid[y][10]=WALL;
+    for(let x=10;x<30;x++) grid[8][x]=WALL;
+    for(let y=8;y<20;y++) grid[y][22]=WALL;
+    for(let x=22;x<35;x++) grid[16][x]=WALL;
+    grid[8][15]=EMPTY; grid[16][28]=EMPTY;
+  }},
+  {name:'双通道', desc:'上下两条路', build:()=>{
+    for(let x=6;x<35;x++){ grid[6][x]=WALL; grid[18][x]=WALL; }
+    grid[6][20]=EMPTY; grid[18][20]=EMPTY;
+  }},
+];
+const levelsEl = document.getElementById('levels');
+levels.forEach((lv,i)=>{
+  const b=document.createElement('button');
+  b.className='lvl'+(i===0?' active':'');
+  b.innerHTML=lv.name+'<small>'+lv.desc+'</small>';
+  b.onclick=()=>{
+    document.querySelectorAll('.lvl').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    grid=Array.from({length:ROWS},()=>Array(COLS).fill(EMPTY));
+    start={x:3,y:12}; end={x:37,y:12};
+    grid[start.y][start.x]=START; grid[end.y][end.x]=END;
+    lv.build();
+    grid[start.y][start.x]=START; grid[end.y][end.x]=END;
+    clearPath(); render();
+  };
+  levelsEl.appendChild(b);
+});
+
+function tick(){render();requestAnimationFrame(tick)}
+tick();
+</script>
+</body>
+</html>
