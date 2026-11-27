@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>学习路线市场</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+       background: #f5f7fa; color: #1a1a2e; padding: 0; }
+
+/* Header */
+.market-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                 color: #fff; padding: 28px 32px 20px; }
+.market-header h1 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+.market-header p { font-size: 13px; opacity: 0.85; }
+
+/* Search & Filter Bar */
+.filter-bar { background: #fff; padding: 16px 32px; border-bottom: 1px solid #e0e0e0;
+              display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.search-box { flex: 1; min-width: 200px; position: relative; }
+.search-box input { width: 100%; padding: 10px 14px 10px 38px; border: 2px solid #e0e0e0;
+                    border-radius: 10px; font-size: 14px; outline: none; transition: border-color .2s; }
+.search-box input:focus { border-color: #667eea; }
+.search-box .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+                           font-size: 16px; color: #aaa; }
+
+.sort-group { display: flex; gap: 4px; }
+.sort-btn { padding: 8px 16px; border: 1px solid #e0e0e0; border-radius: 8px;
+            background: #fff; font-size: 13px; cursor: pointer; color: #666;
+            transition: all .2s; }
+.sort-btn:hover { border-color: #667eea; color: #667eea; }
+.sort-btn.active { background: #667eea; color: #fff; border-color: #667eea; }
+
+/* Category Tags */
+.category-bar { padding: 12px 32px; background: #fff; border-bottom: 1px solid #f0f0f0;
+                display: flex; gap: 8px; flex-wrap: wrap; }
+.cat-tag { padding: 6px 16px; border-radius: 20px; font-size: 13px; cursor: pointer;
+           background: #f0f2f5; color: #666; border: 1px solid transparent; transition: all .2s; }
+.cat-tag:hover { background: #e8ecff; color: #667eea; }
+.cat-tag.active { background: #667eea; color: #fff; }
+
+/* Content */
+.content { padding: 24px 32px; }
+
+/* Route Cards Grid */
+.route-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+              gap: 20px; }
+
+.route-card { background: #fff; border-radius: 16px; overflow: hidden;
+              box-shadow: 0 2px 12px rgba(0,0,0,0.06); cursor: pointer;
+              transition: all .3s; border: 2px solid transparent; }
+.route-card:hover { transform: translateY(-4px); box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+                    border-color: #667eea; }
+
+.card-cover { height: 100px; display: flex; align-items: center; justify-content: center;
+              position: relative; }
+.card-cover .cover-icon { font-size: 42px; filter: drop-shadow(0 2px 8px rgba(0,0,0,0.2)); }
+.card-cover .cover-badge { position: absolute; top: 10px; right: 10px; padding: 3px 10px;
+                           border-radius: 10px; font-size: 11px; font-weight: 600;
+                           background: rgba(255,255,255,0.9); }
+.card-cover .adopted-badge { position: absolute; top: 10px; left: 10px; padding: 4px 12px;
+                             border-radius: 10px; font-size: 11px; font-weight: 600;
+                             background: #10b981; color: #fff; display: flex; align-items: center; gap: 4px; }
+.card-cover .adopted-badge::before { content: '✓'; font-weight: 700; }
+
+.card-body { padding: 16px 18px; }
+.card-body .card-title { font-size: 16px; font-weight: 700; margin-bottom: 4px; color: #1a1a2e; }
+.card-body .card-subtitle { font-size: 12px; color: #888; margin-bottom: 10px; }
+.card-body .card-desc { font-size: 13px; color: #555; line-height: 1.5; margin-bottom: 12px;
+                        display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+                        overflow: hidden; }
+
+.card-meta { display: flex; align-items: center; gap: 12px; font-size: 12px; color: #999;
+             flex-wrap: wrap; }
+.card-meta .meta-item { display: flex; align-items: center; gap: 4px; }
+
+.card-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+.card-tags .tag { padding: 2px 8px; border-radius: 6px; font-size: 11px;
+                  background: #f0f4ff; color: #667eea; }
+
+.card-footer { padding: 12px 18px; border-top: 1px solid #f0f0f0;
+               display: flex; align-items: center; justify-content: space-between; }
+.card-footer .adopt-btn { padding: 8px 20px; border: none; border-radius: 8px;
+                          background: linear-gradient(135deg, #667eea, #764ba2);
+                          color: #fff; font-size: 13px; font-weight: 600; cursor: pointer;
+                          transition: all .2s; }
+.card-footer .adopt-btn:hover { transform: scale(1.05); box-shadow: 0 4px 16px rgba(102,126,234,0.4); }
+.card-footer .detail-btn { padding: 8px 16px; border: 1px solid #e0e0e0; border-radius: 8px;
+                           background: #fff; color: #666; font-size: 13px; cursor: pointer;
+                           transition: all .2s; }
+.card-footer .detail-btn:hover { border-color: #667eea; color: #667eea; }
+
+/* Detail Panel (overlay) */
+.detail-overlay { position: fixed; inset: 0; z-index: 9000; background: rgba(0,0,0,0.5);
+                  display: none; align-items: flex-start; justify-content: center;
+                  padding: 40px 20px; overflow-y: auto; }
+.detail-overlay.show { display: flex; }
+
+.detail-panel { background: #fff; border-radius: 20px; width: 100%; max-width: 800px;
+                box-shadow: 0 20px 60px rgba(0,0,0,0.2); overflow: hidden;
+                animation: slideUp .3s ease; }
+@keyframes slideUp { from { opacity: 0; transform: translateY(30px); }
+                     to { opacity: 1; transform: translateY(0); } }
+
+.detail-header { padding: 24px 28px; color: #fff; position: relative; }
+.detail-header .close-btn { position: absolute; top: 16px; right: 20px; background: rgba(255,255,255,0.25);
+                            border: none; color: #fff; font-size: 22px; cursor: pointer;
+                            width: 36px; height: 36px; border-radius: 50%; display: flex;
+                            align-items: center; justify-content: center; transition: all .2s; }
+.detail-header .close-btn:hover { background: rgba(255,255,255,0.4); }
+.detail-header .detail-icon { font-size: 36px; margin-bottom: 8px; }
+.detail-header h2 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+.detail-header .detail-subtitle { font-size: 14px; opacity: 0.85; }
+
+.detail-meta { padding: 16px 28px; background: #f8f9ff; display: flex; gap: 20px;
+               flex-wrap: wrap; border-bottom: 1px solid #e8ecff; }
+.detail-meta .meta-block { text-align: center; }
+.detail-meta .meta-label { font-size: 11px; color: #999; }
+.detail-meta .meta-value { font-size: 15px; font-weight: 700; color: #667eea; }
+
+.detail-body { padding: 24px 28px; max-height: 55vh; overflow-y: auto; }
+
+.detail-section { margin-bottom: 24px; }
+.detail-section h3 { font-size: 16px; font-weight: 700; color: #1a1a2e; margin-bottom: 12px;
+                     display: flex; align-items: center; gap: 8px; }
+
+.phase-card { background: #f8f9fa; border-radius: 12px; padding: 16px; margin-bottom: 12px;
+              border-left: 4px solid #667eea; }
+.phase-card .phase-title { font-size: 14px; font-weight: 700; color: #333; margin-bottom: 4px; }
+.phase-card .phase-weeks { font-size: 12px; color: #888; margin-bottom: 8px; }
+.phase-card .phase-desc { font-size: 13px; color: #555; margin-bottom: 10px; line-height: 1.5; }
+.phase-card .phase-kps { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.phase-card .phase-kps .kp { padding: 3px 10px; border-radius: 12px; font-size: 11px;
+                              background: #e8ecff; color: #667eea; }
+.phase-card .phase-milestone { font-size: 12px; color: #10b981; margin-bottom: 10px;
+                               display: flex; align-items: center; gap: 4px; }
+
+/* Resource sub-sections inside phase */
+.resource-tabs { display: flex; gap: 4px; margin-bottom: 10px; }
+.resource-tab { padding: 4px 12px; border-radius: 6px; font-size: 11px; cursor: pointer;
+                background: #e8ecff; color: #667eea; border: none; transition: all .2s; }
+.resource-tab.active { background: #667eea; color: #fff; }
+.resource-tab:hover { background: #667eea; color: #fff; }
+
+.resource-list { display: none; }
+.resource-list.active { display: block; }
+.resource-item { padding: 8px 12px; background: #fff; border-radius: 8px; margin-bottom: 6px;
+                 border: 1px solid #e8ecff; font-size: 12px; }
+.resource-item .res-title { font-weight: 600; color: #333; margin-bottom: 2px; }
+.resource-item .res-desc { color: #888; font-size: 11px; }
+.resource-item .res-meta { color: #aaa; font-size: 11px; margin-top: 2px; }
+
+/* Reviews */
+.review-item { padding: 12px; background: #f8f9fa; border-radius: 10px; margin-bottom: 8px; }
+.review-item .review-header { display: flex; align-items: center; justify-content: space-between;
+                              margin-bottom: 4px; }
+.review-item .review-user { font-size: 13px; font-weight: 600; color: #333; }
+.review-item .review-stars { color: #f59e0b; font-size: 13px; }
+.review-item .review-text { font-size: 13px; color: #666; line-height: 1.5; }
+
+/* Adopt Buttons in Detail */
+.detail-actions { padding: 20px 28px; border-top: 1px solid #e0e0e0; background: #fff;
+                  display: flex; gap: 12px; }
+.detail-actions .action-btn { flex: 1; padding: 14px; border: none; border-radius: 12px;
+                              font-size: 15px; font-weight: 700; cursor: pointer;
+                              transition: all .2s; display: flex; align-items: center;
+                              justify-content: center; gap: 8px; }
+.action-btn.direct { background: linear-gradient(135deg, #11998e, #38ef7d); color: #fff; }
+.action-btn.direct:hover { transform: scale(1.02); box-shadow: 0 6px 20px rgba(17,153,142,0.4); }
+.action-btn.ai { background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; }
+.action-btn.ai:hover { transform: scale(1.02); box-shadow: 0 6px 20px rgba(102,126,234,0.4); }
+.action-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none !important; }
+
+/* Empty state */
+.empty-state { text-align: center; padding: 60px 20px; color: #aaa; }
+.empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; }
+.empty-state .empty-text { font-size: 15px; }
+
+/* Loading */
+.loading { text-align: center; padding: 40px; color: #aaa; }
+.loading .spinner { width: 32px; height: 32px; border: 3px solid #f0f0f0;
+                    border-top-color: #667eea; border-radius: 50%;
+                    animation: spin .8s linear infinite; margin: 0 auto 12px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Toast */
+.toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+         padding: 12px 24px; border-radius: 10px; font-size: 14px; font-weight: 600;
+         color: #fff; z-index: 99999; animation: toastIn .3s ease;
+         box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+.toast.success { background: #10b981; }
+.toast.error { background: #ef4444; }
+@keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+                     to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+
+/* Flowchart Section */
+.flowchart-section { background: #f8f9ff; border-radius: 14px; padding: 20px; margin-bottom: 24px;
+                     border: 1px solid #e8ecff; }
+.flowchart-section h3 { font-size: 16px; font-weight: 700; color: #1a1a2e; margin-bottom: 14px;
+                        display: flex; align-items: center; gap: 8px; }
+.flowchart-controls { display: flex; gap: 8px; margin-bottom: 12px; justify-content: center; }
+.fc-btn { padding: 6px 14px; border: 1px solid #667eea; border-radius: 8px; background: #fff;
+          color: #667eea; font-size: 13px; cursor: pointer; transition: all .2s; }
+.fc-btn:hover { background: #667eea; color: #fff; }
+.flowchart-container { background: #fff; border-radius: 12px; padding: 20px; overflow: auto;
+                       min-height: 200px; display: flex; align-items: center; justify-content: center;
+                       transition: transform .2s; }
+.flowchart-container svg { max-width: 100%; height: auto; }
+
+/* Fullscreen Flowchart */
+.flowchart-fullscreen { position: fixed; inset: 0; z-index: 9800; background: rgba(0,0,0,0.9);
+                        display: flex; flex-direction: column; padding: 20px; }
+.flowchart-fullscreen .fs-header { display: flex; justify-content: space-between; align-items: center;
+                                    margin-bottom: 16px; }
+.flowchart-fullscreen .fs-header h3 { color: #fff; font-size: 18px; }
+.flowchart-fullscreen .fs-close { background: rgba(255,255,255,0.2); border: none; color: #fff;
+                                   font-size: 20px; cursor: pointer; width: 36px; height: 36px;
+                                   border-radius: 50%; }
+.flowchart-fullscreen .fs-container { flex: 1; background: #fff; border-radius: 12px; overflow: auto;
+                                       display: flex; align-items: center; justify-content: center; }
+.flowchart-fullscreen .fs-container svg { max-width: none; height: auto; }
+
+/* Edit Modal */
+.edit-overlay { position: fixed; inset: 0; z-index: 9500; background: rgba(0,0,0,0.5);
+                display: none; align-items: center; justify-content: center; padding: 20px; }
+.edit-overlay.show { display: flex; }
+.edit-modal { background: #fff; border-radius: 20px; width: 100%; max-width: 600px;
+              box-shadow: 0 20px 60px rgba(0,0,0,0.25); overflow: hidden;
+              animation: slideUp .3s ease; max-height: 90vh; display: flex; flex-direction: column; }
+.edit-modal-header { padding: 20px 24px; background: linear-gradient(135deg, #f59e0b, #d97706);
+                     color: #fff; display: flex; align-items: center; justify-content: space-between; }
+.edit-modal-header h3 { font-size: 18px; font-weight: 700; }
+.edit-modal-header .close-edit { background: rgba(255,255,255,0.25); border: none; color: #fff;
+                                 font-size: 20px; cursor: pointer; width: 32px; height: 32px;
+                                 border-radius: 50%; display: flex; align-items: center;
+                                 justify-content: center; }
+.edit-modal-body { padding: 20px 24px; overflow-y: auto; flex: 1; }
+.edit-form .form-group { margin-bottom: 14px; }
+.edit-form .form-group label { display: block; font-size: 13px; font-weight: 600; color: #333; margin-bottom: 4px; }
+.edit-form .form-group input, .edit-form .form-group select, .edit-form .form-group textarea {
+  width: 100%; padding: 10px 12px; border: 2px solid #e0e0e0; border-radius: 10px;
+  font-size: 13px; outline: none; transition: border-color 0.2s; box-sizing: border-box; }
+.edit-form .form-group input:focus, .edit-form .form-group select:focus, .edit-form .form-group textarea:focus {
+  border-color: #f59e0b; }
+.edit-form .form-group textarea { resize: vertical; min-height: 60px; }
+.edit-form .form-row { display: flex; gap: 12px; }
+.edit-form .form-row .form-group { flex: 1; }
+.edit-modal-footer { padding: 16px 24px; border-top: 1px solid #f0f0f0;
+                     display: flex; gap: 10px; justify-content: flex-end; }
+.edit-modal-footer button { padding: 10px 24px; border: none; border-radius: 10px;
+                            font-size: 14px; font-weight: 600; cursor: pointer; }
+.edit-modal-footer .btn-cancel { background: #f0f0f0; color: #666; }
+.edit-modal-footer .btn-save { background: #f59e0b; color: #fff; }
+.edit-modal-footer .btn-save:hover { background: #d97706; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .route-grid { grid-template-columns: 1fr; }
+  .filter-bar { padding: 12px 16px; }
+  .content { padding: 16px; }
+  .detail-panel { border-radius: 12px; }
+  .edit-modal { max-width: 95vw; }
+}
+</style>
+</head>
+<body>
+
+<div class="market-header">
+  <h1>🛒 学习路线市场</h1>
+  <p>精选学习路线，一键采纳为你的个性化学习计划</p>
+</div>
+
+<div class="filter-bar">
+  <div class="search-box">
+    <span class="search-icon">🔍</span>
+    <input id="searchInput" type="text" placeholder="搜索路线名称、关键词..."
+           oninput="debounceSearch()">
+  </div>
+  <div class="sort-group">
+    <button class="sort-btn active" data-sort="hot" onclick="setSort('hot')">🔥 最热</button>
+    <button class="sort-btn" data-sort="rating" onclick="setSort('rating')">⭐ 评分</button>
+    <button class="sort-btn" data-sort="new" onclick="setSort('new')">🆕 最新</button>
+  </div>
+</div>
+
+<div class="category-bar" id="categoryBar">
+  <span class="cat-tag active" data-cat="" onclick="setCategory('')">全部</span>
+</div>
+
+<div class="content">
+  <div class="route-grid" id="routeGrid">
+    <div class="loading"><div class="spinner"></div>加载中...</div>
+  </div>
+</div>
+
+<!-- Detail Overlay -->
+<div class="detail-overlay" id="detailOverlay" onclick="if(event.target===this)closeDetail()">
+  <div class="detail-panel" id="detailPanel">
+    <div class="detail-header" id="detailHeader">
+      <button class="close-btn" onclick="closeDetail()">&times;</button>
+    </div>
+    <div class="detail-meta" id="detailMeta"></div>
+    <div class="detail-body" id="detailBody"></div>
+    <div class="detail-actions" id="detailActions"></div>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="edit-overlay" id="editOverlay" onclick="if(event.target===this)closeEditModal()">
+  <div class="edit-modal">
+    <div class="edit-modal-header">
+      <h3>️ 编辑学习路线</h3>
+      <button class="close-edit" onclick="closeEditModal()">&times;</button>
+    </div>
+    <div class="edit-modal-body">
+      <div class="edit-form" id="editForm">
+        <div class="form-group">
+          <label>路线名称</label>
+          <input type="text" id="editName" placeholder="输入路线名称">
+        </div>
+        <div class="form-group">
+          <label>副标题</label>
+          <input type="text" id="editSubtitle" placeholder="简要概括学习路径">
+        </div>
+        <div class="form-group">
+          <label>路线简介</label>
+          <textarea id="editDesc" rows="3" placeholder="描述学习目标和内容体系"></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>分类</label>
+            <select id="editCategory">
+              <option value="前端开发">前端开发</option>
+              <option value="后端开发">后端开发</option>
+              <option value="移动端开发">移动端开发</option>
+              <option value="数据科学">数据科学</option>
+              <option value="人工智能">人工智能</option>
+              <option value="算法与数据结构">算法与数据结构</option>
+              <option value="计算机基础">计算机基础</option>
+              <option value="其他">其他</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>难度</label>
+            <select id="editDifficulty">
+              <option value="easy">入门</option>
+              <option value="medium">进阶</option>
+              <option value="hard">高级</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>标签（逗号分隔）</label>
+          <input type="text" id="editTags" placeholder="如：Python, 数据分析, Pandas">
+        </div>
+        <div class="form-group">
+          <label>适合人群</label>
+          <input type="text" id="editAudience" placeholder="描述适合的学习者">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>预计时长</label>
+            <input type="text" id="editDuration" placeholder="如：3个月">
+          </div>
+          <div class="form-group">
+            <label>前置要求</label>
+            <input type="text" id="editPrereq" placeholder="如：Python基础">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="edit-modal-footer">
+      <button class="btn-cancel" onclick="closeEditModal()">取消</button>
+      <button class="btn-save" onclick="saveRoute()">💾 保存</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>
+// ========== Mermaid Init ==========
+if (typeof mermaid !== 'undefined') {
+  mermaid.initialize({
+    startOnLoad: false,
+    theme: 'base',
+    themeVariables: {
+      primaryColor: '#e8ecff',
+      primaryTextColor: '#1a1a2e',
+      primaryBorderColor: '#667eea',
+      lineColor: '#667eea',
+      secondaryColor: '#f0f2f5',
+      tertiaryColor: '#fff',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      fontSize: '13px',
+      // 子图样式
+      clusterBkg: '#f8f9ff',
+      clusterBorder: '#667eea',
+      titleColor: '#667eea',
+    },
+    flowchart: {
+      htmlLabels: true,
+      curve: 'basis',
+      padding: 15,
+      nodeSpacing: 30,
+      rankSpacing: 50,
+    },
+  });
+}
+
+// ========== State ==========
+let currentCategory = '';
+let currentSort = 'hot';
+let searchTimer = null;
+let currentDetailRoute = null;
+
+// ========== Init ==========
+document.addEventListener('DOMContentLoaded', function() {
+  loadCategories();
+  loadRoutes();
+  // 从父页面获取 userId
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'setUserId') {
+      window._userId = e.data.userId;
+    }
+    if (e.data && e.data.type === 'reloadRoutes') {
+      loadRoutes();
+    }
+  });
+  // 请求 userId
+  if (window.parent && window.parent !== window) {
+    window.parent.postMessage({ type: 'getUserId' }, '*');
+  }
+});
+
+function getUserId() {
+  return window._userId || 'user_001';
+}
+
+// ========== Categories ==========
+async function loadCategories() {
+  try {
+    const res = await fetch('/api/route-market/categories');
+    const data = await res.json();
+    if (data.success && data.categories) {
+      const bar = document.getElementById('categoryBar');
+      data.categories.forEach(function(cat) {
+        const span = document.createElement('span');
+        span.className = 'cat-tag';
+        span.dataset.cat = cat;
+        span.textContent = cat;
+        span.onclick = function() { setCategory(cat); };
+        bar.appendChild(span);
+      });
+    }
+  } catch(e) {
+    console.warn('加载分类失败:', e);
+  }
+}
+
+function setCategory(cat) {
+  currentCategory = cat;
+  document.querySelectorAll('.cat-tag').forEach(function(t) {
+    t.classList.toggle('active', t.dataset.cat === cat);
+  });
+  loadRoutes();
+}
+
+function setSort(sort) {
+  currentSort = sort;
+  document.querySelectorAll('.sort-btn').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.sort === sort);
+  });
+  loadRoutes();
+}
+
+function debounceSearch() {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(loadRoutes, 300);
+}
+
+// ========== Load Routes ==========
+async function loadRoutes() {
+  const grid = document.getElementById('routeGrid');
+  grid.innerHTML = '<div class="loading"><div class="spinner"></div>加载中...</div>';
+
+  const params = new URLSearchParams();
+  if (currentCategory) params.set('category', currentCategory);
+  params.set('sort', currentSort);
+  const q = document.getElementById('searchInput').value.trim();
+  if (q) params.set('search', q);
+  
+  // 传入用户ID，用于获取采纳状态
+  const userId = getUserId();
+  if (userId) params.set('user_id', userId);
+
+  try {
+    const res = await fetch('/api/route-market/list?' + params.toString());
+    const data = await res.json();
+
+    if (!data.success || !data.routes || data.routes.length === 0) {
+      grid.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div>' +
+                       '<div class="empty-text">暂无匹配的路线</div></div>';
+      return;
+    }
+
+    grid.innerHTML = '';
+    data.routes.forEach(function(route) {
+      grid.appendChild(renderCard(route));
+    });
+  } catch(e) {
+    grid.innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div>' +
+                     '<div class="empty-text">加载失败，请稍后重试</div></div>';
+    console.error('加载路线失败:', e);
+  }
+}
+
+// ========== Render Card ==========
+function renderCard(route) {
+  const card = document.createElement('div');
+  card.className = 'route-card';
+
+  const diffLabel = { easy: '入门', medium: '进阶', hard: '高级' };
+  const diffColor = { easy: '#10b981', medium: '#f59e0b', hard: '#ef4444' };
+  
+  // 构建采纳状态徽章
+  let adoptedBadgeHtml = '';
+  if (route.adopted_by_user) {
+    const mode = route.adoption_mode || '直接使用';
+    adoptedBadgeHtml = '<span class="adopted-badge">已采纳 · ' + escapeHtml(mode) + '</span>';
+  } else if (route.was_personalized) {
+    adoptedBadgeHtml = '<span class="adopted-badge" style="background:rgba(139,92,246,0.25);color:#a78bfa;">已AI个性化</span>';
+  }
+
+  // 采纳按钮状态
+  let adoptBtnHtml;
+  if (route.adopted_by_user) {
+    adoptBtnHtml = '<button class="adopt-btn adopted" disabled style="opacity:0.6;cursor:not-allowed;">✓ 已采纳</button>';
+  } else if (route.was_personalized) {
+    adoptBtnHtml = '<button class="adopt-btn adopted" disabled style="opacity:0.6;cursor:not-allowed;background:#7c3aed;">✓ 已AI个性化</button>';
+  } else {
+    adoptBtnHtml = '<button class="adopt-btn" onclick="event.stopPropagation();quickAdopt(\'' + route.route_id + '\',\'' + escapeHtml(route.name || '') + '\')">🎯 直接采纳</button>';
+  }
+
+  card.innerHTML =
+    '<div class="card-cover" style="background:' + (route.cover_color || '#667eea') + '">' +
+      '<span class="cover-icon">' + (route.cover_icon || '📚') + '</span>' +
+      '<span class="cover-badge" style="color:' + (diffColor[route.difficulty] || '#666') + '">' +
+        (diffLabel[route.difficulty] || route.difficulty) +
+      '</span>' +
+      adoptedBadgeHtml +
+    '</div>' +
+    '<div class="card-body">' +
+      '<div class="card-title">' + escapeHtml(route.name || '') + '</div>' +
+      '<div class="card-subtitle">' + escapeHtml(route.subtitle || '') + '</div>' +
+      '<div class="card-desc">' + escapeHtml(route.description || '') + '</div>' +
+      '<div class="card-meta">' +
+        '<span class="meta-item">⭐ ' + ((route.stats && route.stats.rating) || '0') + '</span>' +
+        '<span class="meta-item">👥 ' + ((route.stats && route.stats.adoptions) || 0) + '人采纳</span>' +
+        '<span class="meta-item">📅 ' + escapeHtml(route.estimated_duration || '') + '</span>' +
+        '<span class="meta-item">🎯 ' + escapeHtml(route.target_audience || '') + '</span>' +
+      '</div>' +
+      '<div class="card-tags">' +
+        (route.tags || []).slice(0, 4).map(function(t) {
+          return '<span class="tag">' + escapeHtml(t) + '</span>';
+        }).join('') +
+      '</div>' +
+    '</div>' +
+    '<div class="card-footer">' +
+      '<button class="detail-btn" onclick="event.stopPropagation();openDetail(\'' + route.route_id + '\')">查看详情</button>' +
+      adoptBtnHtml +
+    '</div>';
+
+  card.onclick = function() { openDetail(route.route_id); };
+  return card;
+}
+
+// ========== Detail View ==========
+async function openDetail(routeId) {
+  const overlay = document.getElementById('detailOverlay');
+  const header = document.getElementById('detailHeader');
+  const meta = document.getElementById('detailMeta');
+  const body = document.getElementById('detailBody');
+  const actions = document.getElementById('detailActions');
+
+  header.innerHTML = '<button class="close-btn" onclick="closeDetail()">&times;</button>' +
+                     '<div class="loading" style="padding:30px;"><div class="spinner"></div></div>';
+  meta.innerHTML = '';
+  body.innerHTML = '';
+  actions.innerHTML = '';
+  overlay.classList.add('show');
+
+  try {
+    const userId = getUserId();
+    const url = '/api/route-market/' + routeId + (userId ? '?user_id=' + encodeURIComponent(userId) : '');
+    const res = await fetch(url);
+    const data = await res.json();
+    if (!data.success || !data.route) {
+      header.innerHTML = '<button class="close-btn" onclick="closeDetail()">&times;</button>' +
+                         '<h2>加载失败</h2>';
+      return;
+    }
+    const route = data.route;
+    currentDetailRoute = route;
+
+    const diffLabel = { easy: '入门', medium: '进阶', hard: '高级' };
+
+    // Header
+    header.style.background = 'linear-gradient(135deg, ' + (route.cover_color || '#667eea') + ' 0%, #764ba2 100%)';
+    header.innerHTML = '<button class="close-btn" onclick="closeDetail()">&times;</button>' +
+      '<div class="detail-icon">' + (route.cover_icon || '📚') + '</div>' +
+      '<h2>' + escapeHtml(route.name) + '</h2>' +
+      '<div class="detail-subtitle">' + escapeHtml(route.subtitle || '') + '</div>';
+
+    // Meta
+    meta.innerHTML =
+      '<div class="meta-block"><div class="meta-label">难度</div><div class="meta-value">' + (diffLabel[route.difficulty] || route.difficulty) + '</div></div>' +
+      '<div class="meta-block"><div class="meta-label">时长</div><div class="meta-value">' + escapeHtml(route.estimated_duration || '') + '</div></div>' +
+      '<div class="meta-block"><div class="meta-label">预估学时</div><div class="meta-value">' + (route.estimated_hours || 0) + 'h</div></div>' +
+      '<div class="meta-block"><div class="meta-label">评分</div><div class="meta-value">⭐ ' + ((route.stats && route.stats.rating) || 0) + '</div></div>' +
+      '<div class="meta-block"><div class="meta-label">采纳人数</div><div class="meta-value">' + ((route.stats && route.stats.adoptions) || 0) + '</div></div>' +
+      '<div class="meta-block"><div class="meta-label">适合人群</div><div class="meta-value" style="font-size:12px">' + escapeHtml(route.target_audience || '') + '</div></div>';
+
+    // Body: description + phases + reviews
+    let bodyHtml = '';
+
+    // Description
+    bodyHtml += '<div class="detail-section"><h3>📋 路线简介</h3>' +
+      '<p style="font-size:14px;color:#555;line-height:1.8;">' + escapeHtml(route.description || '') + '</p>' +
+      '</div>';
+
+    // Prerequisites
+    if (route.prerequisites) {
+      bodyHtml += '<div class="detail-section"><h3>📌 前置要求</h3>' +
+        '<p style="font-size:13px;color:#888;">' + escapeHtml(route.prerequisites) + '</p></div>';
+    }
+
+    // Flowchart
+    bodyHtml += '<div class="flowchart-section"><h3>🗺️ 路线流程图</h3>' +
+      '<div class="flowchart-controls">' +
+        '<button class="fc-btn" onclick="zoomFlowchart(0.8)" title="缩小">🔍-</button>' +
+        '<button class="fc-btn" onclick="zoomFlowchart(1.25)" title="放大">🔍+</button>' +
+        '<button class="fc-btn" onclick="resetFlowchartZoom()" title="重置"> 重置</button>' +
+        '<button class="fc-btn" onclick="fullscreenFlowchart()" title="全屏"> 全屏</button>' +
+      '</div>' +
+      '<div class="flowchart-container" id="flowchartContainer">' +
+        '<div class="loading"><div class="spinner"></div>正在生成流程图...</div>' +
+      '</div></div>';
+
+    // Phases
+    bodyHtml += '<div class="detail-section"><h3>📚 学习阶段 (' + (route.phases || []).length + '个)</h3>';
+    (route.phases || []).forEach(function(phase, idx) {
+      bodyHtml += renderPhaseCard(phase, idx, routeId);
+    });
+    bodyHtml += '</div>';
+
+    // Reviews
+    if (route.reviews && route.reviews.length > 0) {
+      bodyHtml += '<div class="detail-section"><h3>💬 用户评价 (' + route.reviews.length + ')</h3>';
+      route.reviews.forEach(function(review) {
+        const stars = '⭐'.repeat(review.rating || 0);
+        bodyHtml += '<div class="review-item">' +
+          '<div class="review-header"><span class="review-user">' + escapeHtml(review.user_id) + '</span>' +
+          '<span class="review-stars">' + stars + '</span></div>' +
+          '<div class="review-text">' + escapeHtml(review.comment || '') + '</div></div>';
+      });
+      bodyHtml += '</div>';
+    }
+
+    // 添加评价表单（仅已采纳的用户可见）
+    bodyHtml += '<div class="detail-section" id="reviewFormSection">' +
+      '<h3>✍️ 发表评价</h3>' +
+      '<div class="review-form">' +
+        '<div class="form-row"><label>评分：</label>' +
+          '<div class="star-rating" id="ratingStars">' +
+            '<span class="star" data-rating="1">⭐</span>' +
+            '<span class="star" data-rating="2">⭐</span>' +
+            '<span class="star" data-rating="3">⭐</span>' +
+            '<span class="star" data-rating="4">⭐</span>' +
+            '<span class="star" data-rating="5">⭐</span>' +
+          '</div>' +
+        '</div>' +
+        '<div class="form-row"><label>评价：</label>' +
+          '<textarea id="reviewComment" rows="3" placeholder="分享你的学习体验..." style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;resize:vertical;"></textarea>' +
+        '</div>' +
+        '<button class="submit-review-btn" onclick="submitReview(\'' + routeId + '\')" style="margin-top:10px;padding:8px 20px;background:#667eea;color:#fff;border:none;border-radius:8px;cursor:pointer;">提交评价</button>' +
+      '</div>' +
+    '</div>';
+
+    body.innerHTML = bodyHtml;
+
+    // 渲染流程图
+    renderFlowchart(route);
+
+    // 绑定评分星星点击事件
+    const stars = document.querySelectorAll('#ratingStars .star');
+    stars.forEach(function(star) {
+      star.style.cursor = 'pointer';
+      star.style.opacity = '0.4';
+      star.addEventListener('click', function() {
+        const rating = parseInt(this.dataset.rating);
+        window._selectedRating = rating;
+        stars.forEach(function(s, idx) {
+          s.style.opacity = idx < rating ? '1' : '0.4';
+        });
+      });
+    });
+
+    // Actions - 根据采纳状态和发布者身份显示不同按钮
+    var currentUserId = getUserId();
+    var isOwner = route.creator && route.creator.id === currentUserId;
+
+    var ownerBtns = '';
+    if (isOwner) {
+      ownerBtns =
+        '<button class="action-btn" onclick="editRoute(\'' + route.route_id + '\')" style="background:#f59e0b;">️ 编辑</button>' +
+        '<button class="action-btn" onclick="deleteRoute(\'' + route.route_id + '\')" style="background:#ef4444;">�️ 删除</button>';
+    }
+
+    if (route.adopted_by_user) {
+      actions.innerHTML =
+        '<div class="adopted-notice" style="text-align:center;padding:12px;background:#e8f5e9;border-radius:12px;margin-bottom:10px;">' +
+          '<span style="color:#10b981;font-weight:600;">✓ 您已采纳此路线（' + escapeHtml(route.adoption_mode || '直接使用') + '）</span>' +
+        '</div>' +
+        '<button class="action-btn" onclick="goToStudyPlan()" style="background:#667eea;">📋 查看学习计划</button>' +
+        ownerBtns;
+    } else if (route.was_personalized) {
+      actions.innerHTML =
+        '<div class="adopted-notice" style="text-align:center;padding:12px;background:#ede9fe;border-radius:12px;margin-bottom:10px;">' +
+          '<span style="color:#7c3aed;font-weight:600;">🤖 您已使用AI个性化此路线</span>' +
+        '</div>' +
+        '<button class="action-btn" onclick="goToStudyPlan()" style="background:#667eea;">📋 查看学习计划</button>' +
+        ownerBtns;
+    } else if (isOwner) {
+      actions.innerHTML = ownerBtns;
+    } else {
+      actions.innerHTML =
+        '<button class="action-btn direct" onclick="adoptRoute(false)">' +
+          '🎯 直接使用此路线</button>' +
+        '<button class="action-btn ai" onclick="adoptRoute(true)">' +
+          '🤖 AI个性化后使用</button>';
+    }
+
+  } catch(e) {
+    header.innerHTML = '<button class="close-btn" onclick="closeDetail()">&times;</button>' +
+                       '<h2>加载失败</h2>';
+    console.error('加载详情失败:', e);
+  }
+}
+
+function renderPhaseCard(phase, idx, routeId) {
+  let html = '<div class="phase-card">' +
+    '<div class="phase-title">阶段' + (phase.phase || idx + 1) + '：' + escapeHtml(phase.name || '') + '</div>' +
+    '<div class="phase-weeks">⏰ ' + escapeHtml(phase.weeks || '') + ' | 预估 ' + (phase.estimated_hours || 0) + '小时</div>' +
+    '<div class="phase-desc">' + escapeHtml(phase.description || '') + '</div>';
+
+  // Knowledge points
+  if (phase.knowledge_points && phase.knowledge_points.length) {
+    html += '<div class="phase-kps">';
+    phase.knowledge_points.forEach(function(kp) {
+      html += '<span class="kp">' + escapeHtml(kp) + '</span>';
+    });
+    html += '</div>';
+  }
+
+  // Milestone
+  if (phase.milestone) {
+    html += '<div class="phase-milestone">🏁 里程碑：' + escapeHtml(phase.milestone) + '</div>';
+  }
+
+  // Resources
+  const res = phase.resources || {};
+  const hasVideos = res.videos && res.videos.length > 0;
+  const hasDocs = res.documents && res.documents.length > 0;
+  const hasPrac = res.practices && res.practices.length > 0;
+  const hasMaps = res.mindmaps && res.mindmaps.length > 0;
+
+  if (hasVideos || hasDocs || hasPrac || hasMaps) {
+    const tabId = 'phase_' + routeId + '_' + idx;
+    html += '<div class="resource-tabs">';
+    if (hasVideos) html += '<button class="resource-tab active" onclick="showResTab(\'' + tabId + '_v\',this)">📹 视频(' + res.videos.length + ')</button>';
+    if (hasDocs) html += '<button class="resource-tab" onclick="showResTab(\'' + tabId + '_d\',this)">📄 文档(' + res.documents.length + ')</button>';
+    if (hasPrac) html += '<button class="resource-tab" onclick="showResTab(\'' + tabId + '_p\',this)">💻 练习(' + res.practices.length + ')</button>';
+    if (hasMaps) html += '<button class="resource-tab" onclick="showResTab(\'' + tabId + '_m\',this)">🧠 导图(' + res.mindmaps.length + ')</button>';
+    html += '</div>';
+
+    // Videos
+    if (hasVideos) {
+      html += '<div class="resource-list active" id="' + tabId + '_v">';
+      res.videos.forEach(function(v) {
+        html += '<div class="resource-item"><div class="res-title">📹 ' + escapeHtml(v.title) + '</div>' +
+          '<div class="res-desc">' + escapeHtml(v.description || '') + '</div>' +
+          '<div class="res-meta">⏱ ' + escapeHtml(v.duration || '') + ' | BVID: ' + escapeHtml(v.bvid || '') + '</div></div>';
+      });
+      html += '</div>';
+    }
+
+    // Documents
+    if (hasDocs) {
+      html += '<div class="resource-list" id="' + tabId + '_d">';
+      res.documents.forEach(function(d) {
+        html += '<div class="resource-item"><div class="res-title">📄 ' + escapeHtml(d.title) + '</div>' +
+          '<div class="res-desc">' + escapeHtml(d.content_preview || '') + '</div>' +
+          '<div class="res-meta">' + (d.pages || 0) + '页</div></div>';
+      });
+      html += '</div>';
+    }
+
+    // Practices
+    if (hasPrac) {
+      html += '<div class="resource-list" id="' + tabId + '_p">';
+      res.practices.forEach(function(p) {
+        html += '<div class="resource-item"><div class="res-title">💻 ' + escapeHtml(p.title) + '</div>' +
+          '<div class="res-desc">' + escapeHtml(p.description || '') + '</div>' +
+          '<div class="res-meta">难度: ' + escapeHtml(p.difficulty || '中等') + (p.is_preview ? ' | 📋 预览' : '') + '</div></div>';
+      });
+      html += '</div>';
+    }
+
+    // Mindmaps
+    if (hasMaps) {
+      html += '<div class="resource-list" id="' + tabId + '_m">';
+      res.mindmaps.forEach(function(m) {
+        html += '<div class="resource-item"><div class="res-title">🧠 ' + escapeHtml(m.title) + '</div>' +
+          '<div class="res-desc">' + escapeHtml((m.topics || []).join('、')) + '</div></div>';
+      });
+      html += '</div>';
+    }
+  }
+
+  html += '</div>';
+  return html;
+}
+
+function showResTab(tabId, btn) {
+  // Hide all resource lists in this phase
+  const parent = btn.closest('.phase-card');
+  parent.querySelectorAll('.resource-list').forEach(function(el) {
+    el.classList.remove('active');
+  });
+  parent.querySelectorAll('.resource-tab').forEach(function(el) {
+    el.classList.remove('active');
+  });
+  // Show selected
+  document.getElementById(tabId).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ========== Flowchart Rendering ==========
+function generateMermaidSyntax(route) {
+  var phases = route.phases || [];
+  if (phases.length === 0) return 'graph TD\n  A[暂无阶段]';
+
+  var lines = ['graph TD'];
+  lines.push('  START((开始)) --> P1');
+
+  for (var i = 0; i < phases.length; i++) {
+    var phase = phases[i];
+    var phaseNum = i + 1;
+    var name = escapeHtml(phase.name || '').replace(/"/g, "'");
+    var weeks = escapeHtml(phase.weeks || '').replace(/"/g, "'");
+    var milestone = escapeHtml(phase.milestone || '').replace(/"/g, "'");
+    var kps = phase.knowledge_points || [];
+
+    // 阶段主节点
+    var phaseLabel = '阶段' + phaseNum + ': ' + name + '\\n' + weeks;
+    if (milestone) phaseLabel += '\\n🏁 ' + milestone;
+    lines.push('  P' + phaseNum + '["' + phaseLabel + '"]');
+
+    // 知识点子节点
+    if (kps.length > 0) {
+      lines.push('  subgraph SP' + phaseNum + '["知识点"]');
+      lines.push('    direction LR');
+      for (var j = 0; j < kps.length; j++) {
+        var kpName = escapeHtml(kps[j]).replace(/"/g, "'").replace(/\n/g, ' ');
+        // 限制知识点显示长度
+        if (kpName.length > 20) kpName = kpName.substring(0, 18) + '...';
+        lines.push('    KP' + phaseNum + '_' + (j + 1) + '["' + kpName + '"]');
+      }
+      lines.push('  end');
+      lines.push('  P' + phaseNum + ' --- SP' + phaseNum);
+    }
+
+    // 连接下一阶段
+    if (i < phases.length - 1) {
+      lines.push('  P' + phaseNum + ' --> P' + (phaseNum + 1));
+    } else {
+      lines.push('  P' + phaseNum + ' --> END((完成))');
+    }
+  }
+
+  return lines.join('\n');
+}
+
+async function renderFlowchart(route) {
+  var container = document.getElementById('flowchartContainer');
+  if (!container) return;
+
+  if (typeof mermaid === 'undefined') {
+    container.innerHTML = '<div style="color:#999;">流程图加载失败，请检查网络连接</div>';
+    return;
+  }
+
+  var syntax = generateMermaidSyntax(route);
+  var id = 'flowchart-' + Date.now();
+
+  try {
+    var result = await mermaid.render(id, syntax);
+    container.innerHTML = result.svg;
+  } catch (e) {
+    console.warn('Mermaid 渲染失败:', e);
+    container.innerHTML = '<div style="color:#999;">流程图生成失败</div>';
+  }
+}
+
+// ========== Flowchart Zoom ==========
+var currentZoom = 1;
+
+function zoomFlowchart(factor) {
+  currentZoom *= factor;
+  currentZoom = Math.max(0.3, Math.min(3, currentZoom));
+  applyFlowchartZoom();
+}
+
+function resetFlowchartZoom() {
+  currentZoom = 1;
+  applyFlowchartZoom();
+}
+
+function applyFlowchartZoom() {
+  var container = document.getElementById('flowchartContainer');
+  if (container) {
+    container.style.transform = 'scale(' + currentZoom + ')';
+    container.style.transformOrigin = 'top center';
+  }
+}
+
+function fullscreenFlowchart() {
+  var container = document.getElementById('flowchartContainer');
+  if (!container) return;
+
+  var svg = container.querySelector('svg');
+  if (!svg) return;
+
+  // 创建全屏容器
+  var fs = document.createElement('div');
+  fs.className = 'flowchart-fullscreen';
+  fs.innerHTML =
+    '<div class="fs-header">' +
+      '<h3>🗺️ 路线流程图 - 全屏模式</h3>' +
+      '<button class="fs-close" onclick="this.parentElement.parentElement.remove()">×</button>' +
+    '</div>' +
+    '<div class="fs-container"></div>';
+
+  document.body.appendChild(fs);
+
+  // 克隆 SVG 到全屏容器
+  var fsContainer = fs.querySelector('.fs-container');
+  var svgClone = svg.cloneNode(true);
+  fsContainer.appendChild(svgClone);
+}
+
+// ========== Edit / Delete (仅发布者可见) ==========
+let _editingRouteId = null;
+
+function editRoute(routeId) {
+  if (!currentDetailRoute) return;
+  _editingRouteId = routeId;
+
+  // 填充表单
+  document.getElementById('editName').value = currentDetailRoute.name || '';
+  document.getElementById('editSubtitle').value = currentDetailRoute.subtitle || '';
+  document.getElementById('editDesc').value = currentDetailRoute.description || '';
+  document.getElementById('editCategory').value = currentDetailRoute.category || '其他';
+  document.getElementById('editDifficulty').value = currentDetailRoute.difficulty || 'medium';
+  document.getElementById('editTags').value = (currentDetailRoute.tags || []).join(', ');
+  document.getElementById('editAudience').value = currentDetailRoute.target_audience || '';
+  document.getElementById('editDuration').value = currentDetailRoute.estimated_duration || '';
+  document.getElementById('editPrereq').value = currentDetailRoute.prerequisites || '';
+
+  document.getElementById('editOverlay').classList.add('show');
+}
+
+function closeEditModal() {
+  document.getElementById('editOverlay').classList.remove('show');
+  _editingRouteId = null;
+}
+
+async function saveRoute() {
+  if (!_editingRouteId) return;
+
+  const tagsStr = document.getElementById('editTags').value.trim();
+  const tags = tagsStr ? tagsStr.split(/[,，]/).map(function(t) { return t.trim(); }).filter(function(t) { return t; }) : [];
+
+  const updates = {
+    name: document.getElementById('editName').value.trim(),
+    subtitle: document.getElementById('editSubtitle').value.trim(),
+    description: document.getElementById('editDesc').value.trim(),
+    category: document.getElementById('editCategory').value,
+    difficulty: document.getElementById('editDifficulty').value,
+    tags: tags,
+    target_audience: document.getElementById('editAudience').value.trim(),
+    estimated_duration: document.getElementById('editDuration').value.trim(),
+    prerequisites: document.getElementById('editPrereq').value.trim(),
+  };
+
+  if (!updates.name) {
+    showToast('路线名称不能为空', 'error');
+    return;
+  }
+
+  try {
+    const uid = getUserId();
+    const res = await fetch('/api/route-market/' + _editingRouteId + '/update', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(Object.assign({ user_id: uid }, updates))
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('✅ 路线已更新', 'success');
+      closeEditModal();
+      closeDetail();
+      loadRoutes();
+    } else {
+      showToast('❌ ' + (data.error || '保存失败'), 'error');
+    }
+  } catch (e) {
+    showToast('❌ 网络错误: ' + e.message, 'error');
+  }
+}
+
+async function deleteRoute(routeId) {
+  if (!confirm('确定要删除此路线吗？删除后不可恢复！')) return;
+
+  try {
+    const uid = getUserId();
+    const res = await fetch('/api/route-market/' + routeId + '/delete', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: uid })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('✅ 路线已删除', 'success');
+      closeDetail();
+      loadRoutes();
+    } else {
+      showToast('❌ ' + (data.error || '删除失败'), 'error');
+    }
+  } catch (e) {
+    showToast('❌ 网络错误: ' + e.message, 'error');
+  }
+}
+
+function closeDetail() {
+  document.getElementById('detailOverlay').classList.remove('show');
+  currentDetailRoute = null;
+}
+
+// ========== Adopt ==========
+async function quickAdopt(routeId, routeName) {
+  await doAdopt(routeId, false);
+}
+
+async function adoptRoute(personalize) {
+  if (!currentDetailRoute) return;
+  await doAdopt(currentDetailRoute.route_id, personalize);
+}
+
+async function doAdopt(routeId, personalize) {
+  const uid = getUserId();
+
+  showToast(personalize ? '🤖 AI个性化处理中...' : '🎯 正在采纳路线...', 'success');
+
+  try {
+    const res = await fetch('/api/route-market/' + routeId + '/adopt', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: uid, personalize: personalize })
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      showToast('✅ 已成功采纳为学习计划！正在跳转...', 'success');
+
+      // 上报页面上下文
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({
+          type: 'pageContext', page: 'route_market',
+          title: '路线市场', action: 'adopt_route',
+          detail: data.plan_name
+        }, '*');
+      }
+
+      // 1.5秒后切换到学习计划Tab
+      setTimeout(function() {
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({ type: 'switchTab', tab: 'plan' }, '*');
+          // 通知学习计划页面刷新
+          setTimeout(function() {
+            const planFrame = window.parent.document.getElementById('frame-plan');
+            if (planFrame && planFrame.contentWindow) {
+              planFrame.contentWindow.postMessage({ type: 'refreshPlan' }, '*');
+            }
+          }, 500);
+        }
+      }, 1500);
+
+      closeDetail();
+    } else {
+      showToast('❌ 采纳失败: ' + (data.error || '未知错误'), 'error');
+    }
+  } catch(e) {
+    showToast('❌ 网络错误: ' + e.message, 'error');
+  }
+}
+
+// ========== Review ==========
+async function submitReview(routeId) {
+  const uid = getUserId();
+  const rating = window._selectedRating || 5;
+  const comment = document.getElementById('reviewComment').value.trim();
+  
+  if (!comment) {
+    showToast('请填写评价内容', 'error');
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/route-market/' + routeId + '/rate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id: uid,
+        rating: rating,
+        comment: comment
+      })
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      showToast('✅ 评价提交成功，感谢反馈！', 'success');
+      // 刷新详情以显示新评价
+      setTimeout(function() {
+        openDetail(routeId);
+      }, 1000);
+    } else {
+      showToast('❌ 提交失败: ' + (data.error || '未知错误'), 'error');
+    }
+  } catch(e) {
+    showToast('❌ 网络错误: ' + e.message, 'error');
+  }
+}
+
+// ========== Navigation ==========
+function goToStudyPlan() {
+  closeDetail();
+  if (window.parent && window.parent !== window) {
+    window.parent.postMessage({ type: 'switchTab', tab: 'plan' }, '*');
+  }
+}
+
+// ========== Utils ==========
+function escapeHtml(str) {
+  if (!str) return '';
+  var div = document.createElement('div');
+  div.appendChild(document.createTextNode(str));
+  return div.innerHTML;
+}
+
+function showToast(msg, type) {
+  // Remove existing
+  document.querySelectorAll('.toast').forEach(function(t) { t.remove(); });
+  const toast = document.createElement('div');
+  toast.className = 'toast ' + (type || 'success');
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(function() { toast.remove(); }, 3000);
+}
+
+// ========== Page Context Reporting ==========
+setTimeout(function() {
+  if (window.parent && window.parent !== window) {
+    window.parent.postMessage({
+      type: 'pageContext', page: 'route_market',
+      title: '路线市场', action: 'viewing', detail: ''
+    }, '*');
+  }
+}, 500);
+</script>
+</body>
+</html>

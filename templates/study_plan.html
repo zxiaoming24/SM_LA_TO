@@ -1,0 +1,3461 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>学习计划</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+       background: #f5f7fa; color: #1a1a2e; min-height: 100vh; }
+
+.header { background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);
+           color: #fff; padding: 20px 40px; display: flex; align-items: center;
+           justify-content: space-between; }
+.header h1 { font-size: 24px; font-weight: 600; }
+.header .user-info { display: flex; align-items: center; gap: 12px; }
+.header .user-info input { padding: 8px 14px; border: none; border-radius: 8px;
+                           background: rgba(255,255,255,0.2); color: #fff;
+                           font-size: 14px; width: 180px; outline: none; }
+.header .user-info input::placeholder { color: rgba(255,255,255,0.6); }
+.header .user-info button { padding: 8px 18px; border: none; border-radius: 8px;
+                            background: rgba(255,255,255,0.25); color: #fff;
+                            cursor: pointer; font-size: 14px; transition: all .2s; }
+.header .user-info button:hover { background: rgba(255,255,255,0.35); }
+
+.container { max-width: 960px; margin: 0 auto; padding: 24px 16px; }
+
+/* Plan Info */
+.plan-header { background: #fff; border-radius: 16px; padding: 24px;
+               box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 20px; }
+.plan-header .plan-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+.plan-header .plan-meta { display: flex; gap: 16px; font-size: 13px; color: #888; }
+.plan-header .btn-new-plan { margin-top: 12px; padding: 8px 24px; border: none;
+                              border-radius: 8px; background: #6c5ce7; color: #fff;
+                              cursor: pointer; font-size: 14px; }
+
+/* Phase Card */
+.phase-card { background: #fff; border-radius: 16px; padding: 24px;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 16px;
+              transition: all .2s; position: relative; overflow: hidden; }
+.phase-card.active { border: 2px solid #6c5ce7; }
+.phase-card.completed { border: 2px solid #00b894; }
+.phase-card .phase-header { display: flex; justify-content: space-between;
+                             align-items: flex-start; margin-bottom: 12px; }
+.phase-card .phase-name { font-size: 18px; font-weight: 600; }
+.phase-card .phase-weeks { font-size: 13px; color: #888; }
+.phase-card .phase-desc { font-size: 14px; color: #555; line-height: 1.6;
+                           margin-bottom: 12px; }
+.phase-card .phase-kps { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+.phase-card .phase-kp { padding: 3px 10px; border-radius: 10px; font-size: 12px;
+                         background: #eef0ff; color: #6c5ce7; }
+.phase-card .phase-kp.clickable { cursor: pointer; transition: all .2s; padding: 5px 12px; }
+.phase-card .phase-kp.clickable:hover { background: #d5d0ff; transform: translateY(-1px); box-shadow: 0 2px 8px rgba(108,92,231,0.15); }
+.phase-card .phase-kp.locked { background: #e0e0e0; color: #999; cursor: not-allowed; }
+.phase-card .phase-kp.locked:hover { transform: none; box-shadow: none; }
+.phase-card .phase-milestone { font-size: 13px; color: #00b894; margin-bottom: 12px; }
+
+/* Phase completion modal */
+.result-panel { display: none; margin-top: 16px; padding: 16px; border-radius: 12px;
+                background: #f8f9fa; }
+.result-panel.show { display: block; }
+.result-panel .rp-title { font-size: 14px; font-weight: 600; margin-bottom: 10px;
+                           display: flex; align-items: center; gap: 8px; }
+
+.rp-section { margin-bottom: 10px; padding: 12px; border-radius: 10px;
+               background: #fff; border: 1px solid #e8e8e8; }
+.rp-section .rs-title { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+.rp-section .rs-body { font-size: 13px; color: #333; }
+.rp-section .rs-preview { font-size: 12px; color: #666; margin-top: 4px;
+                           max-height: 120px; overflow-y: auto; line-height: 1.6; }
+.rp-section .rs-pre { font-size: 12px; max-height: 150px; overflow-y: auto;
+                       background: #f8f9fa; padding: 8px; border-radius: 6px;
+                       line-height: 1.5; white-space: pre-wrap; }
+.rs-summary { margin-top: 12px; padding: 8px; border-radius: 8px;
+               background: #eef0ff; font-size: 12px; color: #6c5ce7;
+               text-align: center; }
+
+.p-btn { padding: 6px 18px; border: none; border-radius: 8px;
+          background: #6c5ce7; color: #fff; cursor: pointer;
+          font-size: 13px; transition: all .2s; }
+.p-btn:hover { background: #5a4bd1; }
+
+.no-plan { text-align: center; padding: 80px 20px; color: #aaa; }
+.no-plan .icon { font-size: 48px; margin-bottom: 16px; }
+.no-plan p { font-size: 16px; margin-bottom: 20px; }
+.no-plan .btn-create { padding: 12px 36px; border: none; border-radius: 12px;
+                        background: #6c5ce7; color: #fff; font-size: 15px;
+                        cursor: pointer; transition: all .2s; }
+.no-plan .btn-create:hover { background: #5a4bd1; }
+
+.spinner-sm { display: inline-block; width: 16px; height: 16px;
+              border: 2px solid #e0e0e0; border-top-color: #6c5ce7;
+              border-radius: 50%; animation: spin .8s linear infinite;
+              vertical-align: middle; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* 视频网格（同智能助手） */
+.video-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+              gap: 16px; margin-top: 12px; }
+.video-grid .video-card { background: #fff; border-radius: 12px; overflow: hidden;
+                          border: 1px solid #e8e8e8; }
+.video-grid .video-card video { width: 100%; display: block; max-height: 350px; background: #000; }
+.video-grid .video-card .vc-info { padding: 10px 12px; }
+.video-grid .video-card .vc-title { font-size: 13px; font-weight: 600; color: #333;
+                                    margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis;
+                                    white-space: nowrap; }
+.video-grid .video-card .vc-meta { font-size: 11px; color: #888; }
+.video-grid .video-card .vc-monitor { margin-top: 6px; padding: 6px 10px; background: #f0fdf4;
+                                      border-radius: 6px; border: 1px solid #bbf7d0;
+                                      font-size: 11px; display: flex; gap: 10px; flex-wrap: wrap; }
+.video-grid .video-card .vc-monitor .m-status { color: #166534; font-weight: 600; }
+.video-grid .video-card .vc-monitor .m-rewind { color: #92400e; }
+.video-grid .video-card .vc-monitor .m-pause { color: #1e40af; }
+.video-grid .video-card .vc-monitor .m-progress { color: #888; }
+
+/* Modal overlay for phase completion */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+                 z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+.modal-overlay.active { display: flex; }
+.modal-box { background: #fff; border-radius: 16px; max-width: 800px; width: 100%;
+             max-height: 90vh; overflow-y: auto; padding: 28px; position: relative; box-shadow: 0 8px 32px rgba(0,0,0,0.15); }
+.modal-box .close { position: absolute; top: 12px; right: 16px; background: none; border: none;
+                    font-size: 28px; cursor: pointer; color: #999; line-height: 1; }
+.modal-box .close:hover { color: #333; }
+.modal-title { font-size: 20px; font-weight: 700; margin-bottom: 16px; padding-right: 30px; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px; }
+.btn-cancel { padding: 10px 24px; border: 1px solid #ddd; border-radius: 8px; background: #fff;
+              cursor: pointer; font-size: 14px; color: #666; }
+.btn-cancel:hover { background: #f5f5f5; }
+.btn-submit { padding: 10px 24px; border: none; border-radius: 8px; background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+              color: #fff; cursor: pointer; font-size: 14px; font-weight: 600; }
+.btn-submit:hover { opacity: 0.9; }
+.btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Exam Styles */
+.exam-section { margin-bottom: 20px; padding: 16px; border-radius: 12px; background: #f8f9fa; }
+.exam-section .es-title { font-size: 15px; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.exam-question { margin-bottom: 16px; padding: 14px; border-radius: 10px; background: #fff; border: 1px solid #e8e8e8; }
+.exam-question .eq-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.exam-question .eq-type { font-size: 11px; padding: 2px 8px; border-radius: 6px; background: #eef0ff; color: #6c5ce7; }
+.exam-question .eq-score { font-size: 12px; color: #888; }
+.exam-question .eq-text { font-size: 14px; line-height: 1.6; margin-bottom: 12px; }
+.exam-question .eq-options { display: flex; flex-direction: column; gap: 8px; }
+.exam-option { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 8px; 
+               background: #f8f9fa; cursor: pointer; transition: all .2s; border: 2px solid transparent; }
+.exam-option:hover { background: #eef0ff; }
+.exam-option.selected { background: #eef0ff; border-color: #6c5ce7; }
+.exam-option input { margin: 0; }
+.exam-option label { cursor: pointer; flex: 1; font-size: 13px; }
+.exam-code-area { width: 100%; min-height: 150px; padding: 12px; border-radius: 8px; border: 1px solid #e8e8e8;
+                  font-family: monospace; font-size: 13px; resize: vertical; background: #fafafa; }
+.exam-code-area:focus { outline: none; border-color: #6c5ce7; }
+
+/* Exam Result Styles */
+.exam-result { text-align: center; padding: 20px; }
+.exam-result .er-score { font-size: 48px; font-weight: 700; margin-bottom: 8px; }
+.exam-result .er-score.passed { color: #27ae60; }
+.exam-result .er-score.failed { color: #e74c3c; }
+.exam-result .er-message { font-size: 15px; color: #666; margin-bottom: 20px; }
+.exam-result-details { margin-top: 20px; padding-top: 20px; border-top: 1px solid #e8e8e8; }
+.exam-result-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0f0f0; }
+.exam-result-row:last-child { border-bottom: none; }
+.exam-result-row .err-question { font-size: 13px; }
+.exam-result-row .err-status { font-size: 13px; font-weight: 600; }
+.exam-result-row .err-status.correct { color: #27ae60; }
+.exam-result-row .err-status.incorrect { color: #e74c3c; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ★★★ 复习提醒铃铛 ★★★ */
+.review-bell { position: relative; display: inline-flex; align-items: center; gap: 6px;
+                padding: 8px 14px; border: none; border-radius: 10px;
+                background: rgba(255,255,255,0.2); color: #fff; cursor: pointer;
+                font-size: 14px; transition: all .2s; margin-right: 8px; }
+.review-bell:hover { background: rgba(255,255,255,0.35); }
+.review-bell .badge { position: absolute; top: -4px; right: -4px;
+                       background: #ff4757; color: #fff; font-size: 10px;
+                       font-weight: 700; min-width: 18px; height: 18px;
+                       border-radius: 9px; display: flex; align-items: center;
+                       justify-content: center; padding: 0 4px;
+                       box-shadow: 0 2px 6px rgba(255,71,87,0.4); }
+.review-bell .badge.zero { background: #888; }
+/* ★★★ 复习弹窗内容 ★★★ */
+.review-kp-group { margin-bottom: 16px; padding: 16px; border-radius: 12px;
+                   background: #f8f9fa; border-left: 4px solid #6c5ce7; }
+.review-kp-group .rkp-header { display: flex; justify-content: space-between;
+                                align-items: center; margin-bottom: 8px; }
+.review-kp-group .rkp-kp { font-size: 15px; font-weight: 600; color: #6c5ce7; }
+.review-kp-group .rkp-count { font-size: 12px; color: #888; }
+.review-kp-group .rkp-items { display: flex; flex-wrap: wrap; gap: 8px; }
+.review-kp-group .rkp-item { display: flex; align-items: center; gap: 6px;
+    padding: 6px 12px; border-radius: 8px; font-size: 12px; cursor: pointer;
+    transition: all .2s; border: 1px solid #e0e0e0; background: #fff;
+    color: #333; text-decoration: none; }
+.review-kp-group .rkp-item:hover { border-color: #6c5ce7; background: #eef0ff;
+                                    transform: translateY(-1px); }
+.review-kp-group .rkp-item .rkp-diff { font-size: 10px; color: #888; }
+.review-kp-group .review-actions { display: flex; gap: 10px; margin-top: 10px; padding: 0 4px; }
+.review-actions .review-action-btn { flex: 1; padding: 8px 16px; border: none; border-radius: 8px;
+    font-size: 13px; font-weight: 500; cursor: pointer; transition: all .2s; text-align: center; }
+.review-actions .action-theory { background: #e8f5e9; color: #2e7d32; }
+.review-actions .action-theory:hover { background: #c8e6c9; transform: translateY(-1px); box-shadow: 0 2px 8px rgba(46,125,50,0.2); }
+.review-actions .action-coding { background: #e3f2fd; color: #1565c0; }
+.review-actions .action-coding:hover { background: #bbdefb; transform: translateY(-1px); box-shadow: 0 2px 8px rgba(21,101,192,0.2); }
+.review-empty { text-align: center; padding: 40px 20px; color: #00b894; }
+.review-empty .big-icon { font-size: 48px; margin-bottom: 12px; }
+.review-empty p { font-size: 15px; }
+.review-stats { display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+.review-stat { flex: 1; min-width: 100px; padding: 14px; border-radius: 12px;
+               text-align: center; background: #f8f9fa; }
+.review-stat .rs-num { font-size: 28px; font-weight: 700; }
+.review-stat .rs-label { font-size: 12px; color: #888; margin-top: 4px; }
+.review-stat.due .rs-num { color: #ff4757; }
+.review-stat.mastered .rs-num { color: #00b894; }
+.review-stat.mastered { cursor: pointer; }
+.review-stat.mastered:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,184,148,0.2); }
+.review-stat.learning .rs-num { color: #f39c12; }
+.review-stat.total { cursor: pointer; }
+.review-stat.total:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(108,92,231,0.2); }
+.review-stat.total .rs-num { color: #6c5ce7; }
+
+/* ★★★ 版本树样式 ★★★ */
+.version-tree-column { width: 300px; flex-shrink: 0; position: sticky; top: 20px; align-self: flex-start; }
+.version-tree-card { background: #fff; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); padding: 20px; }
+.version-tree-title { font-size: 14px; font-weight: 700; color: #333; margin-bottom: 16px; display: flex; align-items: center; gap: 6px; }
+.version-tree-title .vt-sub { font-size: 11px; color: #aaa; font-weight: 400; }
+.vt-node { position: relative; padding: 10px 12px; border-radius: 10px; cursor: pointer; transition: all .2s; margin-bottom: 4px; border: 2px solid transparent; }
+.vt-node:hover { background: #f5f3ff; }
+.vt-node.active { background: #eef0ff; border-color: #6c5ce7; }
+.vt-node .vt-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #ddd; margin-right: 6px; border: 2px solid #fff; box-shadow: 0 0 0 2px #ddd; }
+.vt-node.active .vt-dot { background: #6c5ce7; box-shadow: 0 0 0 2px #6c5ce7; }
+.vt-node.completed .vt-dot { background: #00b894; box-shadow: 0 0 0 2px #00b894; }
+.vt-node .vt-label { font-size: 13px; font-weight: 600; color: #333; }
+.vt-node .vt-trigger { font-size: 11px; color: #888; margin-top: 2px; }
+.vt-node .vt-status-badge { font-size: 10px; padding: 2px 8px; border-radius: 6px; background: #f0f0f0; color: #999; margin-left: 6px; }
+.vt-node.active .vt-status-badge { background: #6c5ce7; color: #fff; }
+.vt-node .vt-progress { font-size: 11px; color: #aaa; margin-top: 2px; }
+.vt-empty { text-align: center; padding: 24px; color: #ccc; font-size: 13px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📋 学习计划</h1>
+  <div class="user-info">
+    <button class="review-bell" id="reviewBell" onclick="showReviewModal()" style="display:none">
+      🔔 <span id="reviewBadge" class="badge zero">0</span>
+    </button>
+    <input id="userId" type="text" placeholder="用户ID"
+           oninput="onUserIdChange()" onkeydown="if(event.key==='Enter')loadPlan()">
+    <button onclick="loadPlan()">查询</button>
+  </div>
+</div>
+
+<div class="container">
+  <div id="planArea"></div>
+
+  <!-- 合集播放器（埋入式，点击视频结果时显示） -->
+  <div id="studyCollectionPlayer" style="display:none;background:#fff;border-radius:12px;border:2px solid #fb7299;margin:16px 0;">
+    <div style="padding:10px 16px;display:flex;align-items:center;justify-content:space-between;background:#fafafa;border-bottom:1px solid #eee;">
+      <div style="font-weight:600;font-size:13px;color:#333;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;" id="studyCollTitle">-</div>
+      <div style="font-size:11px;color:#fb7299;font-weight:600;margin-left:12px;white-space:nowrap;" id="studyCollProgress">1/0</div>
+    </div>
+    <div style="position:relative;width:100%;background:#000;" class="study-coll-wrapper">
+      <video id="studyCollVideo" style="width:100%;display:block;max-height:400px;background:#000;" preload="metadata" playsinline></video>
+      <div class="study-coll-controls" style="background:linear-gradient(transparent,rgba(0,0,0,0.9));position:absolute;bottom:0;left:0;right:0;padding:30px 0 6px;z-index:10;">
+        <div style="display:flex;align-items:center;padding:0 8px;">
+          <button id="studyCollPlayBtn" onclick="studyCollTogglePlay()" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer;padding:0 10px;line-height:1;">▶</button>
+          <div id="studyCollChapterGroup" style="display:none;align-items:center;gap:4px;margin:0 4px;">
+            <button onclick="studyCollPrev()" style="background:none;border:none;color:#ccc;font-size:14px;cursor:pointer;padding:0 6px;line-height:1;">◀</button>
+            <span id="studyCollChapterIndicator" style="color:#ddd;font-size:12px;white-space:nowrap;">-</span>
+            <button onclick="studyCollNext()" style="background:none;border:none;color:#ccc;font-size:14px;cursor:pointer;padding:0 6px;line-height:1;">▶</button>
+          </div>
+          <span style="color:#ccc;font-size:12px;margin:0 8px;" id="studyCollTimeDisplay">0:00 / 0:00</span>
+          <div style="flex:1;height:4px;background:#555;border-radius:2px;cursor:pointer;position:relative;" onclick="studyCollSeekBar(event)">
+            <div id="studyCollProgressFill" style="width:0%;height:100%;background:#fb7299;border-radius:2px;"></div>
+          </div>
+          <span style="color:#ccc;font-size:12px;margin:0 4px;cursor:pointer;" onclick="studyCollToggleMute()" id="studyCollVolumeBtn">🔊</span>
+          <button onclick="studyCollFullscreen()" style="background:none;border:none;color:#fff;font-size:16px;cursor:pointer;padding:0 10px;">⛶</button>
+        </div>
+      </div>
+    </div>
+    <div style="padding:0 16px 10px;border-bottom:1px solid #eee;">
+      <div style="font-size:12px;color:#888;margin-top:8px;margin-bottom:6px;">章节列表 — 点击跳转</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;max-height:120px;overflow-y:auto;" id="studyCollChapterList"></div>
+    </div>
+    <div style="padding:8px 16px;background:#f0fdf4;font-size:12px;display:flex;gap:12px;flex-wrap:wrap;">
+      <span style="color:#166534;font-weight:600;" id="studyCollStatus">⏳ 加载中...</span>
+      <span style="color:#92400e;" id="studyCollRewind">↩ 0次</span>
+      <span style="color:#1e40af;" id="studyCollPause">⏸️ 0次</span>
+      <span style="color:#888;" id="studyCollProgressTime">⏱️ 0s (0%)</span>
+    </div>
+  </div>
+</div>
+
+<!-- ★★★ 通用资源查看弹窗（doc/extension/mindmap 共用）★★★ -->
+<div class="modal-overlay" id="resourceModalOverlay" style="display:none;z-index:10000;" onclick="if(event.target===this)closeResourceModal()">
+  <div class="modal-box" style="max-width:800px;max-height:90vh;display:flex;flex-direction:column;padding:0;">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #eee;flex-shrink:0;">
+      <div class="modal-title" id="resourceModalTitle" style="font-size:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">-</div>
+      <button class="close" onclick="closeResourceModal()">&times;</button>
+    </div>
+    <div id="resourceModalBody" style="flex:1;overflow-y:auto;padding:20px;font-size:14px;line-height:1.8;white-space:pre-wrap;"></div>
+  </div>
+</div>
+
+<!-- 合集播放器困惑弹窗 -->
+<div class="modal-overlay" id="studyCollConfusionOverlay">
+  <div class="modal-box" style="max-width:480px">
+    <button class="close" onclick="document.getElementById('studyCollConfusionOverlay').classList.remove('active')">&times;</button>
+    <div class="modal-title" style="font-size:18px">🤔 您对这个部分有疑惑吗？</div>
+    <div style="font-size:14px;color:#555;line-height:1.6;margin-bottom:16px" id="studyCollConfusionInfo">-</div>
+    <div style="display:flex;gap:12px;justify-content:flex-end">
+      <button class="btn-cancel" onclick="studyCollConfirmConfusion(false)">没有疑惑</button>
+      <button class="btn-submit" onclick="studyCollConfirmConfusion(true)" style="background:linear-gradient(135deg,#fb7299,#cc208e)">有疑惑</button>
+    </div>
+  </div>
+</div>
+
+<style>
+.study-coll-wrapper:hover .study-coll-controls { opacity: 1 !important; }
+.study-coll-controls { opacity: 1; transition: opacity .3s; }
+</style>
+
+<script>
+function getUserId() {
+  const uid = document.getElementById('userId').value.trim();
+  if (uid) {
+    localStorage.setItem('study_plan_user_id', uid);
+    return uid;
+  }
+  const saved = localStorage.getItem('study_plan_user_id');
+  if (saved) {
+    document.getElementById('userId').value = saved;
+    return saved;
+  }
+  return 'user_001';
+}
+
+function goToAgent(problemId) {
+  try {
+    if (problemId) {
+      reportResourceContext('practice', problemId);
+      window.parent.postMessage({ type: 'startPractice', problemId: problemId }, '*');
+    } else {
+      window.parent.postMessage({ type: 'switchTab', tab: 'agent' }, '*');
+    }
+  } catch(e) {}
+}
+
+// ★★★ 上报用户当前查看的资源上下文（供摄像头感知）★★★
+function reportResourceContext(resourceType, resourceId, knowledgePoint, action) {
+  const userId = getUserId();
+  const body = {
+    user_id: userId,
+    resource_type: resourceType,
+    resource_id: resourceId || '',
+    knowledge_point: knowledgePoint || '',
+    action: action || 'open'
+  };
+  fetch('/api/user/resource-context', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  }).catch(function(err) {
+    console.warn('[CameraContext] 上报资源上下文失败:', err);
+  });
+}
+
+// ★★★ 通用资源查看弹窗（doc/extension/mindmap 共用）★★★
+var _modalCache = {};
+function showResourceModal(type, id) {
+  var data = _modalCache[id];
+  if (!data) return;
+  reportResourceContext(type, data.title || type, '', 'open');
+  var overlay = document.getElementById('resourceModalOverlay');
+  document.getElementById('resourceModalTitle').textContent = data.title || type;
+  document.getElementById('resourceModalBody').innerHTML = data.body || '';
+  overlay.style.display = 'flex';
+}
+function closeResourceModal() {
+  document.getElementById('resourceModalOverlay').style.display = 'none';
+}
+
+function onUserIdChange() {
+  const uid = document.getElementById('userId').value.trim();
+  if (uid) {
+    localStorage.setItem('study_plan_user_id', uid);
+  }
+}
+
+async function loadPlan() {
+  const area = document.getElementById('planArea');
+  area.innerHTML = '<div class="no-plan"><div class="spinner-sm"></div><p>加载中...</p></div>';
+
+  try {
+    const plansResp = await fetch(`/study_plans/${getUserId()}`);
+    const plansData = await plansResp.json();
+
+    // ★★★ 先展示计划列表页，让用户选择 ★★★
+    if (plansData.success && plansData.plans && plansData.plans.length > 0) {
+      renderPlanList(plansData.plans, plansData.active_plan_id);
+    } else {
+      area.innerHTML = `
+        <div class="no-plan">
+          <div class="icon">📋</div>
+          <p>暂无学习计划，前往智能助手让系统为你生成</p>
+          <button class="btn-create" onclick="window.parent.document.querySelector(\`[data-tab='agent']\`).click()">
+            去生成计划
+          </button>
+        </div>`;
+    }
+  } catch (e) {
+    area.innerHTML = '<div class="no-plan"><p style="color:#e74c3c;">加载失败</p></div>';
+  }
+}
+
+// ★★★ 渲染计划列表页 ★★★
+function renderPlanList(plans, activePlanId) {
+  const area = document.getElementById('planArea');
+  let html = '<div class="plan-list-page">';
+  html += '<div style="margin-bottom:16px"><h2 style="font-size:20px;font-weight:700">我的学习计划</h2><p style="font-size:13px;color:#888;margin-top:4px">点击计划查看详情</p></div>';
+
+  // ★★★ 构建 plan_ids 数组用于批量检查 ★★★
+  var planIds = plans.map(function(pl) { return pl.plan_id; });
+
+  plans.forEach(function(p) {
+    const isActive = p.plan_id === activePlanId;
+    html += `
+      <div class="plan-list-card" id="plan-card-${p.plan_id}" onclick="switchPlanAndView('${p.plan_id}')" style="cursor:pointer;background:#fff;border-radius:16px;padding:20px 24px;box-shadow:0 2px 8px rgba(0,0,0,0.06);margin-bottom:12px;transition:all .2s;${isActive ? 'border:2px solid #6c5ce7' : 'border:2px solid transparent'}">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div>
+            <div style="font-size:17px;font-weight:600;margin-bottom:4px">
+              ${escapeHtml(p.title || '未命名计划')}
+              <span id="plan-badge-${p.plan_id}" style="display:none;font-size:11px;padding:2px 8px;border-radius:6px;margin-left:8px;vertical-align:middle;background:#d1d5db;color:#6b7280">✅ 已发布</span>
+            </div>
+            <div style="font-size:13px;color:#888;display:flex;gap:12px;flex-wrap:wrap">
+              <span>⏱ ${escapeHtml(p.total_duration || '?')}</span>
+              <span>📅 ${escapeHtml((p.created_at || '').slice(0, 10))}</span>
+              ${isActive ? '<span style="color:#6c5ce7;font-weight:600">✓ 当前活跃</span>' : ''}
+            </div>
+          </div>
+          <button onclick="event.stopPropagation();deletePlanItem('${p.plan_id}')" style="padding:4px 8px;border:none;border-radius:6px;background:rgba(255,71,87,0.1);color:#e74c3c;cursor:pointer;font-size:12px;transition:all .2s" title="删除此计划">🗑 删除</button>
+        </div>
+      </div>`;
+  });
+
+  html += '</div>';
+  area.innerHTML = html;
+
+  // ★★★ 批量检查发布状态，更新卡片样式 ★★★
+  if (planIds.length > 0) {
+    batchCheckPublishedStatus(planIds);
+  }
+}
+
+// ★★★ 批量检查计划发布状态（列表页） ★★★
+async function batchCheckPublishedStatus(planIds) {
+  const userId = getUserId();
+  if (!userId || !planIds.length) return;
+  try {
+    // 并发调用单个检查接口
+    var results = await Promise.all(planIds.map(function(pid) {
+      return fetch('/api/route-market/check-published?user_id=' + encodeURIComponent(userId) + '&plan_id=' + encodeURIComponent(pid))
+        .then(function(r) { return r.json(); })
+        .then(function(d) { return { plan_id: pid, published: d.published }; });
+    }));
+    results.forEach(function(item) {
+      if (item.published) {
+        var card = document.getElementById('plan-card-' + item.plan_id);
+        if (card) {
+          card.style.opacity = '0.55';
+          card.style.cursor = 'default';
+          card.onclick = null;
+          card.style.transition = 'none';
+        }
+        var badge = document.getElementById('plan-badge-' + item.plan_id);
+        if (badge) {
+          badge.style.display = 'inline';
+        }
+      }
+    });
+  } catch (e) {
+    console.warn('批量检查发布状态失败:', e);
+  }
+}
+
+// ★★★ 查看指定计划详情 ★★★
+async function viewPlan(planId) {
+  const area = document.getElementById('planArea');
+  area.innerHTML = '<div class="no-plan"><div class="spinner-sm"></div><p>加载中...</p></div>';
+  try {
+    const resp = await fetch(`/study_plan/${getUserId()}?plan_id=${planId}`);
+    const data = await resp.json();
+    if (data.success && data.plan) {
+      renderPlan(data.plan, true); // 传入 true 表示显示"返回列表"按钮
+
+      // ★★★ 检查续期状态（两阶段）★★★
+      setTimeout(function() {
+        checkContinuationProposal(getUserId());
+      }, 1000);
+
+      setTimeout(checkPhaseNotification, 1000);
+    } else {
+      area.innerHTML = '<div class="no-plan"><p style="color:#e74c3c;">加载计划失败</p></div>';
+    }
+  } catch (e) {
+    area.innerHTML = '<div class="no-plan"><p style="color:#e74c3c;">加载失败: ' + escapeHtml(e.message) + '</p></div>';
+  }
+}
+
+// ★★★ 点击计划卡片 → 设为活跃计划，并跳转到详情页 ★★★
+async function switchPlanAndView(planId) {
+  try {
+    const resp = await fetch(`/study_plan/${getUserId()}/switch-plan`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ plan_id: planId })
+    });
+    const data = await resp.json();
+    if (data.success) {
+      viewPlan(planId); // 直接跳转到详情页
+    } else {
+      alert('切换失败: ' + (data.message || '未知错误'));
+    }
+  } catch (e) {
+    alert('切换失败: ' + e.message);
+  }
+}
+
+// ★★★ 从列表页删除计划 ★★★
+async function deletePlanItem(planId) {
+  if (!confirm('确定要删除此学习计划吗？此操作不可撤销。')) return;
+  try {
+    const resp = await fetch(`/study_plan/${getUserId()}/plan/${planId}`, {
+      method: 'DELETE'
+    });
+    const data = await resp.json();
+    if (data.success) {
+      loadPlan();
+    } else {
+      alert('删除失败: ' + (data.message || '未知错误'));
+    }
+  } catch (e) {
+    alert('删除失败: ' + e.message);
+  }
+}
+
+function renderPlan(plan, showBackButton) {
+  const phases = plan.phases || [];
+  const area = document.getElementById('planArea');
+  const currentUserId = getUserId();
+  _currentPlanId = plan.plan_id || '';
+  _currentPlan = plan;  // 保存当前计划数据，供发布功能使用
+
+  // ★★★ 计算已完成和当前进行的阶段索引 ★★★
+  let firstUncompleted = -1;
+  phases.forEach((phase, i) => {
+    const status = phase.status || '';
+    if (status === '已完成') {
+      // 已完成
+    } else if (firstUncompleted === -1) {
+      firstUncompleted = i; // 第一个未完成阶段作为当前阶段
+    }
+  });
+
+  let html = `
+    <div style="display:flex; gap:20px; align-items:flex-start;">
+      <div style="flex:1; min-width:0;">
+        <div class="plan-header">
+          ${showBackButton ? '<div style="margin-bottom:12px"><button onclick="loadPlan()" style="padding:4px 12px;border:none;border-radius:6px;background:#eef0ff;color:#6c5ce7;cursor:pointer;font-size:13px">← 返回计划列表</button></div>' : ''}
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div class="plan-title">${escapeHtml(plan.title || '学习计划')}</div>
+            <span style="font-size:12px;padding:4px 12px;border-radius:8px;background:#eef0ff;color:#6c5ce7;white-space:nowrap">👤 ${escapeHtml(currentUserId)}</span>
+          </div>
+          <div class="plan-meta">
+            <span>⏱ ${escapeHtml(plan.total_duration || '')}</span>
+            <span>📊 难度: ${escapeHtml(plan.difficulty || '')}</span>
+            <span>📌 ${phases.length} 个阶段</span>
+          </div>
+          <div style="margin-top:8px;font-size:13px;color:#555">${escapeHtml(plan.description || '')}</div>
+          <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap" id="publishBtnWrap">
+            <button id="publishBtn" style="padding:8px 20px;border:none;border-radius:8px;background:#ccc;color:#fff;font-size:13px;font-weight:600;cursor:default;transition:all .2s">⏳ 检查中...</button>
+          </div>
+        </div>
+        <div id="phasesContainer"></div>
+      </div>
+      <div class="version-tree-column" id="versionTreeColumn" style="display:none">
+        <div class="version-tree-card">
+          <div class="version-tree-title">📋 版本树 <span class="vt-sub">执行记录</span></div>
+          <div id="versionTreeBody"><div class="vt-empty"><span class="spinner-sm"></span></div></div>
+        </div>
+      </div>
+    </div>
+  `;
+  area.innerHTML = html;
+
+  // ★★★ 异步加载版本树（传入当前计划ID，只显示该计划所属版本族）★★★
+  setTimeout(() => loadVersionTree(currentUserId, plan.plan_id), 100);
+
+  // ★★★ 检查是否已发布过该计划 ★★★
+  setTimeout(() => checkPlanPublished(currentUserId, plan.plan_id, plan.title), 200);
+
+  const container = document.getElementById('phasesContainer');
+  // 缓存各阶段考试结果，供「查看考试结果」按钮使用
+  _phasesExamData = {};
+  phases.forEach((phase, i) => {
+    // 确定阶段状态
+    let status = phase.status || '';
+
+    // ★★★ 如果后端返回"生成中"，直接使用，不覆盖 ★★★
+    if (status === '生成中') {
+      // 保持生成中状态
+    } else if (i === firstUncompleted) {
+      status = '进行中'; // 第一个未完成阶段设为进行中
+    } else if (i > firstUncompleted && status !== '已完成') {
+      status = '未解锁'; // 后续未完成阶段设为未解锁
+    }
+
+    // ★★★ 检测 _regenerating_phases 全局标记 ★★★
+    if (plan._regenerating_phases) {
+      // 如果整个计划正在重规划，在第一个未完成/生成中的阶段显示提示
+    }
+
+    if (phase._exam_completed_info) {
+      _phasesExamData[i] = phase._exam_completed_info;
+    }
+    container.appendChild(buildPhaseCard(phase, i, status));
+  });
+
+  // ★★★ 如果正在重规划，每5秒自动刷新一次检测是否完成 ★★★
+  if (plan._regenerating_phases) {
+    setTimeout(async function checkRegeneration() {
+      try {
+        const resp = await fetch(`/study_plan/${getUserId()}`);
+        const data = await resp.json();
+        if (data.success && data.plan && !data.plan._regenerating_phases) {
+          console.log('🔄 重规划已完成，刷新页面');
+          renderPlan(data.plan, true);
+          return;
+        }
+        // 还没完成，继续轮询
+        setTimeout(checkRegeneration, 5000);
+      } catch (e) {
+        setTimeout(checkRegeneration, 5000);
+      }
+    }, 5000);
+  }
+}
+
+function buildPhaseCard(phase, index, status) {
+  const card = document.createElement('div');
+  
+  // 根据状态设置卡片样式
+  let cardClass = 'phase-card';
+  if (status === '已完成') {
+    cardClass += ' completed';
+  } else if (status === '进行中' || status === 'active') {
+    cardClass += ' active';
+  }
+  card.className = cardClass;
+  card.id = `phase-${index}`;
+  card.setAttribute('data-kps', (phase.knowledge_points || []).join(','));
+
+  const kps = phase.knowledge_points || [];
+  // ★★★ 未完成的阶段（不是当前进行中）→ 可点击但提示前置 ★★★
+  const isPending = status !== '已完成' && status !== '进行中' && status !== 'active';
+  
+  // 阶段状态徽章
+  let statusBadge = '';
+  if (status === '已完成') {
+    statusBadge = '<span style="font-size:12px;padding:4px 12px;border-radius:8px;background:#00b894;color:#fff">✅ 已完成</span>';
+  } else if (status === '进行中' || status === 'active') {
+    statusBadge = '<span style="font-size:12px;padding:4px 12px;border-radius:8px;background:#6c5ce7;color:#fff">🔄 进行中</span>';
+  } else if (status === '生成中') {
+    statusBadge = '<span style="font-size:12px;padding:4px 12px;border-radius:8px;background:#fdcb6e;color:#fff">⏳ 规划生成中...</span>';
+  } else {
+    statusBadge = '<span style="font-size:12px;padding:4px 12px;border-radius:8px;background:#f0f0f0;color:#999">⏳ 待完成</span>';
+  }
+
+  // 检查考试状态（从后端传来的通知数据判断）
+  const examPending = phase._exam_pending;
+  const examCompletedInfo = phase._exam_completed_info;
+
+  // 构建考试相关按钮
+  let examButtonsHtml = '';
+  if (examPending) {
+    examButtonsHtml = `
+    <div style="margin-top:10px;padding-top:10px;border-top:1px solid #e8e8e8;display:flex;gap:8px">
+      <button class="btn-submit" style="padding:6px 16px;font-size:12px" onclick="retakeExam(${index})">📝 参加考试</button>
+    </div>`;
+  } else if (examCompletedInfo) {
+    const passed = examCompletedInfo.score >= (examCompletedInfo.total * 0.6);
+    examButtonsHtml = `
+    <div style="margin-top:10px;padding-top:10px;border-top:1px solid #e8e8e8;display:flex;gap:8px;align-items:center">
+      <span style="font-size:13px;color:#888">📊 考试: <span style="color:${passed ? '#27ae60' : '#e74c3c'};font-weight:600">${examCompletedInfo.score}/${examCompletedInfo.total}</span></span>
+      <button class="btn-submit" style="padding:6px 16px;font-size:12px;background:#8e44ad" onclick="viewExamResult(${index})">📋 查看结果</button>
+    </div>`;
+  }
+
+  const regenerateBtn = (status === '进行中' || status === 'active') ? `
+    <div style="margin-top:12px;padding-top:12px;border-top:1px solid #e8e8e8">
+      <button class="btn-regenerate" style="padding:6px 16px;font-size:12px;background:#e17055;color:#fff;border:none;border-radius:8px;cursor:pointer;transition:all .2s" onclick="regeneratePhase(${index})" title="重新生成此阶段内容">🔄 重新生成阶段</button>
+    </div>
+  ` : '';
+
+  card.innerHTML = `
+    <div class="phase-header">
+      <div>
+        <div class="phase-name">${index + 1}. ${escapeHtml(phase.name || '')}</div>
+        <div class="phase-weeks">
+          ⏱ ${escapeHtml(phase.estimated_hours || '?')} 小时
+          ${phase.status === '已完成' && phase._actual_hours ? `· 实际 ${phase._actual_hours} 小时` : ''}
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        ${statusBadge}
+        <div style="font-size:12px;color:#888">难度: ${escapeHtml(phase.difficulty || '')}</div>
+      </div>
+    </div>
+    <div class="phase-desc">${escapeHtml(phase.description || '')}</div>
+    ${phase.milestone ? `<div class="phase-milestone">🏆 里程碑: ${escapeHtml(phase.milestone)}</div>` : ''}
+    <div class="phase-kps">
+      ${kps.map(kp => {
+        if (status === '生成中') {
+          return `<span class="phase-kp locked">⏳ ${escapeHtml(kp)}</span>`;
+        }
+        if (status === '已完成') {
+          return `<span class="phase-kp clickable" onclick="generateForKp(${index}, '${escapeHtml(kp)}', true)" style="background:#e8f5e9;color:#2e7d32;border:1px solid #a5d6a7" title="点击查看已掌握的资源（从缓存读取，不会重新生成）">✅ ${escapeHtml(kp)}</span>`;
+        }
+        if (isPending) {
+          return `<span class="phase-kp clickable" onclick="showPrerequisiteHint(${index}, '${escapeHtml(kp)}')" title="请先完成前置阶段再学习此内容" style="opacity:0.7">📌 ${escapeHtml(kp)}</span>`;
+        }
+        return `<span class="phase-kp clickable" onclick="generateForKp(${index}, '${escapeHtml(kp)}', false)">📌 ${escapeHtml(kp)}</span>`;
+      }).join('')}
+    </div>
+    ${examButtonsHtml}
+    ${regenerateBtn}
+    <div class="result-panel" id="result-${index}"></div>
+    ${status === '生成中' ? `
+      <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.85);z-index:2">
+        <div style="font-size:36px;margin-bottom:12px">
+          <span class="spinner-sm" style="width:36px;height:36px;border-width:4px"></span>
+        </div>
+        <div style="font-size:15px;color:#6c5ce7;font-weight:600">正在重新规划该阶段...</div>
+        <div style="font-size:13px;color:#999;margin-top:4px">系统正在根据上一阶段表现生成更适合你的学习内容</div>
+      </div>
+    ` : ''}
+  `;
+
+  // ★★★ 如果该阶段是进行中，启动心跳 ★★★
+  if (status === '进行中' || status === 'active') {
+    setTimeout(() => startHeartbeat(index), 1000);
+  }
+
+  return card;
+}
+
+// ==================== 心跳函数 ====================
+let heartbeatTimer = null;
+let heartbeatPhaseIndex = -1;
+
+function startHeartbeat(phaseIndex) {
+  stopHeartbeat();
+  heartbeatPhaseIndex = phaseIndex;
+  heartbeatTimer = setInterval(() => {
+    if (!document.hidden) {
+      fetch(`/study_plan/${getUserId()}/phase/${phaseIndex}/heartbeat`, { method: 'POST' })
+        .catch(() => {}); // 静默失败，不影响用户体验
+    }
+  }, 30000);
+}
+
+function stopHeartbeat() {
+  if (heartbeatTimer) {
+    clearInterval(heartbeatTimer);
+    heartbeatTimer = null;
+  }
+  heartbeatPhaseIndex = -1;
+}
+
+// 页面不可见时暂停心跳，关闭时停止
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) stopHeartbeat();
+});
+window.addEventListener('pagehide', stopHeartbeat);
+
+// ★★★ 前置未完成提示 ★★★
+function showPrerequisiteHint(phaseIndex, knowledgePoint) {
+  var prevPhaseName;
+  if (phaseIndex === 0) {
+    // 第一阶段没有前置阶段，提示先完成本阶段前置内容
+    prevPhaseName = '本阶段的入门基础';
+  } else {
+    // 前一阶段：比如 phaseIndex=2（阶段3）→ 前置是"阶段2"
+    prevPhaseName = '阶段' + phaseIndex;
+  }
+
+  const toast = document.createElement('div');
+  toast.style.cssText = 'position:fixed;top:80px;left:50%;transform:translateX(-50%);background:#fff3cd;color:#856404;padding:12px 24px;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,0.12);font-size:14px;z-index:9999;border-left:4px solid #ffc107;max-width:480px';
+  toast.innerHTML = '⚠️ 前置课程未完成<br><span style="font-size:12px;color:#666">请先完成「' + escapeHtml(prevPhaseName) + '」的课程内容，再来学习此阶段的知识点</span>';
+  document.body.appendChild(toast);
+  setTimeout(function() { toast.style.transition = 'opacity 0.5s'; toast.style.opacity = '0'; setTimeout(function() { toast.remove(); }, 500); }, 3500);
+}
+
+// ★★★ 生成锁：防止同一阶段重复生成 ★★★
+const _generatingPhases = new Set();
+
+function _setPhaseKpsDisabled(phaseIndex, disabled) {
+  const phaseCard = document.getElementById(`phase-${phaseIndex}`);
+  if (!phaseCard) return;
+  phaseCard.querySelectorAll('.phase-kp.clickable').forEach(el => {
+    if (disabled) {
+      el.dataset._origPointerEvents = el.style.pointerEvents;
+      el.dataset._origOpacity = el.style.opacity;
+      el.dataset._origCursor = el.style.cursor;
+      el.style.pointerEvents = 'none';
+      el.style.opacity = '0.5';
+      el.style.cursor = 'not-allowed';
+    } else {
+      el.style.pointerEvents = el.dataset._origPointerEvents || '';
+      el.style.opacity = el.dataset._origOpacity || '';
+      el.style.cursor = el.dataset._origCursor || '';
+      delete el.dataset._origPointerEvents;
+      delete el.dataset._origOpacity;
+      delete el.dataset._origCursor;
+    }
+  });
+}
+
+async function generateForKp(phaseIndex, knowledgePoint, cachedOnly) {
+  // ★★★ 检查是否正在生成中（锁保护）★★★
+  if (_generatingPhases.has(phaseIndex)) {
+    console.log(`⏳ [生成锁] 阶段${phaseIndex+1}正在生成中，忽略重复点击`);
+    return;
+  }
+
+  const uid = getUserId();
+  const resultPanel = document.getElementById(`result-${phaseIndex}`);
+
+  // ★★★ 锁定：禁用该阶段所有知识点的点击 ★★★
+  _generatingPhases.add(phaseIndex);
+  _setPhaseKpsDisabled(phaseIndex, true);
+
+  if (cachedOnly) {
+    // ★★★ 已完成阶段：只查缓存，不生成 ★★★
+    resultPanel.className = 'result-panel show';
+    resultPanel.innerHTML = `<div class="rp-title">🔍 正在查找已生成的资源...</div><div style="text-align:center;padding:12px"><span class="spinner-sm"></span></div>`;
+  } else {
+    resultPanel.className = 'result-panel show';
+    resultPanel.innerHTML = `<div class="rp-title">⏳ 正在为「${escapeHtml(knowledgePoint)}」生成全套资源...</div>
+      <div style="padding:12px;color:#888;text-align:center">📄 文档 · 🧠 思维导图 · 💻 练习题 · 🎬 视频 · 📖 拓展阅读</div>
+      <div style="text-align:center;padding:12px"><span class="spinner-sm"></span></div>`;
+  }
+
+  try {
+    const params = new URLSearchParams();
+    params.set('knowledge_point', knowledgePoint);
+    params.set('entry', 'plan');
+    if (cachedOnly) params.set('cached_only', 'true');
+    const resp = await fetch(`/study_plan/${uid}/phase/${phaseIndex}/generate/video?${params.toString()}`, {
+      method: 'POST'
+    });
+    const data = await resp.json();
+
+    if (data.success) {
+      if (cachedOnly && data.cached === false && (!data.generated_resources || Object.keys(data.generated_resources).length === 0)) {
+        resultPanel.innerHTML = `<div class="rp-title">ℹ️ 暂无缓存资源</div><div style="padding:12px;color:#888;text-align:center">该知识点在之前的学习中未生成过资源，或缓存已过期。</div>`;
+      } else {
+        showPipelineResult(resultPanel, data, knowledgePoint);
+      }
+      // ★★★ 资源生成完毕，立即检查阶段完成通知（弹出考试弹窗）★★★
+      checkPhaseNotification();
+      setTimeout(checkPhaseNotification, 1500);
+    } else {
+      resultPanel.innerHTML = `
+        <div class="rp-title">❌ 获取失败</div>
+        <div class="rp-content" style="color:#e74c3c">${escapeHtml(data.error || data.message || '未知错误')}</div>`;
+    }
+  } catch (e) {
+    resultPanel.innerHTML = `
+      <div class="rp-title">❌ 请求失败</div>
+      <div class="rp-content" style="color:#e74c3c">${escapeHtml(e.message)}</div>`;
+  } finally {
+    // ★★★ 解锁：恢复该阶段知识点的点击 ★★★
+    _generatingPhases.delete(phaseIndex);
+    _setPhaseKpsDisabled(phaseIndex, false);
+  }
+}
+
+function showPipelineResult(panel, data, knowledgePoint) {
+  const generated = data.generated_resources || {};
+  const steps = data.step_results || [];
+  const kpTag = `<span style="font-size:12px;color:#6c5ce7;background:#eef0ff;padding:2px 8px;border-radius:6px;margin-left:8px">${escapeHtml(knowledgePoint)}</span>`;
+
+  let html = `<div class="rp-title">📚 全套学习资源${kpTag}</div>`;
+
+  const resTypeMap = { doc: 'doc', practice: 'practice', video: 'video', mindmap: 'mindmap', extension: 'extension', question: 'question', ppt: 'ppt' };
+
+  // ★★★ 去重：已展示过的 content_id 集合 ★★★
+  const shownContentIds = new Set();
+
+  function addShareBar(resType, resId, title, kp) {
+    const escId = escapeHtml(resId || '');
+    const escTitle = escapeHtml(title || '');
+    const escKp = escapeHtml(kp || '');
+    return `<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+      <button onclick="doFavorite('${resType}','${escId}','${escTitle}','${escKp}',this)" data-fav="0" style="padding:4px 10px;background:#667eea;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:11px">☆ 收藏</button>
+      <button onclick="showShareDialog('${resType}','${escId}','${escTitle}','${escKp}')" style="padding:4px 10px;background:#8b5cf6;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:11px">📤 分享</button>
+    </div>`;
+  }
+
+  if (generated.doc) {
+    const doc = generated.doc.document || {};
+    const resId = generated.doc._content_id || `${knowledgePoint}_doc`;
+    // ★★★ 去重检查 ★★★
+    if (!shownContentIds.has(resId)) {
+      shownContentIds.add(resId);
+    const ossUrl = generated.doc.oss_url || '';
+    const filePath = generated.doc.file_path || '';
+    const localDl = filePath ? `/document/download/${getUserId()}/${escapeHtml(resId)}` : '';
+    // ★★★ 优先本地下载，避免 OSS 链接过期或返回错误 ★★★
+    const downloadBtn = localDl
+      ? `<a href="${localDl}" style="display:inline-block;padding:4px 10px;background:#27ae60;color:#fff;border:none;border-radius:6px;text-decoration:none;font-size:11px">📥 下载文档</a>`
+      : ossUrl
+        ? `<a href="${escapeHtml(ossUrl)}" target="_blank" style="display:inline-block;padding:4px 10px;background:#27ae60;color:#fff;border:none;border-radius:6px;text-decoration:none;font-size:11px">📥 下载文档(OSS)</a>`
+        : '';
+    _modalCache[resId] = {
+      title: doc.doc_title || doc.title || '文档',
+      body: '<div style="font-size:16px;font-weight:600;margin-bottom:16px">' + escapeHtml(doc.doc_title || doc.title || '文档') + '</div><div style="line-height:1.8">' + escapeHtml(doc.doc_content || doc.content || '暂无内容') + '</div>'
+    };
+    html += `
+      <div class="rp-section">
+        <div class="rs-title">📄 讲义文档</div>
+        <div class="rs-body">
+          <div style="font-weight:500;margin-bottom:4px">${escapeHtml(doc.doc_title || doc.title || '文档')}</div>
+          <div class="rs-preview">${escapeHtml((doc.doc_content || doc.content || '').slice(0, 300))}</div>
+          <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+            <button onclick="showResourceModal('doc','${escapeHtml(resId)}')" style="padding:4px 10px;background:#667eea;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:11px">👁️ 查看</button>
+            ${downloadBtn}
+          </div>
+          ${addShareBar('doc', resId, doc.doc_title || '文档', knowledgePoint)}
+        </div>
+      </div>`;
+    }
+  }
+
+  if (generated.mindmap) {
+    const mm = generated.mindmap.mindmap || {};
+    const resId = generated.mindmap._content_id || `${knowledgePoint}_mindmap`;
+    const mmStr = JSON.stringify(mm, null, 2);
+    _modalCache[resId] = {
+      title: '思维导图',
+      body: '<pre style="font-family:monospace;font-size:13px;line-height:1.6;white-space:pre-wrap">' + escapeHtml(mmStr) + '</pre>'
+    };
+    html += `
+      <div class="rp-section">
+        <div class="rs-title">🧠 思维导图</div>
+        <div class="rs-body">
+          <pre class="rs-pre">${escapeHtml(mmStr.slice(0, 500))}</pre>
+          <div style="margin-top:8px">
+            <button onclick="showResourceModal('mindmap','${escapeHtml(resId)}')" style="padding:4px 10px;background:#667eea;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:11px">👁️ 查看完整</button>
+          </div>
+          ${addShareBar('mindmap', resId, '思维导图', knowledgePoint)}
+        </div>
+      </div>`;
+  }
+
+  if (generated.practice) {
+    const problem = generated.practice.problem || {};
+    // ★★★ 如果 problem 没有标题或描述或题目ID，尝试从 recommendations 提取 ★★★
+    if ((!problem.title || !problem.problem_id) && generated.practice.recommendations && generated.practice.recommendations.length > 0) {
+      const r = generated.practice.recommendations[0];
+      problem.title = r.title || '编程练习题';
+      problem.description = r.content || r.description || '';
+      problem.knowledge_points = r.knowledge_points || [knowledgePoint];
+      problem.difficulty = r.difficulty || '中等';
+      problem.examples = r.examples || [];
+      problem.hints = r.hints || [];
+      problem.problem_id = r.problem_id || r._id || '';
+    }
+    const resId = problem.problem_id || generated.practice._content_id || `${knowledgePoint}_practice`;
+    html += `
+      <div class="rp-section">
+        <div class="rs-title">💻 编程练习</div>
+        <div class="rs-body">
+          <div style="font-weight:500;margin-bottom:4px">${escapeHtml(problem.title || '编程题')}</div>
+          <div class="rs-preview">${escapeHtml((problem.description || '').slice(0, 300))}</div>
+          <button class="p-btn" style="margin-top:8px" onclick="goToAgent('${resId}')">去智能助手作答</button>
+          ${addShareBar('practice', resId, problem.title || '编程题', knowledgePoint)}
+        </div>
+      </div>`;
+  }
+
+  if (generated.video) {
+    const videos = generated.video.videos || [];
+    if (videos.length > 0) {
+      const platformNames = { bilibili: 'B站', imooc: '慕课网', icourse163: '中国大学MOOC' };
+
+      // 合集：使用现有合集播放器
+      if (videos[0].collection) {
+        const bvid = (videos[0].url || '').match(/BV\w+/);
+        html += `
+          <div class="rp-section">
+            <div class="rs-title">🎬 推荐视频（合集）</div>
+            <div class="rs-body">
+              ${bvid ? `<button onclick="studyCollLoadVideo('${bvid[0]}')" style="padding:8px 18px;background:#fb7299;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px">▶ 播放合集（${videos.length}P）</button>` : ''}
+              ${addShareBar('video', generated.video._content_id || `${knowledgePoint}_video`, videos[0].collection_title || '视频合集', knowledgePoint)}
+            </div>
+          </div>`;
+      } else {
+        // 独立视频网格（同智能助手）
+        const gridId = `spVideoGrid-${Date.now()}`;
+        html += `<div class="rp-section"><div class="rs-title">🎬 推荐视频</div><div class="video-grid" id="${gridId}">`;
+        videos.forEach(function(v, i) {
+          const bvidMatch = (v.url || '').match(/BV\w+/);
+          if (!bvidMatch) {
+            // 非B站视频 → 外链
+            html += `
+              <div class="video-card">
+                <div class="vc-info">
+                  <div class="vc-title">${escapeHtml(v.title || '无标题')}</div>
+                  <div class="vc-meta">${escapeHtml(v.author || '')}${v.duration ? ' · ' + escapeHtml(v.duration) : ''}${v.platform ? ' · ' + (platformNames[v.platform] || v.platform) : ''}</div>
+                  <div style="margin-top:6px"><a href="${escapeHtml(v.url || '#')}" target="_blank" style="display:inline-block;padding:4px 10px;background:#667eea;color:#fff;border:none;border-radius:6px;text-decoration:none;font-size:11px">▶ 打开</a></div>
+                </div>
+              </div>`;
+            return;
+          }
+          const bvid = bvidMatch[0];
+          const uid = bvid + '-' + i;
+          html += `
+            <div class="video-card" data-bvid="${bvid}" data-idx="${i}" data-grid="${gridId}">
+              <video id="spv-${uid}" preload="metadata" playsinline controls style="width:100%;display:block;max-height:350px;background:#000;"></video>
+              <div class="vc-info">
+                <div class="vc-title">${escapeHtml(v.title || '无标题')}</div>
+                <div class="vc-meta">${escapeHtml(v.author || '')}${v.duration ? ' · ' + escapeHtml(v.duration) : ''}</div>
+                <div class="vc-monitor" id="spm-${uid}">
+                  <span class="m-status" id="sps-${uid}">⏳ 加载中...</span>
+                  <span class="m-rewind" id="spr-${uid}">↩ 0次</span>
+                  <span class="m-pause" id="spp-${uid}">⏸️ 0次</span>
+                  <span class="m-progress" id="sppt-${uid}">⏱️ 0s (0%)</span>
+                </div>
+              </div>
+            </div>`;
+        });
+        html += `</div>`;
+        if (generated.video._content_id) {
+          html += `<div style="margin-top:8px">${addShareBar('video', generated.video._content_id, '视频', knowledgePoint)}</div>`;
+        }
+        html += `</div>`;
+      }
+    }
+  }
+
+  if (generated.ppt) {
+    const ppt = generated.ppt.ppt || {};
+    const resId = generated.ppt._content_id || `${knowledgePoint}_ppt`;
+    const ossUrl = generated.ppt.oss_url || '';
+    const filename = ppt.filename || '';
+    // ★★★ 优先本地下载，避免 OSS 链接过期或返回错误 ★★★
+    const downloadBtn = filename
+      ? `<a href="/ppt/download/${escapeHtml(filename)}?viewer_id=${escapeHtml(getUserId())}" style="display:inline-block;padding:4px 10px;background:#27ae60;color:#fff;border:none;border-radius:6px;text-decoration:none;font-size:11px">📥 下载PPT</a>`
+      : ossUrl
+        ? `<a href="${escapeHtml(ossUrl)}" target="_blank" style="display:inline-block;padding:4px 10px;background:#27ae60;color:#fff;border:none;border-radius:6px;text-decoration:none;font-size:11px">📥 下载PPT(OSS)</a>`
+        : '';
+    html += `
+      <div class="rp-section">
+        <div class="rs-title">📊 PPT演示文稿</div>
+        <div class="rs-body">
+          <div style="font-weight:500;margin-bottom:4px">${escapeHtml(ppt.topic || ppt.title || 'PPT')}</div>
+          <div style="font-size:12px;color:#888;margin-bottom:4px">风格: ${escapeHtml(ppt.style || '')} · ${ppt.pages || 0}页</div>
+          <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+            ${downloadBtn ? downloadBtn : ''}
+          </div>
+          ${addShareBar('ppt', resId, ppt.topic || 'PPT', knowledgePoint)}
+        </div>
+      </div>`;
+  }
+
+  if (generated.extension) {
+    const material = generated.extension.material || {};
+    const resId = generated.extension._content_id || `${knowledgePoint}_extension`;
+    const extContent = material.content || material.background || '暂无内容';
+    const extTitle = material.title || '拓展材料';
+    _modalCache[resId] = {
+      title: extTitle,
+      body: '<div style="font-size:16px;font-weight:600;margin-bottom:16px">' + escapeHtml(extTitle) + '</div><div style="line-height:1.8">' + escapeHtml(extContent) + '</div>'
+    };
+    html += `
+      <div class="rp-section">
+        <div class="rs-title">📖 拓展阅读</div>
+        <div class="rs-body">
+          <div style="font-weight:500;margin-bottom:4px">${escapeHtml(extTitle)}</div>
+          <div class="rs-preview" style="max-height:200px;overflow-y:hidden;line-height:1.6">${escapeHtml(extContent.slice(0, 300))}${extContent.length > 300 ? '...' : ''}</div>
+          <div style="margin-top:8px">
+            <button onclick="showResourceModal('extension','${escapeHtml(resId)}')" style="padding:4px 10px;background:#667eea;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:11px">👁️ 查看完整</button>
+          </div>
+          ${addShareBar('extension', resId, extTitle, knowledgePoint)}
+        </div>
+      </div>`;
+  }
+
+  const successCount = steps.filter(s => s.success).length;
+  const totalCount = steps.length;
+  html += `
+    <div class="rs-summary">已完成 ${successCount}/${totalCount} 项资源生成</div>`;
+
+  if (!generated.doc && !generated.mindmap && !generated.practice && !generated.video && !generated.extension) {
+    html += '<div style="padding:12px;color:#888;text-align:center">暂无生成结果</div>';
+  }
+
+  panel.innerHTML = html;
+
+  // ★★★ 初始化视频网格（独立视频的监控和流加载）★★★
+  initStudyPlanVideoGrid(panel);
+}
+
+// ★★★ 收藏/分享助手函数（同智能助手） ★★★
+async function doFavorite(resourceType, resourceId, title, knowledgePoint, btn) {
+  const userId = getUserId();
+  const isFav = btn.dataset.fav === '1';
+  try {
+    if (isFav) {
+      await fetch('/companion/favorite/remove', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: userId, resource_type: resourceType, resource_id: resourceId }),
+      });
+      btn.dataset.fav = '0'; btn.innerHTML = '☆ 收藏'; btn.style.background = '#667eea';
+    } else {
+      await fetch('/companion/favorite/add', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: userId, resource_type: resourceType, resource_id: resourceId, title: title, knowledge_point: knowledgePoint }),
+      });
+      btn.dataset.fav = '1'; btn.innerHTML = '★ 已收藏'; btn.style.background = '#f59e0b';
+    }
+  } catch (e) {}
+}
+
+let _cl = null;
+async function getCompanionList() {
+  if (_cl) return _cl;
+  try { const r = await fetch(`/companion/list/${getUserId()}`); const d = await r.json(); _cl = d.companions || []; return _cl; } catch(e) { return []; }
+}
+
+async function doShare(resourceType, resourceId, title, knowledgePoint, target) {
+  try {
+    const body = { sharer_id: getUserId(), receiver_id: target === 'community' ? '__community__' : target, resource_type: resourceType, resource_id: resourceId, title: title, knowledge_point: knowledgePoint };
+    const r = await fetch('/companion/share', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const d = await r.json();
+    if (d.success) alert(d.message || '分享成功'); else alert(d.error || '分享失败');
+  } catch(e) { alert('分享失败'); }
+}
+
+function showShareDialog(resourceType, resourceId, title, knowledgePoint) {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:2000;display:flex;align-items:center;justify-content:center;';
+  overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+  const box = document.createElement('div');
+  box.style.cssText = 'background:#fff;border-radius:16px;padding:24px;max-width:400px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,0.15);';
+  box.innerHTML = '<div style="font-size:16px;font-weight:600;margin-bottom:16px">📤 分享资源</div><div style="font-size:13px;color:#888;margin-bottom:16px">' + escapeHtml(title) + '</div><button id="shareToCommunity" style="display:block;width:100%;padding:12px;margin-bottom:10px;border:none;border-radius:10px;background:linear-gradient(135deg,#11998e,#38ef7d);color:#fff;font-size:14px;font-weight:600;cursor:pointer;">📢 分享到社区（所有人可见）</button><div id="shareToCompanionList"></div><button onclick="this.closest(\'[style]\').remove()" style="display:block;width:100%;padding:10px;margin-top:10px;border:1px solid #ddd;border-radius:10px;background:#fff;color:#888;font-size:13px;cursor:pointer;">取消</button>';
+  overlay.appendChild(box); document.body.appendChild(overlay);
+  document.getElementById('shareToCommunity').onclick = function() { doShare(resourceType, resourceId, title, knowledgePoint, 'community'); overlay.remove(); };
+  getCompanionList().then(list => {
+    const c = document.getElementById('shareToCompanionList');
+    if (list.length === 0) { c.innerHTML = '<div style="padding:10px;text-align:center;color:#aaa;font-size:13px;">暂无学伴</div>'; return; }
+    list.forEach(cp => {
+      const b = document.createElement('button');
+      b.style.cssText = 'display:block;width:100%;padding:10px;margin-bottom:6px;border:1px solid #e0e0e0;border-radius:10px;background:#f8f9fa;font-size:13px;cursor:pointer;text-align:left;';
+      b.innerHTML = '👤 ' + escapeHtml(cp.user_id) + ' <span style="color:#888;font-size:11px">' + escapeHtml(cp.current_phase || '') + '</span>';
+      b.onclick = function() { doShare(resourceType, resourceId, title, knowledgePoint, cp.user_id); overlay.remove(); };
+      c.appendChild(b);
+    });
+  });
+}
+
+function escapeHtml(s) {
+  if (!s) return '';
+  const div = document.createElement('div');
+  div.textContent = typeof s === 'string' ? s : String(s);
+  return div.innerHTML;
+}
+
+// ★★★ 发布学习计划到路线市场 ★★★
+let _currentPlan = null;
+let _publishOverlay = null;  // 保存发布弹窗引用
+let _planAlreadyPublished = false;  // 标记是否已发布
+
+async function checkPlanPublished(userId, planId, planName) {
+  if (!userId) return;
+  try {
+    let url = '/api/route-market/check-published?user_id=' + encodeURIComponent(userId);
+    if (planId) url += '&plan_id=' + encodeURIComponent(planId);
+    if (planName) url += '&plan_name=' + encodeURIComponent(planName);
+    const res = await fetch(url);
+    const data = await res.json();
+    _planAlreadyPublished = data.published || false;
+    const btn = document.getElementById('publishBtn');
+    if (btn) {
+      if (_planAlreadyPublished) {
+        btn.textContent = '✅ 已发布到路线市场';
+        btn.style.background = '#10b981';
+        btn.style.cursor = 'default';
+        btn.onclick = null;
+      } else {
+        btn.textContent = ' 发布到路线市场';
+        btn.style.background = 'linear-gradient(135deg,#f093fb,#f5576c)';
+        btn.style.cursor = 'pointer';
+        btn.onclick = showPublishDialog;
+      }
+    }
+    // ★★★ 已发布的计划，计划头部区域变灰 ★★★
+    var planHeader = document.querySelector('.plan-header');
+    if (planHeader && _planAlreadyPublished) {
+      planHeader.style.opacity = '0.6';
+      // 添加已发布标识
+      var titleEl = planHeader.querySelector('.plan-title');
+      if (titleEl) {
+        var pubBadge = document.createElement('span');
+        pubBadge.textContent = '✅ 已发布';
+        pubBadge.style.cssText = 'font-size:11px;padding:2px 10px;border-radius:6px;background:#d1d5db;color:#6b7280;margin-left:10px;vertical-align:middle;font-weight:400';
+        titleEl.appendChild(pubBadge);
+      }
+    }
+  } catch (e) {
+    console.warn('检查发布状态失败:', e);
+  }
+}
+
+async function showPublishDialog() {
+  // 获取当前计划数据
+  if (!_currentPlan) {
+    alert('请先加载学习计划');
+    return;
+  }
+  if (_planAlreadyPublished) {
+    alert('该学习计划已发布到路线市场，请勿重复发布');
+    return;
+  }
+
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  overlay.onclick = function(e) { if (e.target === overlay) closePublishDialog(); };
+  _publishOverlay = overlay;  // 保存引用
+
+  const box = document.createElement('div');
+  box.style.cssText = 'background:#fff;border-radius:16px;padding:24px;max-width:500px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,0.15);max-height:90vh;overflow-y:auto;';
+
+  // 显示加载状态
+  box.innerHTML = `
+    <div style="font-size:18px;font-weight:700;margin-bottom:16px;color:#1a1a2e">📤 发布学习计划到路线市场</div>
+    <div style="text-align:center;padding:40px 20px;">
+      <div class="spinner-sm" style="width:32px;height:32px;border-width:3px;margin:0 auto 12px;"></div>
+      <div style="font-size:14px;color:#888;">正在智能分析学习计划...</div>
+    </div>
+  `;
+
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+
+  // 调用后端自动分析
+  let autoInfo = null;
+  try {
+    const res = await fetch('/api/route-market/auto-generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ plan_data: _currentPlan })
+    });
+    const data = await res.json();
+    if (data.success) {
+      autoInfo = data.route_info;
+    }
+  } catch (e) {
+    console.warn('自动分析失败:', e);
+  }
+
+  // 使用自动分析结果或默认值
+  const info = autoInfo || {};
+  const name = info.name || _currentPlan.title || '';
+  const subtitle = info.subtitle || '';
+  const description = info.description || _currentPlan.description || '';
+  const category = info.category || '其他';
+  const difficulty = info.difficulty || 'medium';
+  const tags = (info.tags || []).join(', ');
+  const targetAudience = info.target_audience || '';
+
+  // 渲染表单
+  box.innerHTML = `
+    <div style="font-size:18px;font-weight:700;margin-bottom:8px;color:#1a1a2e">📤 发布学习计划到路线市场</div>
+    <div style="font-size:12px;color:#10b981;margin-bottom:16px;display:flex;align-items:center;gap:4px;">✨ 已自动分析并填充，您可以微调后发布</div>
+
+    <div style="margin-bottom:14px">
+      <label style="display:block;font-size:13px;font-weight:600;color:#333;margin-bottom:6px">路线名称 *</label>
+      <input id="pubName" type="text" value="${escapeHtml(name)}" style="width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:8px;font-size:14px;outline:none" placeholder="例如：Java后端开发进阶路线">
+    </div>
+
+    <div style="margin-bottom:14px">
+      <label style="display:block;font-size:13px;font-weight:600;color:#333;margin-bottom:6px">副标题</label>
+      <input id="pubSubtitle" type="text" value="${escapeHtml(subtitle)}" style="width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:8px;font-size:14px;outline:none" placeholder="例如：从基础语法到Spring Boot微服务">
+    </div>
+
+    <div style="margin-bottom:14px">
+      <label style="display:block;font-size:13px;font-weight:600;color:#333;margin-bottom:6px">路线简介</label>
+      <textarea id="pubDesc" rows="3" style="width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:8px;font-size:14px;outline:none;resize:vertical" placeholder="描述这条路线的学习目标和内容...">${escapeHtml(description)}</textarea>
+    </div>
+
+    <div style="display:flex;gap:12px;margin-bottom:14px">
+      <div style="flex:1">
+        <label style="display:block;font-size:13px;font-weight:600;color:#333;margin-bottom:6px">分类 *</label>
+        <select id="pubCategory" style="width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:8px;font-size:14px;outline:none;background:#fff">
+          <option value="前端开发" ${category === '前端开发' ? 'selected' : ''}>前端开发</option>
+          <option value="后端开发" ${category === '后端开发' ? 'selected' : ''}>后端开发</option>
+          <option value="移动端开发" ${category === '移动端开发' ? 'selected' : ''}>移动端开发</option>
+          <option value="数据科学" ${category === '数据科学' ? 'selected' : ''}>数据科学</option>
+          <option value="人工智能" ${category === '人工智能' ? 'selected' : ''}>人工智能</option>
+          <option value="算法与数据结构" ${category === '算法与数据结构' ? 'selected' : ''}>算法与数据结构</option>
+          <option value="计算机基础" ${category === '计算机基础' ? 'selected' : ''}>计算机基础</option>
+          <option value="其他" ${category === '其他' ? 'selected' : ''}>其他</option>
+        </select>
+      </div>
+      <div style="flex:1">
+        <label style="display:block;font-size:13px;font-weight:600;color:#333;margin-bottom:6px">难度</label>
+        <select id="pubDifficulty" style="width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:8px;font-size:14px;outline:none;background:#fff">
+          <option value="easy" ${difficulty === 'easy' ? 'selected' : ''}>入门</option>
+          <option value="medium" ${difficulty === 'medium' ? 'selected' : ''}>进阶</option>
+          <option value="hard" ${difficulty === 'hard' ? 'selected' : ''}>高级</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="margin-bottom:14px">
+      <label style="display:block;font-size:13px;font-weight:600;color:#333;margin-bottom:6px">标签（用逗号分隔）</label>
+      <input id="pubTags" type="text" value="${escapeHtml(tags)}" style="width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:8px;font-size:14px;outline:none" placeholder="例如：Java, Spring Boot, MySQL">
+    </div>
+
+    <div style="margin-bottom:14px">
+      <label style="display:block;font-size:13px;font-weight:600;color:#333;margin-bottom:6px">适合人群</label>
+      <input id="pubAudience" type="text" value="${escapeHtml(targetAudience)}" style="width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:8px;font-size:14px;outline:none" placeholder="例如：有编程基础的在校生">
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:20px">
+      <button onclick="doPublish()" style="flex:1;padding:12px;border:none;border-radius:10px;background:linear-gradient(135deg,#f093fb,#f5576c);color:#fff;font-size:14px;font-weight:600;cursor:pointer">🚀 发布</button>
+      <button onclick="closePublishDialog()" style="padding:12px 24px;border:1px solid #ddd;border-radius:10px;background:#fff;color:#888;font-size:14px;cursor:pointer">取消</button>
+    </div>
+  `;
+
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+}
+
+async function doPublish() {
+  const name = document.getElementById('pubName').value.trim();
+  if (!name) { alert('请填写路线名称'); return; }
+
+  const btn = event.target;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-sm"></span> 发布中...';
+
+  const userId = getUserId();
+  const planData = _currentPlan;
+
+  const routeInfo = {
+    name: name,
+    subtitle: document.getElementById('pubSubtitle').value.trim(),
+    description: document.getElementById('pubDesc').value.trim(),
+    category: document.getElementById('pubCategory').value,
+    difficulty: document.getElementById('pubDifficulty').value,
+    tags: document.getElementById('pubTags').value.split(/[,，]/).map(t => t.trim()).filter(t => t),
+    target_audience: document.getElementById('pubAudience').value.trim(),
+    cover_color: '#667eea',
+    cover_icon: '📚',
+  };
+
+  try {
+    const res = await fetch('/api/route-market/publish', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, plan_data: planData, route_info: routeInfo })
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      alert('✅ 发布成功！路线已上架到路线市场');
+      closePublishDialog();
+      // 更新按钮状态
+      _planAlreadyPublished = true;
+      const btn = document.getElementById('publishBtn');
+      if (btn) {
+        btn.textContent = '✅ 已发布到路线市场';
+        btn.style.background = '#10b981';
+        btn.style.cursor = 'default';
+        btn.onclick = null;
+      }
+      // ★★★ 计划头部区域也变灰 ★★★
+      var planHeader = document.querySelector('.plan-header');
+      if (planHeader) {
+        planHeader.style.opacity = '0.6';
+        var titleEl = planHeader.querySelector('.plan-title');
+        if (titleEl && !titleEl.querySelector('.pub-badge')) {
+          var pubBadge = document.createElement('span');
+          pubBadge.className = 'pub-badge';
+          pubBadge.textContent = '✅ 已发布';
+          pubBadge.style.cssText = 'font-size:11px;padding:2px 10px;border-radius:6px;background:#d1d5db;color:#6b7280;margin-left:10px;vertical-align:middle;font-weight:400';
+          titleEl.appendChild(pubBadge);
+        }
+      }
+      // 跳转到路线市场查看并刷新列表
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'switchTab', tab: 'market' }, '*');
+        // 延迟发送刷新消息，确保 market iframe 已切换可见
+        setTimeout(function() {
+          const marketFrame = window.parent.document.getElementById('frame-market');
+          if (marketFrame && marketFrame.contentWindow) {
+            marketFrame.contentWindow.postMessage({ type: 'reloadRoutes' }, '*');
+          }
+        }, 300);
+      }
+    } else {
+      alert('❌ 发布失败: ' + (data.error || '未知错误'));
+      btn.disabled = false;
+      btn.innerHTML = '🚀 发布';
+    }
+  } catch (e) {
+    alert('❌ 网络错误: ' + e.message);
+    btn.disabled = false;
+    btn.innerHTML = '🚀 发布';
+  }
+}
+
+function closePublishDialog() {
+  if (_publishOverlay) {
+    _publishOverlay.remove();
+    _publishOverlay = null;
+  }
+}
+
+// ★★★ 页面加载时从localStorage恢复user_id ★★★
+(function() {
+  const saved = localStorage.getItem('study_plan_user_id');
+  if (saved) {
+    document.getElementById('userId').value = saved;
+  }
+})();
+
+window.addEventListener('message', function(e){
+  if(e.data&&e.data.type==='setUserId'){
+    var inp=document.getElementById('userId');
+    if(inp){
+      inp.value=e.data.userId;
+      localStorage.setItem('study_plan_user_id', e.data.userId);
+    }
+    loadPlan();
+  }
+});
+
+// ==================== 版本树管理 ====================
+
+let _cachedVersionTree = null;
+
+async function loadVersionTree(userId, planId) {
+  const body = document.getElementById('versionTreeBody');
+  const col = document.getElementById('versionTreeColumn');
+  if (!body || !col) return;
+  try {
+    const resp = await fetch(`/study_plan/${userId}/version-tree?plan_id=${encodeURIComponent(planId)}`);
+    const data = await resp.json();
+    if (data.status === 'success' && data.has_tree && data.versions && data.versions.length > 0) {
+      _cachedVersionTree = data;
+      renderVersionTree(data);
+      col.style.display = '';
+    } else {
+      col.style.display = 'none';
+    }
+  } catch (e) {
+    console.error('[版本树] 加载失败:', e);
+    col.style.display = 'none';
+  }
+}
+
+function renderVersionTree(treeData) {
+  const body = document.getElementById('versionTreeBody');
+  if (!body) return;
+  const versions = treeData.versions || [];
+  if (versions.length === 0) { body.innerHTML = '<div class="vt-empty">暂无版本记录</div>'; return; }
+
+  const childrenMap = {};
+  let root = null;
+  
+  versions.forEach(v => {
+    const parentId = v.parent_plan_id;
+    if (!parentId) {
+      root = v;
+    } else {
+      if (!childrenMap[parentId]) childrenMap[parentId] = [];
+      childrenMap[parentId].push(v);
+    }
+  });
+
+  const nodeWidth = 85;
+  const nodeHeight = 34;
+  const levelGap = 95;
+  const phaseHeight = 28;
+  const siblingGap = 70;
+  const phaseRadius = 6;
+
+  const nodePositions = {};
+  
+  function calculatePositions(node, level, startX) {
+    const children = childrenMap[node.plan_id] || [];
+    const phaseCount = node.phase_count || 1;
+    const totalHeight = nodeHeight + phaseCount * phaseHeight + 22;
+    
+    if (children.length === 0) {
+      nodePositions[node.plan_id] = { x: startX, y: level * levelGap, totalHeight: totalHeight };
+      return { width: nodeWidth, midX: startX + nodeWidth/2, totalHeight: totalHeight };
+    }
+
+    let totalChildWidth = 0;
+    const childResults = [];
+    let currentX = startX;
+    
+    children.forEach((child, idx) => {
+      const result = calculatePositions(child, level + 1, currentX);
+      childResults.push(result);
+      currentX += result.width + (idx < children.length - 1 ? siblingGap : 0);
+      totalChildWidth += result.width;
+    });
+    
+    if (children.length > 1) {
+      totalChildWidth += (children.length - 1) * siblingGap;
+    }
+    
+    const midX = startX + totalChildWidth / 2;
+    const nodeX = midX - nodeWidth / 2;
+    
+    nodePositions[node.plan_id] = { 
+      x: nodeX, 
+      y: level * levelGap, 
+      totalHeight: totalHeight,
+      childMids: childResults.map(r => r.midX)
+    };
+    
+    return { width: Math.max(totalChildWidth, nodeWidth), midX, totalHeight };
+  }
+
+  if (root) {
+    calculatePositions(root, 0, 50);
+  } else {
+    versions.forEach((v, idx) => {
+      nodePositions[v.plan_id] = { x: 50 + idx * (nodeWidth + siblingGap), y: 0 };
+    });
+  }
+
+  let maxX = 50, maxY = 50;
+  Object.values(nodePositions).forEach(pos => {
+    maxX = Math.max(maxX, pos.x + nodeWidth);
+    maxY = Math.max(maxY, pos.y + pos.totalHeight + 35);
+  });
+
+  let svgWidth = maxX + 50;
+  let svgHeight = maxY + 50;
+
+  let html = `<svg width="${svgWidth}" height="${svgHeight}" style="overflow: visible;">`;
+
+  function drawConnections(node) {
+    const children = childrenMap[node.plan_id] || [];
+    const parentPos = nodePositions[node.plan_id];
+    const parentMidX = parentPos.x + nodeWidth / 2;
+    
+    const forkPhaseIdx = Math.min(node.completed_phase_count || 0, (node.phase_count || 1) - 1);
+    const forkY = parentPos.y + nodeHeight + forkPhaseIdx * phaseHeight + phaseHeight/2;
+
+    children.forEach((child, idx) => {
+      const childPos = nodePositions[child.plan_id];
+      const childMidX = childPos.x + nodeWidth / 2;
+      const childTopY = childPos.y;
+
+      if (children.length === 1) {
+        html += `<path d="M ${parentMidX} ${forkY} L ${parentMidX} ${childTopY}" stroke="#888" stroke-width="2" fill="none" stroke-linecap="round"/>`;
+      } else {
+        const midY = (forkY + childTopY) / 2;
+        html += `<path d="M ${parentMidX} ${forkY} L ${parentMidX} ${midY} L ${childMidX} ${midY} L ${childMidX} ${childTopY}" stroke="#888" stroke-width="2" fill="none" stroke-linecap="round"/>`;
+        const labelX = (parentMidX + childMidX) / 2;
+        html += `<text x="${labelX}" y="${midY - 8}" text-anchor="middle" fill="#666" font-size="9" font-weight="500">${idx === 0 ? '是' : '否'}</text>`;
+      }
+
+      drawConnections(child);
+    });
+  }
+
+  if (root) drawConnections(root);
+
+  versions.forEach(node => {
+    const pos = nodePositions[node.plan_id];
+    const isActive = node.is_active;
+    const hasChildren = childrenMap[node.plan_id] && childrenMap[node.plan_id].length > 0;
+
+    let fillColor = hasChildren ? (isActive ? '#6c5ce7' : '#00b894') : '#fdcb6e';
+    const strokeColor = hasChildren ? (isActive ? '#a29bfe' : '#00cec9') : '#f39c12';
+
+    html += `<rect x="${pos.x}" y="${pos.y}" width="${nodeWidth}" height="${nodeHeight}" rx="6" ry="6" fill="${fillColor}" stroke="${strokeColor}" stroke-width="2" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.1))" style="cursor:pointer;" onclick="switchVersion('${node.plan_id}')"/>`;
+    html += `<text x="${pos.x + nodeWidth/2}" y="${pos.y + nodeHeight/2 + 4}" text-anchor="middle" fill="#fff" font-size="12" font-weight="bold" style="pointer-events:none;">v${node.version_number}</text>`;
+
+    if (isActive) {
+      html += `<circle cx="${pos.x + nodeWidth - 9}" cy="${pos.y + 9}" r="3.5" fill="#fff" stroke="#6c5ce7" stroke-width="1.5"/>`;
+      html += `<circle cx="${pos.x + nodeWidth - 9}" cy="${pos.y + 9}" r="1.8" fill="#6c5ce7"/>`;
+    }
+
+    for (let i = 0; i < node.phase_count; i++) {
+      const phaseY = pos.y + nodeHeight + i * phaseHeight + phaseHeight/2;
+      const isCompleted = i < node.completed_phase_count;
+      
+      html += `<circle cx="${pos.x + nodeWidth/2}" cy="${phaseY}" r="${phaseRadius}" fill="${isCompleted ? '#00b894' : '#e0e0e0'}" stroke="${isCompleted ? '#00cec9' : '#ccc'}" stroke-width="1.5" filter="drop-shadow(0 1px 2px rgba(0,0,0,0.08))"/>`;
+      html += `<text x="${pos.x + nodeWidth/2}" y="${phaseY + 2.5}" text-anchor="middle" fill="${isCompleted ? '#fff' : '#888'}" font-size="8" font-weight="600" style="pointer-events:none;">${i+1}</text>`;
+    }
+
+    const triggerText = node.trigger_description || (node.version_number === 1 ? '原始方案' : '');
+    if (triggerText) {
+      html += `<text x="${pos.x + nodeWidth/2}" y="${pos.y + pos.totalHeight + 2}" text-anchor="middle" fill="#666" font-size="9" style="pointer-events:none;">${escapeHtml(triggerText)}</text>`;
+    }
+  });
+
+  html += '</svg>';
+  body.innerHTML = html;
+}
+
+async function switchVersion(planId) {
+  if (_cachedVersionTree && _cachedVersionTree.active_version_plan_id === planId) return;
+  try {
+    const resp = await fetch(`/study_plan/${getUserId()}/switch-version`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ plan_id: planId })
+    });
+    if (resp.ok) {
+      const data = await resp.json();
+      if (data.status === 'success') {
+        if (_cachedVersionTree) {
+          _cachedVersionTree.versions.forEach(v => { v.is_active = (v.plan_id === planId); });
+          _cachedVersionTree.active_version_plan_id = planId;
+          _cachedVersionTree.active_version = (_cachedVersionTree.versions.find(v => v.plan_id === planId) || {}).version_number || null;
+        }
+        renderVersionTree(_cachedVersionTree);
+        showVersionToast(`切换到 v${_cachedVersionTree?.active_version || '?'} 版本`);
+        // ★★★ 重新加载左侧计划内容 ★★★
+        viewPlan(planId);
+        return;
+      }
+    }
+  } catch (e) { console.error('[版本树] 切换失败:', e); }
+  // ★★★ 降级：本地切换 ★★★
+  if (_cachedVersionTree) {
+    _cachedVersionTree.versions.forEach(v => { v.is_active = (v.plan_id === planId); });
+    _cachedVersionTree.active_version_plan_id = planId;
+    const target = _cachedVersionTree.versions.find(v => v.plan_id === planId);
+    _cachedVersionTree.active_version = target?.version_number || null;
+    renderVersionTree(_cachedVersionTree);
+    showVersionToast(`切换到 v${target?.version_number || '?'} 版本`);
+    // ★★★ 降级时也刷新左侧 ★★★
+    viewPlan(planId);
+  }
+}
+
+let _regeneratingPhaseIndex = -1;
+let _currentPlanId = '';
+
+async function regeneratePhase(phaseIndex, planId) {
+  if (_regeneratingPhaseIndex >= 0) {
+    showVersionToast(`⚠️ 阶段${_regeneratingPhaseIndex + 1}正在重新生成中，请稍候`);
+    return;
+  }
+
+  const userId = getUserId();
+  const confirmMsg = `确定要重新生成阶段${phaseIndex + 1}的内容吗？\n\n仅当前阶段会被重新生成，后续阶段保持不变。`;
+  if (!confirm(confirmMsg)) return;
+
+  _regeneratingPhaseIndex = phaseIndex;
+
+  const phaseCard = document.getElementById(`phase-${phaseIndex}`);
+  if (phaseCard) {
+    phaseCard.style.opacity = '0.7';
+    phaseCard.style.pointerEvents = 'none';
+  }
+
+  showVersionToast(`🔄 正在重新生成阶段${phaseIndex + 1}...`);
+
+  try {
+    const resp = await fetch(`/study_plan/${userId}/regenerate-phase`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phase_index: phaseIndex, plan_id: planId || _currentPlanId })
+    });
+
+    const data = await resp.json();
+
+    if (data.status === 'success') {
+      showVersionToast(`✅ ${data.message || '重新生成成功'}`);
+      if (planId || _currentPlanId) {
+        viewPlan(planId || _currentPlanId);
+      } else {
+        loadPlan();
+      }
+    } else {
+      showVersionToast(`❌ 重新生成失败: ${data.message || '未知错误'}`);
+      if (phaseCard) {
+        phaseCard.style.opacity = '1';
+        phaseCard.style.pointerEvents = '';
+      }
+    }
+  } catch (e) {
+    console.error('[重新生成] 请求失败:', e);
+    showVersionToast('❌ 网络错误，请重试');
+    if (phaseCard) {
+      phaseCard.style.opacity = '1';
+      phaseCard.style.pointerEvents = '';
+    }
+  } finally {
+    _regeneratingPhaseIndex = -1;
+  }
+}
+
+function showVersionToast(msg) {
+  const existing = document.getElementById('vt-toast');
+  if (existing) existing.remove();
+  const toast = document.createElement('div');
+  toast.id = 'vt-toast';
+  toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#6c5ce7;color:#fff;padding:10px 24px;border-radius:12px;font-size:14px;font-weight:500;z-index:9999;box-shadow:0 4px 16px rgba(108,92,231,0.3);transition:all .3s;opacity:0;';
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  requestAnimationFrame(() => { toast.style.opacity = '1'; });
+  setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 2000);
+}
+
+loadPlan();
+</script>
+
+<!-- ============ 阶段完成通知弹窗 ============ -->
+<div class="modal-overlay" id="phaseCompleteModal" onclick="if(event.target===this){if(_examActive){if(confirm('确定要取消考试吗？'))cancelExam();}else dismissPhaseNotification()}">
+  <div class="modal-box" style="max-width:800px">
+    <button class="close" onclick="if(_examActive){if(confirm('确定要取消考试吗？'))cancelExam();}else dismissPhaseNotification()">&times;</button>
+    <div class="modal-title">🎉 阶段完成！</div>
+    <div id="phaseCompleteBody"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="dismissPhaseNotification()">稍后再说</button>
+      <button class="btn-submit" id="phaseAcceptBtn" onclick="acceptPhaseAssessment()" style="display:none">✅ 保存评估报告</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 复习提醒弹窗 ============ -->
+<div class="modal-overlay" id="reviewModal">
+  <div class="modal-box" style="max-width:700px">
+    <button class="close" onclick="closeReviewModal()">&times;</button>
+    <div class="modal-title">🔔 复习提醒</div>
+    <div id="reviewBody">
+      <div style="text-align:center;padding:24px"><span class="spinner-sm"></span></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeReviewModal()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 续期学习计划建议弹窗 ============ -->
+<div class="modal-overlay" id="continuationModal">
+  <div class="modal-box" style="max-width:700px">
+    <button class="close" onclick="closeContinuationModal()">&times;</button>
+    <div class="modal-title" id="continuationTitle">📋 续期学习计划</div>
+    <div id="continuationBody">
+      <div style="text-align:center;padding:24px"><span class="spinner-sm"></span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ★★★ 复习提醒：当前缓存 ★★★
+let _cachedReviewReminder = { due_count: 0, grouped: {} };
+// ★★★ 各阶段考试结果缓存（查看考试结果用）★★★
+let _phasesExamData = {};
+
+async function checkReviewReminder() {
+  const userId = document.getElementById('userId')?.value || localStorage.getItem('study_plan_user_id') || 'user_001';
+  try {
+    const resp = await fetch(`/study_plan/${userId}/review-reminder`);
+    const data = await resp.json();
+    if (!data.success) return;
+    const reminder = data.reminder || {};
+    const dueCount = reminder.today_due_count || 0;
+    _cachedReviewReminder = {
+      due_count: dueCount,
+      grouped: reminder.grouped_due || {},
+      mastered: reminder.mastered_count || 0,
+      total: reminder.total_items || 0,
+      overdue: reminder.overdue_priority || [],
+      message: reminder.message || '',
+    };
+    updateReviewBell(dueCount);
+  } catch (e) {}
+}
+
+function updateReviewBell(count) {
+  const bell = document.getElementById('reviewBell');
+  const badge = document.getElementById('reviewBadge');
+  if (!bell || !badge) return;
+  if (count > 0) {
+    bell.style.display = 'inline-flex';
+    badge.textContent = count > 99 ? '99+' : count;
+    badge.className = 'badge';
+  } else {
+    bell.style.display = count >= 0 ? 'inline-flex' : 'none';
+    badge.textContent = '0';
+    badge.className = 'badge zero';
+  }
+}
+
+function closeReviewModal() {
+  document.getElementById('reviewModal').classList.remove('active');
+}
+
+// ★★★ 续期学习计划建议（两阶段弹窗）★★★
+function closeContinuationModal() {
+  document.getElementById('continuationModal').classList.remove('active');
+}
+
+async function checkContinuationProposal(userId) {
+  try {
+    const resp = await fetch(`/study_plan/${userId}/continuation`);
+    const data = await resp.json();
+    if (!data.success) return;
+
+    // Stage 1: 所有阶段完成，等待用户"接收"续期建议
+    if (data.continuation_pending && !data.has_continuation_plan) {
+      showContinuationReceivePrompt(userId);
+      return;
+    }
+
+    // Stage 2: 续期计划已生成，等待用户"接受"或"忽略"
+    if (data.has_continuation_plan && data.continuation_plan) {
+      showContinuationAcceptPrompt(data.continuation_plan, userId);
+      return;
+    }
+  } catch (e) {
+    console.warn('检查续期状态失败:', e);
+  }
+}
+
+// ★ Stage 1: 显示"接收/拒绝"弹窗 ★
+function showContinuationReceivePrompt(userId) {
+  const modal = document.getElementById('continuationModal');
+  const title = document.getElementById('continuationTitle');
+  const body = document.getElementById('continuationBody');
+  if (!modal || !body) return;
+
+  title.textContent = '🎉 恭喜完成全部阶段！';
+
+  body.innerHTML =
+    '<div style="text-align:center;padding:20px">' +
+      '<div style="font-size:42px;margin-bottom:16px">🎉</div>' +
+      '<div style="font-size:20px;font-weight:700;color:#2d3436;margin-bottom:8px">你已完成所有学习阶段！</div>' +
+      '<div style="font-size:14px;color:#888;margin-bottom:24px;line-height:1.6">是否需要根据你的学习情况，生成一份续期学习计划建议？</div>' +
+    '</div>' +
+    '<div class="modal-actions" style="margin-top:16px">' +
+      '<button class="btn-cancel" onclick="rejectContinuation(\'' + userId + '\')">暂不需要</button>' +
+      '<button class="btn-submit" onclick="receiveContinuation(\'' + userId + '\')">✅ 接收续期推荐</button>' +
+    '</div>';
+
+  modal.classList.add('active');
+}
+
+// ★ Stage 1: 用户点击"接收" → 调用 LLM 生成，保存为独立新计划 ★
+async function receiveContinuation(userId) {
+  const body = document.getElementById('continuationBody');
+  body.innerHTML = '<div style="text-align:center;padding:40px"><span class="spinner-sm"></span><p style="margin-top:16px;color:#888">正在为你生成续期学习计划...</p></div>';
+
+  try {
+    const resp = await fetch(`/study_plan/${userId}/receive-continuation`, {
+      method: 'POST'
+    });
+    const data = await resp.json();
+    if (data.success) {
+      // 生成成功 → 关闭当前弹窗，重新检测（会进入 Stage 2）
+      closeContinuationModal();
+      setTimeout(function() { checkContinuationProposal(userId); }, 500);
+    } else {
+      alert('生成续期计划失败: ' + (data.message || '未知错误'));
+      closeContinuationModal();
+    }
+  } catch (e) {
+    alert('生成续期计划失败: ' + e.message);
+    closeContinuationModal();
+  }
+}
+
+// ★ Stage 2: 显示"接受/忽略"弹窗 ★
+function showContinuationAcceptPrompt(plan, userId) {
+  const modal = document.getElementById('continuationModal');
+  const title = document.getElementById('continuationTitle');
+  const body = document.getElementById('continuationBody');
+  if (!modal || !body) return;
+
+  title.textContent = '📋 续期学习计划已就绪';
+
+  const phases = plan.phases || [];
+  let phasesHtml = '';
+  phases.forEach(function(p, i) {
+    phasesHtml += '<div style="margin-bottom:12px;padding:12px;border-radius:10px;background:#f8f9fa;border-left:4px solid #6c5ce7">' +
+      '<div style="font-weight:600;font-size:14px;margin-bottom:4px">阶段' + (i+1) + '. ' + escapeHtml(p.name || '') + '</div>' +
+      '<div style="font-size:12px;color:#888">⏱ ' + escapeHtml(p.estimated_hours || '?') + '小时 · ' + escapeHtml(p.difficulty || '') + '</div>' +
+      '<div style="font-size:12px;color:#555;margin-top:4px">' + escapeHtml(p.description || '') + '</div>' +
+      '<div style="font-size:12px;color:#6c5ce7;margin-top:4px">📌 ' + (p.knowledge_points || []).join('、') + '</div>' +
+      '</div>';
+  });
+
+  body.innerHTML =
+    '<div style="margin-bottom:16px;padding:16px;background:#f0fdf4;border-radius:12px;border:1px solid #bbf7d0">' +
+      '<div style="font-size:18px;font-weight:700;color:#166534;margin-bottom:4px">' + escapeHtml(plan.title || '进阶学习计划') + '</div>' +
+      '<div style="font-size:13px;color:#666">' + escapeHtml(plan.total_duration || '') + ' · ' + phases.length + ' 个阶段 · ' + escapeHtml(plan.difficulty || '') + '</div>' +
+      '<div style="font-size:13px;color:#555;margin-top:8px;line-height:1.6">' + escapeHtml(plan.description || '') + '</div>' +
+    '</div>' +
+    '<div style="margin-bottom:12px;font-size:14px;font-weight:600">📋 建议学习阶段</div>' +
+    phasesHtml +
+    '<div class="modal-actions" style="margin-top:20px">' +
+      '<button class="btn-cancel" onclick="ignoreContinuation(\'' + userId + '\')">忽略，保留在列表中</button>' +
+      '<button class="btn-submit" onclick="acceptContinuation(\'' + userId + '\')">✅ 接受并切换到新计划</button>' +
+    '</div>';
+
+  modal.classList.add('active');
+}
+
+// ★ Stage 2: 用户点击"接受" → 切换到续期计划 ★
+async function acceptContinuation(userId) {
+  try {
+    const resp = await fetch(`/study_plan/${userId}/accept-continuation`, {
+      method: 'POST'
+    });
+    const data = await resp.json();
+    if (data.success) {
+      closeContinuationModal();
+      // 切换到新计划
+      loadPlan();
+    } else {
+      alert('切换续期计划失败: ' + (data.message || '未知错误'));
+    }
+  } catch (e) {
+    alert('接受续期计划失败: ' + e.message);
+  }
+}
+
+// ★ Stage 2: 用户点击"忽略" → 清除标记，计划保留在列表中 ★
+async function ignoreContinuation(userId) {
+  try {
+    await fetch(`/study_plan/${userId}/ignore-continuation`, {
+      method: 'POST'
+    });
+    closeContinuationModal();
+  } catch (e) {
+    console.warn('忽略续期计划失败:', e);
+    closeContinuationModal();
+  }
+}
+
+// ★ Stage 1: 用户点击"暂不需要" → 清除 _continuation_pending ★
+async function rejectContinuation(userId) {
+  try {
+    await fetch(`/study_plan/${userId}/reject-continuation`, {
+      method: 'POST'
+    });
+    closeContinuationModal();
+  } catch (e) {
+    console.warn('拒绝续期建议失败:', e);
+    closeContinuationModal();
+  }
+}
+
+async function showReviewModal() {
+  const modal = document.getElementById('reviewModal');
+  const body = document.getElementById('reviewBody');
+  modal.classList.add('active');
+
+  // 先刷新数据
+  await checkReviewReminder();
+  const ctx = _cachedReviewReminder;
+
+  if (ctx.due_count === 0) {
+    body.innerHTML = `
+      <div class="review-empty">
+        <div class="big-icon">✅</div>
+        <p>${escapeHtml(ctx.message || '今日无复习任务，继续学习新内容吧！')}</p>
+      </div>
+      <div class="review-stats">
+        <div class="review-stat total" onclick="showAllKnowledgeMastery()"><div class="rs-num">${ctx.total}</div><div class="rs-label">总复习项</div></div>
+        <div class="review-stat mastered" onclick="showRecentReviews()"><div class="rs-num">${ctx.mastered}</div><div class="rs-label">近7天复习</div></div>
+      </div>`;
+    return;
+  }
+
+  let statsHtml = `
+    <div class="review-stats">
+      <div class="review-stat due"><div class="rs-num">${ctx.due_count}</div><div class="rs-label">待复习</div></div>
+      <div class="review-stat mastered" onclick="showRecentReviews()"><div class="rs-num">${ctx.mastered}</div><div class="rs-label">近7天复习</div></div>
+      <div class="review-stat total" onclick="showAllKnowledgeMastery()"><div class="rs-num">${ctx.total}</div><div class="rs-label">总共</div></div>
+    </div>`;
+
+  let groupsHtml = '';
+  const grouped = ctx.grouped || {};
+
+  // 按知识点聚合（从title/topic中提取知识点名）
+  const kpMap = {};
+  for (const rt of Object.keys(grouped)) {
+    const items = grouped[rt] || [];
+    for (const item of items) {
+      const kp = item.topic || item.title || '未分类';
+      if (!kpMap[kp]) kpMap[kp] = [];
+      kpMap[kp].push({ ...item, type: rt });
+    }
+  }
+
+  const kpEntries = Object.entries(kpMap);
+  if (kpEntries.length === 0) {
+    groupsHtml = '<div class="review-empty"><p>暂无到期复习项</p></div>';
+  } else {
+    for (const [kp, items] of kpEntries) {
+      const masteryColors = { 0: '#999', 1: '#4CAF50', 2: '#2196F3', 3: '#FF9800', 4: '#E91E63' };
+      const masteryIcons = { 0: '○', 1: '●', 2: '◆', 3: '★', 4: '🏆' };
+      groupsHtml += `
+        <div class="review-kp-group">
+          <div class="rkp-header">
+            <span class="rkp-kp">📌 ${escapeHtml(kp)}</span>
+            <span class="rkp-count">${items.length} 项到期</span>
+          </div>
+          <div class="rkp-items">
+            ${items.map((item, idx) => {
+              const ml = item.mastery_level || 0;
+              const icon = masteryIcons[ml] || '●';
+              const color = masteryColors[ml] || '#999';
+              const label = item.mastery_label || '';
+              const points = item.mastery_points ? `(${item.mastery_points}分)` : '';
+              return `
+                <div class="rkp-item" onclick="startReviewItem('${escapeHtml(kp)}', '${escapeHtml(item.type || 'question')}')"
+                     style="border-left: 3px solid ${color};">
+                  <span style="color: ${color}; margin-right: 4px;">${icon}</span>
+                  ${escapeHtml(item.title || item.topic || kp)}
+                  ${label ? `<span style="font-size: 12px; color: ${color}; margin-left: 6px;">${label}${points}</span>` : ''}
+                </div>
+              `;
+            }).join('')}
+          </div>
+          ${/* ★★★ 独立「理论复习」与「编程复习」按钮 ★★★ */''}
+          <div class="review-actions">
+            <button class="review-action-btn action-theory" onclick="startReviewItem('${escapeHtml(kp)}', 'theory')">
+              📝 理论复习
+            </button>
+            <button class="review-action-btn action-coding" onclick="startReviewItem('${escapeHtml(kp)}', 'coding')">
+              💻 编程复习
+            </button>
+          </div>
+        </div>`;
+    }
+  }
+
+  body.innerHTML = statsHtml + groupsHtml;
+}
+
+async function startReviewItem(knowledgePoint, resourceType) {
+  try {
+    const userId = document.getElementById('userId')?.value || localStorage.getItem('study_plan_user_id') || 'user_001';
+    
+    // ★★★ 使用 get-or-create，理论/编程题共用同一个 session_id ★★★
+    const resp = await fetch('/review/session/get-or-create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id: userId,
+        knowledge_point: knowledgePoint,
+      })
+    });
+    const data = await resp.json();
+    
+    if (data.success) {
+      console.log('🎉 [复习会话] 获取/创建成功:', data.session_id, '(resourceType:', resourceType, ')');
+      window.parent.postMessage({
+        type: 'startReview',
+        knowledgePoint: knowledgePoint,
+        resourceType: resourceType,
+        sessionId: data.session_id
+      }, '*');
+    }
+  } catch(e) {
+    console.error('获取/创建复习会话失败:', e);
+    window.parent.postMessage({
+      type: 'startReview',
+      knowledgePoint: knowledgePoint,
+      resourceType: resourceType,
+    }, '*');
+  }
+  closeReviewModal();
+}
+
+// ★★★ 查看近7天复习记录 ★★★
+async function showRecentReviews() {
+  const userId = document.getElementById('userId')?.value || localStorage.getItem('study_plan_user_id') || 'user_001';
+  try {
+    const resp = await fetch(`/review/session/recent-completed/${encodeURIComponent(userId)}?days=7`);
+    const data = await resp.json();
+    if (!data.success) { alert('获取复习记录失败'); return; }
+
+    const sessions = data.sessions || [];
+    let html = `<div class="review-stats" style="margin-bottom:12px;">
+      <div class="review-stat mastered" style="cursor:default;flex:1;"><div class="rs-num">${sessions.length}</div><div class="rs-label">近7天完成</div></div>
+    </div>`;
+
+    if (sessions.length === 0) {
+      html += '<div class="review-empty"><p>近7天暂无复习记录</p></div>';
+    } else {
+      html += '<div style="max-height:400px;overflow-y:auto;">';
+      for (const s of sessions) {
+        const date = s.completed_at ? s.completed_at.slice(0, 10) : '未知';
+        const accuracy = s.answered_count > 0 ? Math.round(s.correct_count / s.answered_count * 100) : 0;
+        html += '<div style="padding:10px 14px;margin-bottom:8px;border-radius:8px;background:#f8f9fa;border-left:3px solid #00b894;">' +
+          '<div style="font-weight:600;font-size:14px;color:#333;">' + escapeHtml(s.knowledge_point) + '</div>' +
+          '<div style="font-size:12px;color:#888;margin-top:4px;">完成于 ' + date + ' · 正确 ' + s.correct_count + '/' + s.answered_count + ' 题 (' + accuracy + '%)</div>' +
+        '</div>';
+      }
+      html += '</div>';
+    }
+
+    // 弹窗
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:2000;display:flex;align-items:center;justify-content:center;';
+    overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+    const box = document.createElement('div');
+    box.style.cssText = 'background:#fff;border-radius:16px;padding:24px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,0.15);';
+    box.innerHTML = '<div style="font-size:18px;font-weight:700;margin-bottom:16px;">📊 近7天复习记录</div>' + html +
+      '<button onclick="this.parentElement.parentElement.remove()" style="margin-top:16px;padding:8px 20px;border:none;border-radius:8px;background:#6c5ce7;color:#fff;font-size:14px;cursor:pointer;width:100%;">关闭</button>';
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+  } catch(e) {
+    console.error('获取复习记录失败:', e);
+    alert('获取复习记录失败');
+  }
+}
+
+// ★★★ 查看所有知识点掌握度 ★★★
+async function showAllKnowledgeMastery() {
+  const userId = document.getElementById('userId')?.value || localStorage.getItem('study_plan_user_id') || 'user_001';
+  try {
+    const resp = await fetch(`/knowledge-mastery/all/${encodeURIComponent(userId)}`);
+    const data = await resp.json();
+    if (!data.success) { alert('获取知识点数据失败'); return; }
+
+    const items = data.items || [];
+    const masteryColors = { 0: '#999', 1: '#4CAF50', 2: '#2196F3', 3: '#FF9800', 4: '#E91E63' };
+    const masteryIcons = { 0: '○', 1: '●', 2: '◆', 3: '★', 4: '🏆' };
+
+    let html = '<div class="review-stats" style="margin-bottom:12px;">' +
+      '<div class="review-stat total" style="cursor:default;flex:1;"><div class="rs-num">' + items.length + '</div><div class="rs-label">知识点总数</div></div>' +
+    '</div>';
+
+    if (items.length === 0) {
+      html += '<div class="review-empty"><p>暂无知识点数据</p></div>';
+    } else {
+      html += '<div style="max-height:400px;overflow-y:auto;">';
+      for (const item of items) {
+        const ml = item.mastery_level || 0;
+        const color = masteryColors[ml] || '#999';
+        const icon = masteryIcons[ml] || '●';
+        const label = item.mastery_label || '';
+        const points = item.mastery_points || 0;
+        html += '<div style="display:flex;align-items:center;padding:8px 14px;margin-bottom:6px;border-radius:8px;background:#f8f9fa;border-left:3px solid ' + color + ';">' +
+          '<span style="color:' + color + ';margin-right:8px;font-size:14px;">' + icon + '</span>' +
+          '<span style="flex:1;font-size:13px;color:#333;">' + escapeHtml(item.knowledge_point) + '</span>' +
+          '<span style="font-size:12px;color:' + color + ';font-weight:500;">' + label + ' (' + points + '分)</span>' +
+        '</div>';
+      }
+      html += '</div>';
+    }
+
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:2000;display:flex;align-items:center;justify-content:center;';
+    overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+    const box = document.createElement('div');
+    box.style.cssText = 'background:#fff;border-radius:16px;padding:24px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,0.15);';
+    box.innerHTML = '<div style="font-size:18px;font-weight:700;margin-bottom:16px;">📚 知识点掌握度</div>' + html +
+      '<button onclick="this.parentElement.parentElement.remove()" style="margin-top:16px;padding:8px 20px;border:none;border-radius:8px;background:#6c5ce7;color:#fff;font-size:14px;cursor:pointer;width:100%;">关闭</button>';
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+  } catch(e) {
+    console.error('获取知识点数据失败:', e);
+    alert('获取知识点数据失败');
+  }
+}
+
+// ★★★ 阶段完成通知（支持考试） ★★★
+async function checkPhaseNotification() {
+  const userId = document.getElementById('userId')?.value || localStorage.getItem('study_plan_user_id') || 'user_001';
+  try {
+    const resp = await fetch(`/study_plan/${userId}/notification`);
+    const data = await resp.json();
+    console.log('[通知检查]', data);
+    if (!data.success || !data.notification) return;
+    const notif = data.notification;
+    // ★ 正在答题中，不要覆盖考试弹窗
+    if (_examActive) return;
+    // 有未处理的阶段完成通知 → 先显示考试选择弹窗
+    if (!notif.exam_completed && !notif.exam_skipped) {
+      console.log('[通知检查] 显示考试选择弹窗', notif);
+      showExamChoiceModal(notif);
+    } else if (notif.assessment_ready) {
+      showPhaseCompleteModal(notif);
+    } else {
+      setTimeout(checkPhaseNotification, 3000);
+    }
+  } catch (e) {
+    console.error('[通知检查] 异常:', e);
+    alert('通知检查出错: ' + e.message);
+  }
+}
+
+let _phaseIndexForAccept = -1;
+
+function showPhaseCompleteModal(notif) {
+  _phaseIndexForAccept = notif.phase_index;
+  const assessment = notif.assessment || {};
+  const summary = assessment.phase_summary || {};
+  const readiness = assessment.readiness || {};
+  const kpAnalysis = assessment.knowledge_point_analysis || [];
+  const weakPoints = assessment.weak_points || [];
+  const adjustments = assessment.adjustments || {};
+
+  // ★★★ 判空检查：确保弹窗元素存在 ★★★
+  const bodyEl = document.getElementById('phaseCompleteBody');
+  const acceptBtn = document.getElementById('phaseAcceptBtn');
+  const modal = document.getElementById('phaseCompleteModal');
+  if (!bodyEl || !modal) {
+    console.error('[评估弹窗] phaseCompleteBody 或 phaseCompleteModal 不存在');
+    return;
+  }
+
+  let kpHtml = '';
+  if (kpAnalysis.length) {
+    kpHtml = '<div style="margin-top:12px"><div style="font-weight:600;margin-bottom:6px">📊 知识点掌握</div>';
+    kpAnalysis.forEach(kp => {
+      const color = kp.score >= 80 ? '#27ae60' : kp.score >= 60 ? '#f39c12' : '#e74c3c';
+      kpHtml += `<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px"><span>${escapeHtml(kp.name)}</span><span style="color:${color};font-weight:600">${kp.score}分 · ${kp.mastery || ''}</span></div>`;
+    });
+    kpHtml += '</div>';
+  }
+
+  let weakHtml = '';
+  if (weakPoints.length) {
+    weakHtml = '<div style="margin-top:12px"><div style="font-weight:600;color:#e74c3c;margin-bottom:6px">⚠️ 薄弱点</div>';
+    weakPoints.forEach(w => { weakHtml += `<div style="padding:4px 0;font-size:13px">• ${escapeHtml(w.point)}</div>`; });
+    weakHtml += '</div>';
+  }
+
+  let readyHtml = '';
+  if (readiness.score !== undefined) {
+    readyHtml = `<div style="margin-top:12px;padding:10px;background:${readiness.ready ? '#e8f5e9' : '#fff3e0'};border-radius:8px"><div style="font-weight:600">${readiness.ready ? '✅ 可以进入下一阶段' : '⚠️ 建议巩固后再进入下一阶段'}</div><div style="font-size:13px;margin-top:4px">准备度评分: ${readiness.score}/100</div>${readiness.suggestions?.length ? '<div style="font-size:12px;color:#666;margin-top:4px">💡 ' + escapeHtml(readiness.suggestions[0]) + '</div>' : ''}</div>`;
+  }
+
+  bodyEl.innerHTML = `
+    <div style="text-align:center;margin-bottom:16px">
+      <div style="font-size:28px;font-weight:700;color:#e74c3c">${summary.score || '?'}分</div>
+      <div style="font-size:14px;color:#888">${summary.status || ''}</div>
+      <div style="font-size:13px;color:#666;margin-top:4px">${escapeHtml(notif.phase_name)}</div>
+    </div>
+    ${summary.summary ? `<div style="background:#f8f9fa;padding:12px;border-radius:8px;font-size:13px;line-height:1.6">${escapeHtml(summary.summary)}</div>` : ''}
+    ${kpHtml}${weakHtml}${readyHtml}
+    ${adjustments.remedy_suggestions?.length ? `<div style="margin-top:12px"><div style="font-weight:600;color:#8e44ad;margin-bottom:6px">📖 补救建议</div>${adjustments.remedy_suggestions.map(s => `<div style="padding:3px 0;font-size:13px">• ${escapeHtml(s)}</div>`).join('')}</div>` : ''}
+  `;
+  
+  // ★★★ 判空检查：接受按钮可能不存在 ★★★
+  if (acceptBtn) {
+    acceptBtn.style.display = assessment?.phase_summary ? 'inline-block' : 'none';
+  }
+  
+  // ★★★ 重置底部按钮：确保不残留考试结果弹窗的按钮 ★★★
+  const modalActions = document.querySelector('.modal-actions');
+  if (modalActions) {
+    modalActions.innerHTML = `
+      <button class="btn-cancel" onclick="dismissPhaseNotification()">稍后再说</button>
+      <button class="btn-submit" id="phaseAcceptBtn" onclick="acceptPhaseAssessment()" style="display:${assessment?.phase_summary ? 'inline-block' : 'none'}">✅ 进入下一阶段</button>
+    `;
+  }
+  
+  modal.classList.add('active');
+}
+
+async function acceptPhaseAssessment() {
+  const btn = document.getElementById('phaseAcceptBtn');
+  if (!btn) {
+    console.error('[接受评估] phaseAcceptBtn 不存在');
+    return;
+  }
+  
+  // ★★★ 立即显示等待状态，跳过"应用中..." ★★★
+  // 同时暂停通知轮询，防止 checkPhaseNotification 重新弹出评估窗
+  if (window._notifPollTimer) {
+    clearInterval(window._notifPollTimer);
+    window._notifPollTimer = null;
+  }
+  const bodyEl = document.getElementById('phaseCompleteBody');
+  const modalActions = document.querySelector('.modal-actions');
+  if (bodyEl) {
+    bodyEl.innerHTML = '<div style="text-align:center;padding:40px"><span class="spinner-sm"></span><div style="margin-top:16px;color:#888">正在为你规划下一阶段学习内容...</div></div>';
+  }
+  if (modalActions) {
+    modalActions.innerHTML = '';
+  }
+  
+  try {
+    const userId = document.getElementById('userId')?.value || localStorage.getItem('study_plan_user_id') || 'user_001';
+    const paResp = await fetch(`/assessment/phase-apply/${userId}/${_phaseIndexForAccept}`, { method: 'POST' });
+    const paData = await paResp.json();
+    await fetch(`/study_plan/${userId}/notification/ack`, { method: 'POST' });
+
+    // ★★★ 所有阶段已完成 → 显示续期流程 ★★★
+    if (paData.all_phases_completed) {
+      const bodyEl = document.getElementById('phaseCompleteBody');
+      const modalActions = document.querySelector('.modal-actions');
+      if (bodyEl) {
+        bodyEl.innerHTML = `
+          <div style="text-align:center;padding:30px">
+            <div style="font-size:48px;margin-bottom:16px">🎉</div>
+            <div style="font-size:20px;font-weight:700;color:#2d3436">所有阶段已完成！</div>
+            <div style="font-size:14px;color:#888;margin-top:8px">你可以接收续期学习计划，继续进阶学习</div>
+          </div>
+        `;
+      }
+      if (modalActions) {
+        modalActions.innerHTML = `
+          <button class="btn-cancel" onclick="document.getElementById('phaseCompleteModal').classList.remove('active')">稍后再说</button>
+          <button class="btn-submit" onclick="triggerContinuationAfterAssessment()">📋 接收续期计划</button>
+        `;
+      }
+      return;
+    }
+
+    const currentPlanId = _currentPlanId;
+    console.log('[评估] 开始等待新版本, 当前planId:', currentPlanId);
+    for (let i = 0; i < 30; i++) {
+      await new Promise(r => setTimeout(r, 1000));
+      if (i % 5 === 0) console.log('[评估] 等待新版本中... 第' + (i+1) + '秒');
+      try {
+        const vtResp = await fetch(`/study_plan/${userId}/version-tree?plan_id=${encodeURIComponent(currentPlanId)}`);
+        const vtData = await vtResp.json();
+        if (vtData.status === 'success' && vtData.has_tree && vtData.versions) {
+          _cachedVersionTree = vtData;
+          const activeId = vtData.active_version_plan_id;
+          if (activeId && activeId !== currentPlanId) {
+            console.log('[评估] 检测到新版本:', activeId, '，正在跳转...');
+            // ★★★ 先对新版本也执行 ack，防止恢复轮询后再次弹出评估 ★★★
+            try {
+              await fetch(`/study_plan/${userId}/notification/ack?phase_index=${_phaseIndexForAccept}`, { method: 'POST' });
+            } catch (e) {}
+            // 恢复通知轮询
+            if (!window._notifPollTimer) window._notifPollTimer = setInterval(checkPhaseNotification, 10000);
+            // 新版本出现，关闭弹窗并跳转
+            const modal = document.getElementById('phaseCompleteModal');
+            if (modal) modal.classList.remove('active');
+            viewPlan(activeId);
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn('[评估] 版本树查询失败:', e);
+      }
+    }
+    // 超时，关弹窗刷新
+    console.log('[评估] 等待超时，刷新当前计划');
+    if (!window._notifPollTimer) window._notifPollTimer = setInterval(checkPhaseNotification, 10000);
+    const modal = document.getElementById('phaseCompleteModal');
+    if (modal) modal.classList.remove('active');
+    viewPlan(currentPlanId);
+  } catch (e) {
+    console.error('[评估] 失败:', e);
+    if (!window._notifPollTimer) window._notifPollTimer = setInterval(checkPhaseNotification, 10000);
+    alert('保存评估报告失败，请重试');
+    btn.disabled = false; btn.textContent = '✅ 进入下一阶段';
+  }
+}
+
+// ★★★ 所有阶段完成后，点击"接收续期计划"按钮 ★★★
+async function triggerContinuationAfterAssessment() {
+  const userId = document.getElementById('userId')?.value || localStorage.getItem('study_plan_user_id') || 'user_001';
+  // 关闭评估弹窗
+  const modal = document.getElementById('phaseCompleteModal');
+  if (modal) modal.classList.remove('active');
+  // 触发续期流程
+  receiveContinuation(userId);
+}
+
+async function dismissPhaseNotification() {
+  _examActive = false;  // ★ 清除答题标记
+  if (window._examPollTimer) {
+    clearTimeout(window._examPollTimer);
+    window._examPollTimer = null;
+  }
+  // ★★★ 判空检查 ★★★
+  const modal = document.getElementById('phaseCompleteModal');
+  if (modal) {
+    modal.classList.remove('active');
+  }
+  try {
+    const userId = document.getElementById('userId')?.value || localStorage.getItem('study_plan_user_id') || 'user_001';
+    await fetch(`/study_plan/${userId}/notification/ack`, { method: 'POST' });
+  } catch (e) {}
+}
+
+// ★★★ 取消考试（重置阶段状态，锁定后续阶段）★★★
+async function cancelExam() {
+  _examActive = false;
+  if (window._examPollTimer) {
+    clearTimeout(window._examPollTimer);
+    window._examPollTimer = null;
+  }
+  // ★★★ 判空检查 ★★★
+  const modal = document.getElementById('phaseCompleteModal');
+  if (modal) {
+    modal.classList.remove('active');
+  }
+  const phaseIndex = _examPhaseIndex;
+  if (phaseIndex >= 0) {
+    try {
+      const userId = document.getElementById('userId')?.value || localStorage.getItem('study_plan_user_id') || 'user_001';
+      await fetch(`/study_plan/${userId}/notification/reset-exam`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phase_index: phaseIndex })
+      });
+    } catch (e) {}
+  }
+  if (_currentPlanId) {
+    viewPlan(_currentPlanId);
+  }
+}
+
+var _notifPollTimer = setInterval(checkPhaseNotification, 10000);
+setTimeout(checkPhaseNotification, 3000);
+
+// ★★★ 复习提醒轮询（每60秒检查一次）★★★
+setInterval(checkReviewReminder, 60000);
+
+// ==================== 阶段考试功能 ====================
+
+let _currentExamNotification = null;
+let _examAnswers = {};
+let _examActive = false;  // ★ 答题中标记，防止轮询覆盖考试弹窗
+
+// 显示考试选择弹窗
+function showExamChoiceModal(notif) {
+  console.log('[考试弹窗] showExamChoiceModal 被调用', notif);
+  try {
+  _currentExamNotification = notif;
+  
+  // ★ 清除旧轮询（如果有）
+  if (window._examPollTimer) {
+    clearTimeout(window._examPollTimer);
+    window._examPollTimer = null;
+  }
+  
+  const bodyEl = document.getElementById('phaseCompleteBody');
+  if (!bodyEl) { console.error('[考试弹窗] phaseCompleteBody 不存在'); return; }
+  // ★ 保存原始HTML，用于考试生成失败时恢复弹窗状态
+  notif._originalBodyHTML = bodyEl.innerHTML;
+  bodyEl.innerHTML = `
+    <div style="text-align:center;margin-bottom:20px">
+      <div style="font-size:28px;font-weight:700;color:#e74c3c">🎉 ${escapeHtml(notif.phase_name)} 完成!</div>
+      <div style="font-size:14px;color:#888;margin-top:8px">已完成所有知识点学习</div>
+    </div>
+    
+    <div style="background:#f8f9fa;padding:16px;border-radius:12px;margin-bottom:20px">
+      <div style="font-weight:600;margin-bottom:12px">📝 阶段考试</div>
+      <div style="font-size:13px;color:#666;line-height:1.6">
+        <div>点击下方「参加考试」按钮将立即生成试题，确认后开始答题。</div>
+        <div style="margin-top:10px;color:#999;font-size:12px">💡 考试成绩将作为阶段性评估的重要参考依据</div>
+      </div>
+    </div>
+  `;
+  
+  // ★ null安全：隐藏接受按钮（如果存在）
+  const acceptBtn = document.getElementById('phaseAcceptBtn');
+  if (acceptBtn) acceptBtn.style.display = 'none';
+  
+  const modalActions = document.querySelector('.modal-actions');
+  if (modalActions) {
+    modalActions.innerHTML = `
+      <button class="btn-cancel" onclick="handleExamChoice(false)">跳过考试，直接进入下一阶段</button>
+      <button class="btn-submit" onclick="handleExamChoice(true)">✅ 参加考试</button>
+    `;
+  } else {
+    console.error('[考试弹窗] .modal-actions 不存在');
+  }
+  
+  const modal = document.getElementById('phaseCompleteModal');
+  if (modal) {
+    modal.classList.add('active');
+  } else {
+    console.error('[考试弹窗] phaseCompleteModal 不存在');
+  }
+  } catch (e) {
+    console.error('[考试弹窗] showExamChoiceModal 异常:', e);
+    alert('考试弹窗出错: ' + e.message);
+  }
+}
+
+// 处理考试选择
+// 从已完成阶段补考 — 实时生成试题
+async function retakeExam(phaseIndex) {
+  const userId = document.getElementById('userId')?.value || localStorage.getItem('study_plan_user_id') || 'user_001';
+  // ★★★ 立即锁定，防止 checkPhaseNotification 轮询重置弹窗 ★★★
+  _examActive = true;
+  // 先弹出加载弹窗
+  const body = document.getElementById('phaseCompleteBody');
+  body.innerHTML = `<div style="text-align:center;padding:30px">
+    <div style="font-size:18px;font-weight:600;color:#6c5ce7">⏳ 正在生成试题...</div>
+    <div style="font-size:13px;color:#888;margin-top:10px">请稍候，题目生成完成后将自动开始</div>
+  </div>`;
+  document.querySelector('.modal-actions').innerHTML = `
+    <button class="btn-submit" disabled style="opacity:0.6;cursor:not-allowed">⏳ 生成中...</button>
+  `;
+  document.getElementById('phaseCompleteModal').classList.add('active');
+  
+  try {
+    const resp = await fetch(`/study_plan/${userId}/phase/${phaseIndex}/exam/choice`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ take_exam: true })
+    });
+    const data = await resp.json();
+    if (data.success && data.exam_data) {
+      showExamModal(data.exam_data, phaseIndex);
+    } else {
+      alert('考试生成失败，请重试');
+      document.getElementById('phaseCompleteModal').classList.remove('active');
+    }
+  } catch(e) {
+    console.error('补考失败:', e);
+    alert('网络错误，请重试');
+    document.getElementById('phaseCompleteModal').classList.remove('active');
+  }
+}
+
+async function handleExamChoice(takeExam) {
+  const userId = document.getElementById('userId')?.value || localStorage.getItem('study_plan_user_id') || 'user_001';
+  const notif = _currentExamNotification;
+  
+  // ★ 参加考试→先锁定防止轮询干扰，再显示加载状态
+  if (takeExam) {
+    _examActive = true;  // ★★★ 立即锁定，防止 checkPhaseNotification 轮询重置弹窗 ★★★
+    const modalActions = document.querySelector('.modal-actions');
+    modalActions.innerHTML = `
+      <button class="btn-submit" disabled style="opacity:0.6;cursor:not-allowed">⏳ 正在生成试题...</button>
+    `;
+  }
+  
+  try {
+    const resp = await fetch(`/study_plan/${userId}/phase/${notif.phase_index}/exam/choice`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ take_exam: takeExam })
+    });
+    const data = await resp.json();
+    
+    if (takeExam && data.success && data.exam_data) {
+      // 显示考试界面
+      showExamModal(data.exam_data, notif.phase_index);
+    } else if (takeExam) {
+      // 参加考试但生成失败→显示错误提示，保留弹窗让用户可重试
+      alert(data.reason || '考试生成失败，请重试');
+      // 恢复弹窗到初始状态
+      const body = document.getElementById('phaseCompleteBody');
+      body.innerHTML = notif._originalBodyHTML || '<p>阶段学习已完成！是否参加阶段考试？</p>';
+      const modalActions = document.querySelector('.modal-actions');
+      modalActions.innerHTML = `
+        <button class="btn-secondary" onclick="handleExamChoice(false)">跳过考试</button>
+        <button class="btn-submit" onclick="handleExamChoice(true)">📝 参加考试</button>
+      `;
+    } else {
+      // 跳过考试，关闭弹窗并刷新页面
+      dismissPhaseNotification();
+      setTimeout(loadPlan, 1000);
+    }
+  } catch (e) {
+    console.error('处理考试选择失败:', e);
+    dismissPhaseNotification();
+  }
+}
+
+// ==================== 逐题考试模式 ====================
+let _examCurrentIdx = 0;
+let _examTotalQuestions = 0;
+let _examQuestions = [];
+let _examPhaseIndex = -1;
+
+// 显示考试答题界面 — 逐题模式
+function showExamModal(examData, phaseIndex) {
+  _examActive = true;  // ★ 开始答题，防止轮询覆盖
+  _examAnswers = {};
+  _examCurrentIdx = 0;
+  _examPhaseIndex = phaseIndex;
+  
+  // 构建扁平题目列表
+  _examQuestions = [];
+  const progQ = examData.programming_questions || [];
+  const theoryQ = examData.theory_questions || [];
+  
+  progQ.forEach((q, idx) => {
+    _examQuestions.push({
+      key: `programming_${idx}`,
+      type: 'programming',
+      index: idx,
+      score: 30,
+      data: q,
+    });
+  });
+  theoryQ.forEach((q, idx) => {
+    const typeLabel = { single_choice: '单选题', multiple_choice: '多选题', judge: '判断题' }[q.type] || '其他';
+    _examQuestions.push({
+      key: `theory_${idx}`,
+      type: q.type || 'single_choice',
+      index: idx,
+      score: 10,
+      data: q,
+      typeLabel,
+    });
+  });
+  
+  _examTotalQuestions = _examQuestions.length;
+  if (_examTotalQuestions === 0) {
+    document.getElementById('phaseCompleteBody').innerHTML = '<div style="padding:20px;text-align:center;color:#888">暂无题目</div>';
+    return;
+  }
+  
+  // 构建进度条区域
+  renderExamQuestion();
+}
+
+function renderExamQuestion() {
+  const body = document.getElementById('phaseCompleteBody');
+  const q = _examQuestions[_examCurrentIdx];
+  const progress = `${_examCurrentIdx + 1}/${_examTotalQuestions}`;
+  const pct = ((_examCurrentIdx + 1) / _examTotalQuestions * 100).toFixed(0);
+  
+  let questionHtml = '';
+  const answer = _examAnswers[q.key] || '';
+  
+  if (q.type === 'programming') {
+    const pd = q.data;
+    questionHtml = `
+      <div class="exam-question">
+        <div class="eq-header">
+          <span class="eq-type">编程题 ${q.index + 1}</span>
+          <span class="eq-score">${q.score}分</span>
+        </div>
+        <div class="eq-text">${escapeHtml(pd.description || pd.title || '')}</div>
+        <div style="margin:8px 0;font-size:12px;color:#666">输入格式：${escapeHtml(pd.input_format || '')}</div>
+        <div style="margin:8px 0;font-size:12px;color:#666">输出格式：${escapeHtml(pd.output_format || '')}</div>
+        ${(pd.examples || []).map((ex, ei) => `
+          <div style="background:#f6f8fa;padding:8px;border-radius:6px;margin:6px 0;font-size:12px">
+            <div><b>示例${ei+1}:</b></div>
+            <div>输入: ${escapeHtml(ex.input || '')}</div>
+            <div>输出: ${escapeHtml(ex.output || '')}</div>
+            ${ex.explanation ? `<div>说明: ${escapeHtml(ex.explanation)}</div>` : ''}
+          </div>
+        `).join('')}
+        <textarea class="exam-code-area" id="prog_input" placeholder="请输入你的代码..." style="margin-top:12px">${answer}</textarea>
+      </div>`;
+  } else if (q.type === 'judge') {
+    questionHtml = `
+      <div class="exam-question">
+        <div class="eq-header">
+          <span class="eq-type">判断题 ${q.index + 1}</span>
+          <span class="eq-score">${q.score}分</span>
+        </div>
+        <div class="eq-text">${escapeHtml(q.data.question || '')}</div>
+        <div class="eq-options" style="margin-top:12px">
+          <label class="exam-option ${answer === '正确' ? 'selected' : ''}" onclick="selectTheoryOption('${q.key}', '正确', this)">
+            <input type="radio" name="current_q" value="正确" ${answer === '正确' ? 'checked' : ''}>
+            <span>✓ 正确</span>
+          </label>
+          <label class="exam-option ${answer === '错误' ? 'selected' : ''}" onclick="selectTheoryOption('${q.key}', '错误', this)">
+            <input type="radio" name="current_q" value="错误" ${answer === '错误' ? 'checked' : ''}>
+            <span>✗ 错误</span>
+          </label>
+        </div>
+      </div>`;
+  } else {
+    const options = q.data.options || [];
+    const isMultiple = q.type === 'multiple_choice';
+    questionHtml = `
+      <div class="exam-question">
+        <div class="eq-header">
+          <span class="eq-type">${q.typeLabel} ${q.index + 1}</span>
+          <span class="eq-score">${q.score}分</span>
+        </div>
+        <div class="eq-text">${escapeHtml(q.data.question || '')}</div>
+        <div class="eq-options" style="margin-top:12px">
+          ${options.map((opt, oi) => {
+            const optLabel = String.fromCharCode(65 + oi);
+            const checked = answer.includes(optLabel);
+            return `
+              <label class="exam-option ${checked ? 'selected' : ''}" 
+                     onclick="${isMultiple ? 'toggleMultiOption' : 'selectTheoryOption'}('${q.key}', '${optLabel}', this${isMultiple ? ', true' : ''})">
+                <input type="${isMultiple ? 'checkbox' : 'radio'}" name="current_q" value="${optLabel}" ${checked ? 'checked' : ''}>
+                <span>${optLabel}. ${escapeHtml(opt || '')}</span>
+              </label>`;
+          }).join('')}
+        </div>
+      </div>`;
+  }
+  
+  body.innerHTML = `
+    <div style="margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:#888;margin-bottom:4px">
+        <span>📝 考试答题</span>
+        <span>${progress}</span>
+      </div>
+      <div style="height:4px;background:#e8e8e8;border-radius:2px">
+        <div style="height:4px;background:#6c5ce7;border-radius:2px;width:${pct}%;transition:width 0.3s"></div>
+      </div>
+    </div>
+    ${questionHtml}
+  `;
+  
+  // 绑定编程题输入
+  if (q.type === 'programming') {
+    const ta = document.getElementById('prog_input');
+    if (ta) ta.oninput = () => { _examAnswers[q.key] = ta.value; };
+  }
+  
+  // 构建按钮
+  const modalActions = document.querySelector('.modal-actions');
+  const isFirst = _examCurrentIdx <= 0;
+  const isLast = _examCurrentIdx >= _examTotalQuestions - 1;
+  modalActions.innerHTML = `
+    <button class="btn-cancel" onclick="cancelExam()">取消考试</button>
+    <div style="flex:1"></div>
+    ${!isFirst ? `<button class="btn-cancel" onclick="prevExamQuestion()" style="margin-right:8px">← 上一题</button>` : ''}
+    ${isLast
+      ? `<button class="btn-submit" onclick="confirmSubmitExam(${_examPhaseIndex})">📤 提交答卷</button>`
+      : `<button class="btn-submit" onclick="nextExamQuestion()">下一题 →</button>`
+    }
+  `;
+}
+
+function prevExamQuestion() {
+  saveCurrentAnswerFromDOM();
+  if (_examCurrentIdx > 0) {
+    _examCurrentIdx--;
+    renderExamQuestion();
+  }
+}
+
+function confirmSubmitExam(phaseIndex) {
+  // 统计未答题目
+  const total = _examTotalQuestions;
+  const answered = Object.keys(_examAnswers).length;
+  const unanswered = total - answered;
+  if (unanswered > 0 && !confirm(`还有 ${unanswered} 道题未作答，确定要提交吗？`)) {
+    return;
+  }
+  submitExamAnswers(phaseIndex);
+}
+
+function nextExamQuestion() {
+  // ★★★ 从 DOM 读取当前题目的答案再切换 ★★★
+  saveCurrentAnswerFromDOM();
+  
+  _examCurrentIdx++;
+  renderExamQuestion();
+}
+
+// 从 DOM 读取当前题目的答案（统一方法）
+function saveCurrentAnswerFromDOM() {
+  const q = _examQuestions[_examCurrentIdx];
+  if (!q) return;
+  
+  if (q.type === 'programming') {
+    const ta = document.getElementById('prog_input');
+    if (ta) _examAnswers[q.key] = ta.value;
+    return;
+  }
+  
+  // 理论题：从已选中的 input 读取
+  if (q.type === 'multiple_choice') {
+    const checked = document.querySelectorAll(`input[name="current_q"]:checked`);
+    const values = Array.from(checked).map(inp => inp.value);
+    _examAnswers[q.key] = values.join(',');
+  } else {
+    const checked = document.querySelector(`input[name="current_q"]:checked`);
+    if (checked) _examAnswers[q.key] = checked.value;
+  }
+}
+
+function selectTheoryOption(key, value, el) {
+  _examAnswers[key] = value;
+  // 清除同级其他选项的选中样式
+  const parent = el.closest('.eq-options');
+  if (parent) {
+    parent.querySelectorAll('.exam-option').forEach(opt => opt.classList.remove('selected'));
+  }
+  el.classList.add('selected');
+}
+
+function toggleMultiOption(key, value, el) {
+  const current = _examAnswers[key] || '';
+  const parts = current ? current.split(',') : [];
+  const idx = parts.indexOf(value);
+  if (idx >= 0) {
+    parts.splice(idx, 1);
+    el.classList.remove('selected');
+  } else {
+    parts.push(value);
+    el.classList.add('selected');
+  }
+  _examAnswers[key] = parts.join(',');
+}
+
+// 提交考试答案
+async function submitExamAnswers(phaseIndex) {
+  const userId = document.getElementById('userId')?.value || localStorage.getItem('study_plan_user_id') || 'user_001';
+  
+  // ★★★ 提交前保存当前题目答案（从 DOM 读取）★★★
+  saveCurrentAnswerFromDOM();
+  
+  console.log('[提交考试] 最终答案:', JSON.stringify(_examAnswers));
+  
+  const btn = document.querySelector('.btn-submit');
+  btn.disabled = true;
+  btn.textContent = '提交中...';
+  
+  try {
+    const resp = await fetch(`/study_plan/${userId}/phase/${phaseIndex}/exam/submit`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ answers: _examAnswers })
+    });
+    const data = await resp.json();
+    
+    if (resp.ok && data.success) {
+      showExamResult(data);
+    } else {
+      _examActive = false;  // ★ 提交失败，清除答题标记
+      // 获取服务端错误详情
+      const errMsg = data.detail || data.message || '提交失败，请重试';
+      alert(errMsg);
+      btn.disabled = false;
+      btn.textContent = '📤 提交答案';
+    }
+  } catch (e) {
+    _examActive = false;
+    console.error('提交考试答案失败:', e);
+    alert('提交失败（网络错误），请重试');
+    btn.disabled = false;
+    btn.textContent = '📤 提交答案';
+  }
+}
+
+// 显示考试结果
+function showExamResult(result) {
+  const score = result.score || 0;
+  const total = result.total || 0;
+  const passed = result.passed || false;
+  const results = result.results || [];
+  
+  let detailsHtml = '';
+  if (results.length > 0) {
+    detailsHtml = `
+      <div class="exam-result-details">
+        <div style="font-weight:600;margin-bottom:12px">答题详情</div>
+        ${results.map((r, idx) => {
+          const userAns = r.user_answer || '(未作答)';
+          const correctAns = r.correct_answer || '';
+          const isMulti = r.type === 'multiple_choice';
+          return `
+          <div class="exam-result-row" style="margin-bottom:8px;padding:8px;background:#f8f9fa;border-radius:8px">
+            <div style="display:flex;justify-content:space-between">
+              <span class="err-question" style="font-size:13px">${r.type === 'programming' ? '💻 编程题' : (isMulti ? '📚 多选题' : '📝 理论题')} ${idx + 1}</span>
+              <span class="err-status ${r.correct ? 'correct' : 'incorrect'}" style="font-weight:600">${r.correct ? '✓ 正确' : '✗ 错误'} (${r.score}分)</span>
+            </div>
+            ${!isMulti ? `
+            <div style="font-size:12px;color:#666;margin-top:4px">
+              你的答案: <span style="color:${r.correct ? '#27ae60' : '#e74c3c'}">${escapeHtml(userAns)}</span>
+              ${!r.correct && correctAns ? ` | 正确答案: <span style="color:#27ae60">${escapeHtml(correctAns)}</span>` : ''}
+            </div>` : `
+            <div style="font-size:12px;color:#666;margin-top:4px">
+              你的答案: <span style="color:${r.correct ? '#27ae60' : '#e74c3c'}">${escapeHtml(userAns)}</span>
+              ${!r.correct && correctAns ? `<br>正确答案: <span style="color:#27ae60">${escapeHtml(correctAns)}</span>` : ''}
+            </div>`}
+          </div>`;
+        }).join('')}
+      </div>`;
+  }
+  
+  document.getElementById('phaseCompleteBody').innerHTML = `
+    <div class="exam-result">
+      <div class="er-score ${passed ? 'passed' : 'failed'}">${score}/${total}</div>
+      <div class="er-message">${result.message || (passed ? '恭喜通过！' : '未通过，请重试')}</div>
+      ${detailsHtml}
+    </div>
+  `;
+  
+  const modalActions = document.querySelector('.modal-actions');
+  if (passed) {
+    modalActions.innerHTML = `
+      <button class="btn-submit" onclick="showAssessmentAfterExam()">📊 查看本阶段评估</button>
+    `;
+  } else {
+    modalActions.innerHTML = `
+      <button class="btn-cancel" onclick="closeExamResultAndWaitForAssessment()">关闭</button>
+      <button class="btn-submit" onclick="retryExam()">🔄 重新考试</button>
+    `;
+  }
+}
+
+// ★★★ 考试不及格时关弹窗但不 ack，等待后台评估完成后自动弹出评估报告 ★★★
+function closeExamResultAndWaitForAssessment() {
+  _examActive = false;
+  if (window._examPollTimer) {
+    clearTimeout(window._examPollTimer);
+    window._examPollTimer = null;
+  }
+  document.getElementById('phaseCompleteModal').classList.remove('active');
+  // 延迟轮询，等后台评估完成
+  setTimeout(checkPhaseNotification, 2000);
+}
+
+// 处理考试通过
+async function handleExamPass() {
+  // ★★★ 关弹窗但不 ack，保留 notification 供后续评估报告弹窗使用 ★★★
+  _examActive = false;
+  if (window._examPollTimer) {
+    clearTimeout(window._examPollTimer);
+    window._examPollTimer = null;
+  }
+  document.getElementById('phaseCompleteModal').classList.remove('active');
+  
+  // ★★★ 检查是否有新版本（重规划已创建新版本时，切换到新版本查看）★★★
+  const currentPlanId = _currentPlanId;
+  setTimeout(async () => {
+    // 先刷新版本树数据
+    try {
+      const vtResp = await fetch(`/study_plan/${getUserId()}/version-tree?plan_id=${encodeURIComponent(currentPlanId)}`);
+      const vtData = await vtResp.json();
+      if (vtData.status === 'success' && vtData.has_tree && vtData.versions && vtData.versions.length > 0) {
+        _cachedVersionTree = vtData;
+        if (vtData.active_version_plan_id && vtData.active_version_plan_id !== currentPlanId) {
+          viewPlan(vtData.active_version_plan_id);
+          setTimeout(checkPhaseNotification, 2000);
+          return;
+        }
+      }
+    } catch (e) { /* 版本树刷新失败，继续使用当前计划 */ }
+    viewPlan(currentPlanId);
+    setTimeout(checkPhaseNotification, 2000);
+  }, 500);
+}
+
+// 查看本阶段评估（替代原来的直接"进入下一阶段"）
+async function showAssessmentAfterExam() {
+  // ★★★ 弹窗保持打开，显示等待状态 ★★★
+  const bodyEl = document.getElementById('phaseCompleteBody');
+  const modalActions = document.querySelector('.modal-actions');
+  if (bodyEl) {
+    bodyEl.innerHTML = '<div style="text-align:center;padding:40px"><span class="spinner-sm"></span><div style="margin-top:16px;color:#888">正在生成评估报告...</div></div>';
+  }
+  if (modalActions) {
+    modalActions.innerHTML = '';
+  }
+  _examActive = false;
+  if (window._examPollTimer) {
+    clearTimeout(window._examPollTimer);
+    window._examPollTimer = null;
+  }
+  
+  // 等待评估生成，然后自动弹出评估窗
+  const maxWait = 60; // 最多等60秒
+  for (let i = 0; i < maxWait; i++) {
+    await new Promise(r => setTimeout(r, 1000));
+    try {
+      const userId = document.getElementById('userId')?.value || localStorage.getItem('study_plan_user_id') || 'user_001';
+      const resp = await fetch(`/study_plan/${userId}/notification`);
+      const data = await resp.json();
+      if (data.success && data.notification && data.notification.assessment_ready) {
+        showPhaseCompleteModal(data.notification);
+        return;
+      }
+    } catch (e) { /* 重试 */ }
+  }
+  // 超时，关弹窗，让正常轮询处理
+  document.getElementById('phaseCompleteModal').classList.remove('active');
+  alert('评估报告生成较慢，请稍后刷新页面查看');
+  setTimeout(checkPhaseNotification, 1000);
+}
+async function retryExam() {
+  console.log('[retryExam] 开始执行, _currentExamNotification:', _currentExamNotification);
+  const notif = _currentExamNotification;
+  if (notif) {
+    const userId = document.getElementById('userId')?.value || localStorage.getItem('study_plan_user_id') || 'user_001';
+    // ★★★ 先重置考试状态，否则后端拒绝提交 ★★★
+    try {
+      await fetch(`/study_plan/${userId}/notification/reset-exam`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phase_index: notif.phase_index })
+      });
+    } catch (e) {}
+    // 再加载考题
+    try {
+      const resp = await fetch(`/study_plan/${userId}/phase/${notif.phase_index}/exam`);
+      const data = await resp.json();
+      if (data.success) {
+        showExamModal(data.exam_data, notif.phase_index);
+      } else {
+        alert('获取考试失败: ' + (data.message || data.detail || '未知错误'));
+      }
+    } catch (e) {
+      console.error('重新获取考试失败:', e);
+      alert('获取考试失败（网络错误）: ' + e.message);
+    }
+  }
+}
+
+// 查看已完成的考试结果
+async function viewExamResult(phaseIndex) {
+  const examInfo = _phasesExamData[phaseIndex];
+  if (!examInfo) return;
+
+  const score = examInfo.score || 0;
+  const total = examInfo.total || 0;
+  const passed = score >= (total * 0.6);
+  const results = examInfo.results || [];
+  const examData = examInfo.exam_data || {};
+
+  // 从 results 构建答题情况映射
+  const resultMap = {};
+  results.forEach((r, idx) => {
+    resultMap[idx] = r;
+  });
+
+  let html = '';
+
+  // 考试结果概览
+  html += `
+    <div class="exam-result" style="padding-bottom:20px;border-bottom:2px solid #e8e8e8;margin-bottom:20px">
+      <div style="font-size:14px;color:#888;margin-bottom:4px">${escapeHtml(examInfo.phase_name || `阶段${phaseIndex+1}`)} 考试结果</div>
+      <div class="er-score ${passed ? 'passed' : 'failed'}">${score}/${total}</div>
+      <div style="font-size:14px;color:#666">${passed ? '✅ 通过' : '❌ 未通过'}</div>
+    </div>`;
+
+  // 编程题部分
+  const progQuestions = examData.programming_questions || [];
+  if (progQuestions.length > 0) {
+    html += `
+      <div class="exam-section">
+        <div class="es-title">💻 编程题</div>`;
+    progQuestions.forEach((q, idx) => {
+      const r = resultMap[idx] || {};
+      html += `
+        <div class="exam-question" style="border-left:4px solid ${r.correct ? '#27ae60' : '#e74c3c'}">
+          <div class="eq-header">
+            <span class="eq-type">编程题 ${idx + 1}</span>
+            <span class="eq-score" style="color:${r.correct ? '#27ae60' : '#e74c3c'}">${r.correct ? '✓ 正确 (+30)' : '✗ 错误 (0)'}</span>
+          </div>
+          <div class="eq-text">${escapeHtml(q.description || q.title || '')}</div>
+          <div style="background:#f5f5f5;padding:10px;border-radius:8px;font-size:13px;color:#333;white-space:pre-wrap;margin-top:8px">${escapeHtml(r.user_answer || '(未作答)')}</div>
+        </div>`;
+    });
+    html += `</div>`;
+  }
+
+  // 理论题部分
+  const theoryQuestions = examData.theory_questions || [];
+  if (theoryQuestions.length > 0) {
+    html += `
+      <div class="exam-section">
+        <div class="es-title">📚 理论题</div>`;
+    theoryQuestions.forEach((q, idx) => {
+      const r = resultMap[progQuestions.length + idx] || {};
+      const typeLabel = { single_choice: '单选题', multiple_choice: '多选题', judge: '判断题' }[q.type] || '其他';
+      const userAnswer = r.user_answer || '(未作答)';
+      const correctAnswer = r.correct_answer || '';
+      html += `
+        <div class="exam-question" style="border-left:4px solid ${r.correct ? '#27ae60' : '#e74c3c'}">
+          <div class="eq-header">
+            <span class="eq-type">${typeLabel} ${idx + 1}</span>
+            <span class="eq-score" style="color:${r.correct ? '#27ae60' : '#e74c3c'}">${r.correct ? '✓ 正确 (+10)' : '✗ 错误 (0)'}</span>
+          </div>
+          <div class="eq-text">${escapeHtml(q.question || '')}</div>
+          <div style="font-size:13px;margin-top:8px;padding:8px;border-radius:6px;background:#f5f5f5">
+            <div>你的答案: <span style="color:${r.correct ? '#27ae60' : '#e74c3c'};font-weight:600">${escapeHtml(userAnswer)}</span></div>
+            ${!r.correct ? `<div style="margin-top:4px">正确答案: <span style="color:#27ae60;font-weight:600">${escapeHtml(correctAnswer)}</span></div>` : ''}
+          </div>
+        </div>`;
+    });
+    html += `</div>`;
+  }
+
+  // 展示在弹窗中
+  const bodyEl = document.getElementById('phaseCompleteBody');
+  const acceptBtn = document.getElementById('phaseAcceptBtn');
+  const modal = document.getElementById('phaseCompleteModal');
+  const modalActions = document.querySelector('.modal-actions');
+  if (bodyEl) bodyEl.innerHTML = html;
+  if (acceptBtn) acceptBtn.style.display = 'none';
+  if (modalActions) {
+    modalActions.innerHTML = `
+      <button class="btn-cancel" onclick="dismissPhaseNotification()">关闭</button>`;
+  }
+  if (modal) modal.classList.add('active');
+}
+setTimeout(checkReviewReminder, 8000);
+
+// ==================== 合集播放器控制函数 ====================
+var _studyCollData = null;
+var _studyCollMonitor = null;
+
+function studyCollLoadVideo(bvid) {
+   reportResourceContext('video', bvid);
+   fetch('/api/play-info?bvid=' + bvid + '&page=1').then(function(r) { return r.json(); }).then(function(result) {
+     if (!result.success) return;
+     var info = result.data;
+     _studyCollData = { bvid: bvid, title: info.title || bvid, chapters: [], currentPage: 1 };
+
+     var pages = info.pages || [];
+     _studyCollData.chapters = pages.map(function(p) { return { page: p.page, title: p.title || 'P' + p.page }; });
+     _studyCollData.chapters.sort(function(a, b) { return a.page - b.page; });
+
+     document.getElementById('studyCollectionPlayer').style.display = 'block';
+     document.getElementById('studyCollTitle').textContent = _studyCollData.title;
+     studyCollRenderChapterList();
+     studyCollInitVideoEvents();
+     studyCollLoadPage(1);
+     document.getElementById('studyCollectionPlayer').scrollIntoView({ behavior: 'smooth', block: 'center' });
+   }).catch(function() {});
+ }
+
+function studyCollRenderChapterList() {
+  if (!_studyCollData) return;
+  var list = document.getElementById('studyCollChapterList');
+  list.innerHTML = '';
+  _studyCollData.chapters.forEach(function(ch) {
+    var btn = document.createElement('button');
+    btn.textContent = 'P' + ch.page + ' ' + ch.title;
+    btn.style.cssText = 'padding:5px 10px;border:1px solid #ddd;border-radius:6px;cursor:pointer;font-size:11px;background:' +
+      (ch.page === _studyCollData.currentPage ? '#fb7299;color:#fff;border-color:#fb7299' : '#fff;color:#333') + ';';
+    btn.onclick = function() { studyCollLoadPage(ch.page); };
+    list.appendChild(btn);
+  });
+}
+
+function studyCollLoadPage(page) {
+   if (!_studyCollData) return;
+   _studyCollData.currentPage = page;
+   var ch = _studyCollData.chapters.find(function(c) { return c.page === page; });
+   if (!ch) return;
+
+   // ★★★ 切章节时重置监控状态，并标记切换中以避免误回溯 ★★★
+   if (_studyCollMonitor) {
+     _studyCollMonitor.currentTime = 0;
+     _studyCollMonitor._confusionAsked = false;
+     _studyCollMonitor._switchingChapter = true;  // ★ 抑制回溯检测
+   }
+
+   document.getElementById('studyCollProgress').textContent = page + '/' + _studyCollData.chapters.length;
+  document.getElementById('studyCollChapterIndicator').textContent = page + '/' + _studyCollData.chapters.length;
+  document.getElementById('studyCollChapterGroup').style.display = _studyCollData.chapters.length > 1 ? 'flex' : 'none';
+  studyCollRenderChapterList();
+
+  var video = document.getElementById('studyCollVideo');
+  fetch('/api/play-info?bvid=' + _studyCollData.bvid + '&page=' + page)
+    .then(function(r) { return r.json(); })
+    .then(function(result) {
+      if (!result.success) { document.getElementById('studyCollStatus').textContent = '⚠️ 加载失败'; return; }
+      var proxyUrl = '/api/stream?url=' + encodeURIComponent(result.data.streams[0].url);
+      video.src = proxyUrl;
+      video.load();
+      video.play();
+      // ★★★ 新章节开始播放后延迟解除回溯抑制 ★★★
+      setTimeout(function() {
+        if (_studyCollMonitor) _studyCollMonitor._switchingChapter = false;
+      }, 2000);
+      document.getElementById('studyCollStatus').textContent = '▶️ P' + page + ' ' + ch.title;
+    }).catch(function() {
+      document.getElementById('studyCollStatus').textContent = '⚠️ 加载失败';
+    });
+}
+
+function studyCollPrev() { if (_studyCollData && _studyCollData.currentPage > 1) studyCollLoadPage(_studyCollData.currentPage - 1); }
+function studyCollNext() { if (_studyCollData && _studyCollData.currentPage < _studyCollData.chapters.length) studyCollLoadPage(_studyCollData.currentPage + 1); }
+
+function studyCollInitVideoEvents() {
+  var video = document.getElementById('studyCollVideo');
+  var state = { currentTime: 0, duration: 0, rewindCount: 0, pauseCount: 0, watchDuration: 0, isPlaying: false, startedPlaying: false, completionRate: 0, _confusionAsked: false };
+  _studyCollMonitor = state;
+
+  video.addEventListener('play', function() { state.isPlaying = true; if (!state.startedPlaying) state.startedPlaying = true; studyCollUpdateControls(); });
+  video.addEventListener('pause', function() { if (state.isPlaying) { state.pauseCount++; state.isPlaying = false; } studyCollUpdateControls(); });
+  video.addEventListener('timeupdate', function() {
+    studyCollUpdateControls();
+    if (!video.duration || isNaN(video.duration)) return;
+
+    // ★★★ 章节切换中不触发回溯检测 ★★★
+    if (state._switchingChapter) return;
+
+    var cur = video.currentTime, prev = state.currentTime;
+    state.duration = video.duration; state.currentTime = cur;
+    state.completionRate = video.duration > 0 ? Math.round((cur / video.duration) * 100) : 0;
+    // ★★★ 回溯检测（仅在同一章节内有效）★★★
+    if (prev > 0 && cur < prev - 5) {
+        state.rewindCount++;
+        // ★★★ 每次回溯都弹窗，不限制次数 ★★★
+        studyCollShowConfusion(_studyCollData.bvid, _studyCollData.title, prev, cur, _studyCollData.currentPage);
+    }
+    document.getElementById('studyCollRewind').textContent = '↩ ' + state.rewindCount + '次';
+    document.getElementById('studyCollPause').textContent = '⏸️ ' + state.pauseCount + '次';
+    document.getElementById('studyCollProgressTime').textContent = '⏱️ ' + state.watchDuration + 's (' + state.completionRate + '%)';
+  });
+  video.addEventListener('click', studyCollTogglePlay);
+
+  if (window._studyCollTimer) clearInterval(window._studyCollTimer);
+  window._studyCollTimer = setInterval(function() {
+    if (!video.paused && !video.ended) state.watchDuration++;
+  }, 1000);
+}
+
+function studyCollTogglePlay() { var v = document.getElementById('studyCollVideo'); if (v.paused) v.play(); else v.pause(); }
+function studyCollSeekBar(e) { var v = document.getElementById('studyCollVideo'); if (!v.duration) return; var r = e.currentTarget.getBoundingClientRect(); v.currentTime = ((e.clientX - r.left) / r.width) * v.duration; }
+function studyCollToggleMute() { var v = document.getElementById('studyCollVideo'); v.muted = !v.muted; document.getElementById('studyCollVolumeBtn').textContent = v.muted ? '🔇' : '🔊'; }
+function studyCollFullscreen() { var el = document.querySelector('.study-coll-wrapper'); if (!document.fullscreenElement) el.requestFullscreen(); else document.exitFullscreen(); }
+function studyCollUpdateControls() {
+   var v = document.getElementById('studyCollVideo');
+   document.getElementById('studyCollPlayBtn').textContent = v.paused ? '▶' : '⏸';
+   if (v.duration) {
+     document.getElementById('studyCollProgressFill').style.width = ((v.currentTime / v.duration) * 100) + '%';
+     var fmt = function(s) { if (!s||s<0) return '0:00'; var m=Math.floor(s/60); return m+':'+(s%60<10?'0':'')+Math.floor(s%60); };
+     document.getElementById('studyCollTimeDisplay').textContent = fmt(v.currentTime) + ' / ' + fmt(v.duration);
+   }
+ }
+
+ var _studyCollPendingConfusion = null;
+
+ function studyCollShowConfusion(bvid, title, fromSec, toSec, page) {
+   _studyCollPendingConfusion = { bvid: bvid, title: title, from: fromSec, to: toSec, page: page || 1 };
+   document.getElementById('studyCollConfusionInfo').innerHTML =
+     '<strong>视频:</strong> ' + escapeHtml(title) + '<br>' +
+     '<strong>回看位置:</strong> ' + fmtTime(fromSec) + ' → ' + fmtTime(toSec) +
+     ' (倒退 ' + Math.round(fromSec - toSec) + '秒)';
+   document.getElementById('studyCollConfusionOverlay').classList.add('active');
+ }
+
+ function fmtTime(s) { if (!s||s<0) return '0:00'; var m=Math.floor(s/60); return m+':'+(s%60<10?'0':'')+Math.floor(s%60); }
+
+ function studyCollConfirmConfusion(isConfused) {
+   document.getElementById('studyCollConfusionOverlay').classList.remove('active');
+   var evt = _studyCollPendingConfusion;
+   if (!evt) return;
+   _studyCollPendingConfusion = null;
+
+   var userId = document.getElementById('userId').value.trim() || 'user_001';
+   fetch('/video/rewind-event', {
+     method: 'POST',
+     headers: { 'Content-Type': 'application/json' },
+     body: JSON.stringify({
+       user_id: userId,
+       bvid: evt.bvid,
+       video_title: evt.title,
+       rewind_from: evt.from,
+       rewind_to: evt.to,
+       rewind_gap: Math.round(evt.from - evt.to),
+       is_confused: isConfused,
+       page: evt.page
+     })
+   }).then(function(r) { return r.json(); }).then(function(result) {
+     if (result.success) console.log('✅ 回溯事件已上报, is_confused=' + isConfused);
+   }).catch(function(e) { console.warn('⚠️ 上报失败:', e.message); });
+ }
+
+// ==================== 视频网格监控（同智能助手） ====================
+var _spVideoMonitors = new Map();
+var _spSeekThreshold = 120;  // 回溯超过120秒（2分钟）即判定为"回溯"
+var _spMonitorTimer = null;
+
+function initStudyPlanVideoGrid(panel) {
+  // 清理旧监控状态
+  _spVideoMonitors.clear();
+
+  // 查找panel中的视频网格
+  var cards = panel.querySelectorAll('.video-card[data-bvid]');
+  if (!cards.length) return;
+
+  cards.forEach(function(card) {
+    var bvid = card.getAttribute('data-bvid');
+    var idx = card.getAttribute('data-idx');
+    var uid = bvid + '-' + idx;
+
+    var state = {
+      bvid: bvid,
+      idx: idx,
+      uid: uid,
+      currentTime: 0,
+      duration: 0,
+      rewindCount: 0,
+      pauseCount: 0,
+      watchDuration: 0,
+      isPlaying: false,
+      startedPlaying: false,
+      completionRate: 0,
+      rewindEvents: [],
+      _confusionAsked: false,
+      _videoJustLoaded: false,
+    };
+    _spVideoMonitors.set(uid, state);
+
+    var videoEl = document.getElementById('spv-' + uid);
+    if (!videoEl) return;
+
+    // 绑定事件
+    spBindVideoEvents(videoEl, bvid, state, uid);
+
+    // 异步加载视频流
+    spLoadVideoStream(videoEl, bvid, state, uid);
+  });
+
+  // 启动定时器
+  if (_spMonitorTimer) clearInterval(_spMonitorTimer);
+  _spMonitorTimer = setInterval(function() {
+    _spVideoMonitors.forEach(function(state) {
+      if (state.isPlaying) state.watchDuration++;
+      spUpdateMonitorUI(state);
+    });
+  }, 1000);
+}
+
+function spLoadVideoStream(videoEl, bvid, state, uid) {
+  if (!videoEl || !bvid) return;
+
+  fetch('/api/play-info?bvid=' + bvid + '&page=1')
+    .then(function(r) { return r.json(); })
+    .then(function(result) {
+      if (!result.success) {
+        spUpdateStatus(uid, '⚠️ 加载失败');
+        return;
+      }
+      var info = result.data;
+      state.duration = info.duration || 0;
+
+      var proxyUrl = '/api/stream?url=' + encodeURIComponent(info.streams[0].url);
+
+      // ★★★ 新视频加载前重置状态，防止误回溯 ★★★
+      state.currentTime = 0;
+      state._videoJustLoaded = true;
+
+      videoEl.src = proxyUrl;
+      videoEl.load();
+      spUpdateStatus(uid, '▶️ 可播放');
+    })
+    .catch(function(e) {
+      spUpdateStatus(uid, '⚠️ 加载失败');
+      console.warn('⚠️ 学习计划视频加载失败 [' + bvid + ']:', e.message);
+    });
+}
+
+function spBindVideoEvents(videoEl, bvid, state, uid) {
+  if (!videoEl || !state) return;
+
+  videoEl.addEventListener('play', function() {
+    state.isPlaying = true;
+    if (!state.startedPlaying) {
+      state.startedPlaying = true;
+      // ★★★ 上报摄像头资源上下文（用户开始播放视频）★★★
+      reportResourceContext('video', bvid, '', 'open');
+    }
+  });
+
+  videoEl.addEventListener('pause', function() {
+    if (state.isPlaying) { state.pauseCount++; state.isPlaying = false; }
+  });
+
+  videoEl.addEventListener('timeupdate', function() {
+    if (!videoEl.duration || isNaN(videoEl.duration)) return;
+
+    // ★★★ 新视频刚加载时不触发回溯检测 ★★★
+    if (state._videoJustLoaded) {
+      state._videoJustLoaded = false;
+      state.currentTime = videoEl.currentTime;
+      spUpdateMonitorUI(state);
+      return;
+    }
+
+    var cur = videoEl.currentTime;
+    var prev = state.currentTime;
+    state.duration = videoEl.duration;
+
+    if (videoEl.duration > 0) {
+      state.completionRate = Math.round((cur / videoEl.duration) * 100);
+    }
+
+    // ★★★ 回溯检测（仅在同一视频内有效）★★★
+    if (prev > 0 && cur < prev - _spSeekThreshold) {
+      state.rewindCount++;
+      var evt = {
+        from: prev, to: cur, gap: prev - cur,
+        time: new Date().toISOString(), bvid: bvid
+      };
+      state.rewindEvents.push(evt);
+      spUpdateStatus(uid, '↩ 回溯!');
+
+      if (!state._confusionAsked) {
+        state._confusionAsked = true;
+        spShowConfusionDialog(bvid, state, evt);
+      }
+    }
+
+    state.currentTime = cur;
+    spUpdateMonitorUI(state);
+  });
+}
+
+// 学习计划视频网格的困惑弹窗复用合集播放器的弹窗
+ function spShowConfusionDialog(bvid, state, evt) {
+   // 从卡片DOM获取视频标题
+   var card = document.querySelector('.video-card[data-bvid="' + bvid + '"]');
+   var title = '';
+   if (card) {
+     var titleEl = card.querySelector('.vc-title');
+     if (titleEl) title = titleEl.textContent || '';
+   }
+   _studyCollPendingConfusion = {
+     bvid: bvid, title: title || bvid,
+     from: evt.from, to: evt.to, page: 1
+   };
+   document.getElementById('studyCollConfusionInfo').innerHTML =
+     '<strong>视频:</strong> ' + escapeHtml(title || bvid) + '<br>' +
+     '<strong>回看位置:</strong> ' + fmtTime(evt.from) + ' → ' + fmtTime(evt.to) +
+     ' (倒退 ' + Math.round(evt.gap) + '秒)';
+   document.getElementById('studyCollConfusionOverlay').classList.add('active');
+ }
+
+function spUpdateStatus(uid, text) {
+  var el = document.getElementById('sps-' + uid);
+  if (el) el.textContent = text;
+}
+
+function spUpdateMonitorUI(state) {
+  if (!state) return;
+  var uid = state.uid;
+  var rewindEl = document.getElementById('spr-' + uid);
+  var pauseEl = document.getElementById('spp-' + uid);
+  var progressEl = document.getElementById('sppt-' + uid);
+  if (rewindEl) rewindEl.textContent = '↩ ' + state.rewindCount + '次';
+  if (pauseEl) pauseEl.textContent = '⏸️ ' + state.pauseCount + '次';
+  if (progressEl) progressEl.textContent = '⏱️ ' + state.watchDuration + 's (' + state.completionRate + '%)';
+}
+</script>
+<script>
+(function(){try{window.parent.postMessage({type:'pageContext',page:'study_plan',title:'学习计划',action:'viewing',detail:''},'*');}catch(e){}})();
+</script>
+
+
+</body></html>

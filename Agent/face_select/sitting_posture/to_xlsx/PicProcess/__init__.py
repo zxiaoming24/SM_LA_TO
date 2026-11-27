@@ -1,0 +1,1 @@
+from sitting_posture.to_xlsx.PicProcess.SkeletonInfo import detect_pose

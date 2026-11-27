@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # CollectWisdomSystem
 
 This template should help get you started developing with Vue 3 in Vite.
@@ -29,3 +30,7 @@ npm run build
 ```
 
 
+=======
+# SM_LA_TO
+聚焦课程学习的agent系统
+>>>>>>> sm/main

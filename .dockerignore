@@ -1,0 +1,33 @@
+# ========== 虚拟环境和开发工具 ==========
+.venv
+.idea
+.vscode
+__pycache__
+*.pyc
+
+# ========== 大型数据文件夹（这些是体积刺客！） ==========
+data
+uploads
+models
+community_data
+leaderboard_data
+note_data
+recommendation_data
+rag_knowledge
+user_assessments
+user_features
+user_voices
+wrong_answer_data
+video_ww
+output
+generated_documents
+memory
+
+# ========== 测试和临时文件 ==========
+server-master
+cache_comparison.png
+
+# ========== 版本控制和敏感信息 ==========
+.git
+.env
+*.log

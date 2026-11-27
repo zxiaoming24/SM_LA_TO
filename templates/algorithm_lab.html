@@ -1,0 +1,2099 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>算法实验室</title>
+<style>
+:root {
+  --primary: #667eea;
+  --primary-dark: #5a6fd6;
+  --secondary: #764ba2;
+  --accent: #f093fb;
+  --bg-dark: #0f0c29;
+  --bg-mid: #1a1a4e;
+  --glass-bg: rgba(255,255,255,0.05);
+  --glass-border: rgba(255,255,255,0.1);
+  --shadow: 0 8px 32px rgba(0,0,0,0.25);
+  --radius: 14px;
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: var(--font);
+  background: linear-gradient(135deg, var(--bg-dark) 0%, #302b63 50%, #24243e 100%);
+  color: #333;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  width: 500px; height: 500px;
+  border-radius: 50%;
+  filter: blur(100px);
+  opacity: 0.12;
+  z-index: 0;
+  pointer-events: none;
+  background: var(--primary);
+  top: -200px; right: -100px;
+  animation: floatBg 25s ease-in-out infinite;
+}
+
+@keyframes floatBg {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-30px, 50px) scale(1.05); }
+}
+
+.app-container {
+  position: relative;
+  z-index: 10;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 16px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+.app-header {
+  text-align: center;
+  margin-bottom: 16px;
+  color: #fff;
+}
+
+.app-header h1 {
+  font-size: 26px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #fff, var(--accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.app-header p {
+  font-size: 13px;
+  opacity: 0.6;
+  margin-top: 4px;
+}
+
+/* Main layout */
+.main-layout {
+  display: grid;
+  grid-template-columns: 240px 1fr 420px;
+  gap: 16px;
+  flex: 1;
+  min-height: 0;
+}
+
+/* Sidebar */
+.sidebar {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+}
+
+.sidebar-title {
+  color: rgba(255,255,255,0.8);
+  font-size: 14px;
+  font-weight: 600;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.structure-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.structure-item {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.25s;
+  color: rgba(255,255,255,0.7);
+  font-size: 13px;
+}
+
+.structure-item:hover {
+  background: rgba(102,126,234,0.15);
+  color: #fff;
+}
+
+.structure-item.active {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgba(102,126,234,0.3);
+}
+
+.structure-item .cat {
+  font-size: 11px;
+  opacity: 0.6;
+  margin-left: 6px;
+}
+
+.operation-section {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.operation-section-title {
+  color: rgba(255,255,255,0.6);
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.operation-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.operation-btn {
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.7);
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+
+.operation-btn:hover {
+  background: rgba(102,126,234,0.2);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+.operation-btn.active {
+  background: var(--primary);
+  color: #fff;
+  border-color: transparent;
+}
+
+.param-input {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.08);
+  border-radius: 8px;
+  color: #fff;
+  font-size: 12px;
+  margin-top: 8px;
+  outline: none;
+}
+
+.param-input:focus {
+  border-color: var(--primary);
+}
+
+/* Custom operation input */
+.custom-op-section {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.custom-op-input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.08);
+  border-radius: 8px;
+  color: #fff;
+  font-size: 12px;
+  outline: none;
+  resize: vertical;
+  min-height: 60px;
+  font-family: var(--font);
+}
+
+.custom-op-input:focus {
+  border-color: var(--primary);
+}
+
+.custom-op-input::placeholder {
+  color: rgba(255,255,255,0.35);
+}
+
+.custom-op-btn {
+  width: 100%;
+  padding: 8px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--accent), var(--secondary));
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: all 0.25s;
+}
+
+.custom-op-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(240,147,251,0.3);
+}
+
+.custom-op-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Canvas area */
+.canvas-area {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.canvas-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.canvas-title {
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.canvas-subtitle {
+  color: rgba(255,255,255,0.5);
+  font-size: 12px;
+}
+
+.canvas-wrapper {
+  flex: 1;
+  position: relative;
+  background: rgba(15, 12, 41, 0.8);
+  overflow: hidden;
+}
+
+#mainCanvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: default;
+}
+
+#mainCanvas.dragging {
+  cursor: grabbing;
+}
+
+.canvas-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255,255,255,0.3);
+  font-size: 14px;
+  pointer-events: none;
+}
+
+.canvas-empty {
+  text-align: center;
+}
+
+.canvas-empty-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+.canvas-hint {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  background: rgba(0,0,0,0.4);
+  color: rgba(255,255,255,0.6);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  backdrop-filter: blur(8px);
+}
+
+/* Bottom toolbar */
+.toolbar {
+  padding: 12px 16px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  background: rgba(15, 12, 41, 0.6);
+}
+
+.toolbar-btn {
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.7);
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.25s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.toolbar-btn:hover:not(:disabled) {
+  background: rgba(102,126,234,0.2);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+.toolbar-btn.primary {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: #fff;
+  border-color: transparent;
+}
+
+.toolbar-btn.primary:hover:not(:disabled) {
+  box-shadow: 0 4px 16px rgba(102,126,234,0.4);
+  transform: translateY(-1px);
+}
+
+.toolbar-btn.danger {
+  background: rgba(231, 76, 60, 0.2);
+  color: #e74c3c;
+  border-color: rgba(231, 76, 60, 0.3);
+}
+
+.toolbar-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.toolbar-btn .icon {
+  font-size: 16px;
+}
+
+/* Pseudocode panel */
+.code-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.code-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.code-title {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.code-steps {
+  color: rgba(255,255,255,0.5);
+  font-size: 12px;
+}
+
+.code-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 0 12px;
+  background: rgba(10, 8, 30, 0.4);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.code-tab {
+  padding: 8px 14px;
+  border: none;
+  background: transparent;
+  color: rgba(255,255,255,0.5);
+  cursor: pointer;
+  font-size: 12px;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+}
+
+.code-tab:hover {
+  color: rgba(255,255,255,0.8);
+}
+
+.code-tab.active {
+  color: #fff;
+  border-bottom-color: var(--primary);
+}
+
+.code-content {
+  flex: 1;
+  overflow-y: auto;
+  background: rgba(10, 8, 30, 0.6);
+  padding: 16px;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  min-height: 200px;
+}
+
+.code-line {
+  display: flex;
+  padding: 1px 0;
+  border-radius: 4px;
+  transition: all 0.25s;
+}
+
+.code-line .line-num {
+  width: 36px;
+  color: rgba(255,255,255,0.3);
+  text-align: right;
+  padding-right: 12px;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.code-line .line-code {
+  color: rgba(255,255,255,0.8);
+  white-space: pre;
+}
+
+.code-line.highlight {
+  background: linear-gradient(90deg, rgba(102,126,234,0.3), rgba(102,126,234,0.1));
+  border-left: 3px solid var(--primary);
+  animation: highlightPulse 1s ease-out;
+}
+
+@keyframes highlightPulse {
+  0% { background: linear-gradient(90deg, rgba(102,126,234,0.6), rgba(102,126,234,0.3)); }
+  100% { background: linear-gradient(90deg, rgba(102,126,234,0.3), rgba(102,126,234,0.1)); }
+}
+
+.code-line.method-def .line-code {
+  color: #81c784;
+  font-weight: 600;
+}
+
+.code-line.comment .line-code {
+  color: rgba(255,255,255,0.4);
+  font-style: italic;
+}
+
+/* Operation history */
+.history-list {
+  padding: 8px;
+  overflow-y: auto;
+  max-height: 180px;
+}
+
+.history-item {
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.05);
+  margin-bottom: 4px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.7);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.history-item:hover {
+  background: rgba(102,126,234,0.15);
+}
+
+.history-item .step-num {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.history-item.current {
+  background: rgba(102,126,234,0.25);
+  border-left: 3px solid var(--primary);
+}
+
+.history-empty {
+  color: rgba(255,255,255,0.3);
+  text-align: center;
+  padding: 20px;
+  font-size: 12px;
+}
+
+/* Step description */
+.step-description {
+  padding: 12px 16px;
+  background: rgba(102,126,234,0.1);
+  border-top: 1px solid rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.8);
+  font-size: 13px;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.step-dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* Control buttons */
+.controls {
+  padding: 10px 12px;
+  background: rgba(15, 12, 41, 0.6);
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+}
+
+.ctrl-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.7);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  font-size: 14px;
+}
+
+.ctrl-btn:hover:not(:disabled) {
+  background: var(--primary);
+  color: #fff;
+  border-color: transparent;
+}
+
+.ctrl-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.ctrl-btn.play-all {
+  width: auto;
+  padding: 0 16px;
+  border-radius: 17px;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  border: none;
+}
+
+.ctrl-btn.play-all:hover:not(:disabled) {
+  box-shadow: 0 4px 12px rgba(102,126,234,0.4);
+}
+
+.speed-select {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.7);
+  border-radius: 8px;
+  padding: 4px 8px;
+  font-size: 12px;
+  cursor: pointer;
+  outline: none;
+}
+
+.speed-select option {
+  background: var(--bg-dark);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
+
+/* Toast */
+.toast {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-12px);
+  z-index: 9999;
+  padding: 10px 24px;
+  border-radius: 10px;
+  font-size: 13px;
+  color: #fff;
+  opacity: 0;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+  backdrop-filter: blur(12px);
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.toast.success { background: rgba(46,204,113,0.9); }
+.toast.error { background: rgba(231,76,60,0.9); }
+.toast.info { background: rgba(52,152,219,0.9); }
+
+/* Loading */
+.loading-bar {
+  position: absolute;
+  top: 0; left: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary), var(--accent));
+  width: 0%;
+  transition: width 0.3s;
+  z-index: 100;
+}
+
+.loading-bar.active {
+  animation: loadingAnim 1.5s ease-in-out infinite;
+}
+
+@keyframes loadingAnim {
+  0% { width: 0%; }
+  50% { width: 70%; }
+  100% { width: 100%; }
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .main-layout {
+    grid-template-columns: 200px 1fr 340px;
+  }
+}
+
+@media (max-width: 900px) {
+  .main-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr auto;
+  }
+
+  .sidebar {
+    max-height: 200px;
+  }
+
+  .code-panel {
+    max-height: 280px;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="app-container">
+  <div class="app-header">
+    <h1>🧪 算法实验室</h1>
+    <p>拖拽节点移动 · 操作实时生成代码 · 播放完整执行过程 · 自定义算法</p>
+  </div>
+
+  <div class="main-layout">
+    <!-- Left sidebar: structure selection -->
+    <aside class="sidebar">
+      <div class="sidebar-title">数据结构</div>
+      <div id="structureList" class="structure-list"></div>
+
+      <button class="custom-op-btn" style="margin-top:8px;width:100%;" onclick="showAddStructureDialog()">➕ 添加自定义数据结构</button>
+
+      <div id="operationSection" class="operation-section" style="display:none;">
+        <div class="operation-section-title">选择操作</div>
+        <div id="operationList" class="operation-list"></div>
+        <input type="text" id="paramInput" class="param-input" placeholder="输入参数值..." onkeypress="if(event.key==='Enter') executeSelectedOperation()">
+      </div>
+
+      <!-- Custom operation -->
+      <div id="customOpSection" class="custom-op-section" style="display:none;">
+        <div class="operation-section-title">自定义操作 (LLM生成)</div>
+        <textarea id="customOpInput" class="custom-op-input" placeholder="描述你想执行的操作，例如：&#10;- 将所有奇数节点移到前面&#10;- 反转链表&#10;- 合并两个有序链表"></textarea>
+        <button class="custom-op-btn" id="customOpBtn" onclick="executeCustomOperation()">✨ AI生成并执行</button>
+      </div>
+    </aside>
+
+    <!-- Center: canvas -->
+    <main class="canvas-area">
+      <div class="canvas-header">
+        <div class="canvas-title" id="canvasTitle">选择一个数据结构开始</div>
+        <div class="canvas-subtitle" id="canvasSubtitle">支持拖拽移动、插入删除、代码同步</div>
+      </div>
+
+      <div class="canvas-wrapper">
+        <div class="loading-bar" id="loadingBar" style="display:none;"></div>
+        <canvas id="mainCanvas"></canvas>
+        <div id="canvasEmpty" class="canvas-overlay">
+          <div class="canvas-empty">
+            <div class="canvas-empty-icon">📊</div>
+            <div>点击左侧数据结构创建可视化</div>
+          </div>
+        </div>
+        <div id="canvasHint" class="canvas-hint" style="display:none;">
+          💡 拖拽节点移动 · 点击选中 · 操作后查看右侧代码
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <button class="toolbar-btn primary" id="executeBtn" onclick="executeSelectedOperation()" disabled>
+          <span class="icon">▶️</span> <span id="executeBtnText">请选择操作</span>
+        </button>
+        <button class="toolbar-btn danger" id="removeNodeBtn" onclick="removeNode()" disabled title="先点击选中画布中的节点，再点击删除">
+          <span class="icon">➖</span> 删除选中
+        </button>
+        <button class="toolbar-btn" onclick="resetCanvas()">
+          <span class="icon">🔄</span> 重置画布
+        </button>
+        <button class="toolbar-btn" onclick="clearHistory()" title="清空所有操作历史">
+          <span class="icon">🗑</span> 清空历史
+        </button>
+      </div>
+    </main>
+
+    <!-- Right: pseudocode & steps -->
+    <aside class="code-panel">
+      <div class="code-header">
+        <div class="code-title">算法伪代码</div>
+        <div class="code-steps" id="codeSteps">步骤: 0 / 0</div>
+      </div>
+
+      <div class="code-tabs">
+        <button class="code-tab active" onclick="switchTab('code')">代码</button>
+        <button class="code-tab" onclick="switchTab('history')">操作历史 (<span id="historyCount">0</span>)</button>
+      </div>
+
+      <!-- Code tab -->
+      <div id="codeTab" class="code-content">
+        <div style="color:rgba(255,255,255,0.3); text-align:center; padding:40px 0;">
+          <!-- // 选择操作并执行后，此处将显示代码 -->
+        </div>
+      </div>
+
+      <!-- History tab -->
+      <div id="historyTab" class="history-list" style="display:none;">
+        <div class="history-empty">暂无操作历史</div>
+      </div>
+
+      <div class="step-description" id="stepDescription">
+        <div style="color:rgba(255,255,255,0.5);">执行操作后，此处将显示步骤描述</div>
+      </div>
+
+      <div class="controls">
+        <button class="ctrl-btn" id="prevStepBtn" onclick="prevStep()" disabled>⏮</button>
+        <button class="ctrl-btn play-all" id="playAllBtn" onclick="playAll()" disabled>▶ 从头播放</button>
+        <button class="ctrl-btn" id="nextStepBtn" onclick="nextStep()" disabled>⏭</button>
+        <select class="speed-select" id="speedSelect">
+          <option value="2000">慢速</option>
+          <option value="1200" selected>正常</option>
+          <option value="600">快速</option>
+        </select>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<!-- 添加自定义数据结构对话框 -->
+<div id="addStructureModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;">
+  <div style="background:#1a1a4e;border-radius:14px;padding:24px;width:90%;max-width:440px;border:1px solid rgba(255,255,255,0.15);">
+    <h3 style="color:#fff;margin-bottom:16px;font-size:18px;">➕ 添加自定义数据结构</h3>
+    <div style="margin-bottom:12px;">
+      <label style="color:rgba(255,255,255,0.7);font-size:13px;display:block;margin-bottom:6px;">名称 *</label>
+      <input type="text" id="newStructName" placeholder="如：跳表、Trie树、并查集..." style="width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.08);color:#fff;font-size:14px;outline:none;">
+    </div>
+    <div style="margin-bottom:12px;">
+      <label style="color:rgba(255,255,255,0.7);font-size:13px;display:block;margin-bottom:6px;">描述（用于AI生成代码和可视化）</label>
+      <textarea id="newStructDesc" placeholder="描述该数据结构的特点、组成方式、关键操作等，描述越详细AI生成越准确" style="width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.08);color:#fff;font-size:13px;outline:none;min-height:80px;resize:vertical;"></textarea>
+    </div>
+    <div style="margin-bottom:16px;">
+      <label style="color:rgba(255,255,255,0.7);font-size:13px;display:block;margin-bottom:6px;">分类</label>
+      <input type="text" id="newStructCategory" value="自定义" placeholder="如：高级结构" style="width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.08);color:#fff;font-size:14px;outline:none;">
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button onclick="closeAddStructureDialog()" style="padding:9px 18px;border:none;border-radius:8px;background:rgba(255,255,255,0.1);color:#fff;cursor:pointer;font-size:14px;">取消</button>
+      <button id="addStructBtn" onclick="addCustomStructure()" style="padding:9px 18px;border:none;border-radius:8px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;cursor:pointer;font-size:14px;font-weight:600;">添加</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ==================== State ====================
+let state = {
+  currentStructure: null,
+  currentStructureName: '',
+  currentStructureIsCustom: false,
+  currentOperation: null,
+  userId: 'user_001',
+  nodes: [],
+  edges: [],
+  pointers: {},
+  selectedNodeId: null,
+  // 操作历史：每次操作生成一个entry，包含pseudocode+steps+操作前状态
+  operationHistory: [],
+  // 当前播放的全局步骤（合并所有操作的steps）
+  allSteps: [],
+  currentStepIndex: -1,
+  isPlaying: false,
+  playTimer: null,
+  // 拖拽相关
+  dragging: null,
+  dragOffset: { x: 0, y: 0 },
+  // 播放模式：是否处于步骤回放（此时画布显示重建的中间状态而非最终状态）
+  isPlayback: false,
+  // 当前步骤高亮的节点 ID 列表
+  highlightedNodes: [],
+  // 播放时的临时画布状态（由 state_before + node_changes 逐步重建）
+  playbackNodes: [],
+  playbackEdges: [],
+  playbackPointers: {},
+};
+
+// 监听父页面(unified.html)传来的userId
+window.addEventListener('message', function(e) {
+  if (e.data && e.data.type === 'setUserId' && e.data.userId) {
+    state.userId = e.data.userId;
+    loadStructures();
+  }
+  if (e.data && e.data.type === 'getUserId') {
+    e.source.postMessage({ type: 'setUserId', userId: state.userId }, '*');
+  }
+});
+
+// ==================== Init ====================
+window.addEventListener('DOMContentLoaded', () => {
+  loadStructures();
+  initCanvas();
+});
+
+async function loadStructures() {
+  try {
+    const res = await fetch(`/algorithm-lab/structures?user_id=${encodeURIComponent(state.userId)}`);
+    const data = await res.json();
+    if (data.success && data.data) {
+      renderStructureList(data.data);
+    } else {
+      renderStructureList(getBuiltinStructures());
+    }
+  } catch (e) {
+    renderStructureList(getBuiltinStructures());
+  }
+}
+
+function getBuiltinStructures() {
+  return [
+    { key: 'singly_linked_list', name: '单链表', category: '线性结构' },
+    { key: 'doubly_linked_list', name: '双向链表', category: '线性结构' },
+    { key: 'stack', name: '栈', category: '线性结构' },
+    { key: 'queue', name: '队列', category: '线性结构' },
+    { key: 'binary_search_tree', name: '二叉搜索树', category: '树形结构' },
+    { key: 'heap', name: '堆', category: '树形结构' },
+    { key: 'hash_table', name: '哈希表', category: '哈希结构' },
+  ];
+}
+
+function renderStructureList(structures) {
+  const list = document.getElementById('structureList');
+  list.innerHTML = '';
+  structures.forEach(s => {
+    const item = document.createElement('div');
+    item.className = 'structure-item';
+    item.dataset.key = s.key;
+    const customTag = s.is_custom ? ' <span class="cat" style="background:#f59e0b;">自定义</span>' : '';
+    item.innerHTML = `${s.name} <span class="cat">${s.category}</span>${customTag}`;
+    item.addEventListener('click', () => selectStructure(s.key, s.name, !!s.is_custom));
+    list.appendChild(item);
+  });
+}
+
+async function selectStructure(key, name, isCustom) {
+  state.currentStructure = key;
+  state.currentStructureName = name;
+  state.currentStructureIsCustom = !!isCustom;
+  state.selectedNodeId = null;
+  state.operationHistory = [];
+  state.allSteps = [];
+  state.currentStepIndex = -1;
+
+  document.querySelectorAll('.structure-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.key === key);
+  });
+
+  document.getElementById('canvasTitle').textContent = name + (isCustom ? ' (自定义)' : '');
+  document.getElementById('canvasSubtitle').textContent = isCustom ? 'AI生成初始状态中...' : '初始化数据结构...';
+  document.getElementById('canvasEmpty').style.display = 'none';
+  document.getElementById('canvasHint').style.display = 'block';
+
+  await loadOperations(key);
+
+  try {
+    const res = await fetch(`/algorithm-lab/initial-state?structure_key=${key}&count=5&user_id=${encodeURIComponent(state.userId)}`);
+    const data = await res.json();
+    if (data.success) {
+      state.nodes = data.data.nodes || [];
+      state.edges = data.data.edges || [];
+      state.pointers = data.data.pointers || {};
+      drawCanvas();
+      document.getElementById('canvasSubtitle').textContent = `${name} - ${state.nodes.length} 个节点`;
+    } else {
+      throw new Error(data.error || '加载失败');
+    }
+  } catch (e) {
+    initFallbackState(key);
+    drawCanvas();
+  }
+
+  updateToolbar();
+  resetCodePanel();
+  updateHistory();
+}
+
+async function loadOperations(structureKey) {
+  try {
+    const res = await fetch(`/algorithm-lab/operations?structure_key=${structureKey}&user_id=${encodeURIComponent(state.userId)}`);
+    const data = await res.json();
+    if (data.success && data.data) {
+      renderOperations(data.data);
+    } else {
+      renderOperations(getDefaultOperations());
+    }
+  } catch (e) {
+    renderOperations(getDefaultOperations());
+  }
+}
+
+function getDefaultOperations() {
+  return [
+    { key: 'insert', name: '插入', params: ['value'] },
+    { key: 'delete', name: '删除', params: ['value'] },
+    { key: 'traverse', name: '遍历', params: [] },
+  ];
+}
+
+function renderOperations(operations) {
+  const section = document.getElementById('operationSection');
+  const list = document.getElementById('operationList');
+  list.innerHTML = '';
+  state.currentOperations = operations; // 保存操作列表供按钮文字显示用
+
+  operations.forEach(op => {
+    const btn = document.createElement('button');
+    btn.className = 'operation-btn';
+    btn.textContent = op.name;
+    btn.dataset.key = op.key;
+    btn.dataset.params = JSON.stringify(op.params || []);
+    btn.addEventListener('click', () => {
+      state.currentOperation = op.key;
+      document.querySelectorAll('.operation-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const paramInput = document.getElementById('paramInput');
+      if (op.params && op.params.length > 0) {
+        paramInput.placeholder = `输入 ${op.params.join(', ')}...`;
+        paramInput.style.display = 'block';
+      } else {
+        paramInput.style.display = 'none';
+      }
+      updateToolbar();
+    });
+    list.appendChild(btn);
+  });
+
+  section.style.display = 'block';
+  document.getElementById('customOpSection').style.display = 'block';
+  // 参数输入框始终显示：既用于侧边栏指定操作，也用于工具栏"添加节点"输入插入值
+  const paramInput = document.getElementById('paramInput');
+  paramInput.style.display = 'block';
+  paramInput.placeholder = '输入数值（用于插入/删除/查找）...';
+}
+
+function initFallbackState(structureKey) {
+  const nodes = [];
+  const count = 5;
+
+  if (structureKey === 'singly_linked_list' || structureKey === 'doubly_linked_list') {
+    for (let i = 0; i < count; i++) {
+      nodes.push({
+        id: `node_${i}`,
+        value: Math.floor(Math.random() * 90) + 10,
+        position_x: 100 + i * 110,
+        position_y: 180,
+        next: i < count - 1 ? `node_${i+1}` : null
+      });
+    }
+    state.edges = nodes.slice(0, -1).map((n, i) => ({ from: n.id, to: nodes[i+1].id }));
+    state.pointers = { head: 'node_0' };
+  } else if (structureKey === 'stack') {
+    for (let i = 0; i < count; i++) {
+      nodes.push({
+        id: `node_${i}`,
+        value: Math.floor(Math.random() * 90) + 10,
+        position_x: 200,
+        position_y: 300 - i * 45
+      });
+    }
+    state.pointers = { top: `node_${count - 1}` };
+  } else if (structureKey === 'queue') {
+    for (let i = 0; i < count; i++) {
+      nodes.push({
+        id: `node_${i}`,
+        value: Math.floor(Math.random() * 90) + 10,
+        position_x: 80 + i * 100,
+        position_y: 180
+      });
+    }
+    state.pointers = { front: 'node_0', rear: `node_${count - 1}` };
+  } else if (structureKey === 'binary_search_tree') {
+    const sortedVals = [15, 35, 50, 70, 85];
+    buildBST(sortedVals, 0, 300, 80, nodes, []);
+    state.pointers = { root: nodes[0]?.id };
+  }
+
+  state.nodes = nodes;
+}
+
+function buildBST(arr, depth, x, y, nodes, edges) {
+  if (!arr.length) return;
+  const mid = Math.floor(arr.length / 2);
+  const val = arr[mid];
+  const id = `bst_${val}`;
+  const node = { id, value: val, position_x: x, position_y: y };
+  nodes.push(node);
+
+  const leftArr = arr.slice(0, mid);
+  const rightArr = arr.slice(mid + 1);
+
+  if (leftArr.length) {
+    const leftX = x - 80 / (depth + 1);
+    const leftY = y + 70;
+    const leftId = buildBST(leftArr, depth + 1, leftX, leftY, nodes, edges);
+    if (leftId) edges.push({ from: id, to: leftId });
+  }
+
+  if (rightArr.length) {
+    const rightX = x + 80 / (depth + 1);
+    const rightY = y + 70;
+    const rightId = buildBST(rightArr, depth + 1, rightX, rightY, nodes, edges);
+    if (rightId) edges.push({ from: id, to: rightId });
+  }
+
+  return id;
+}
+
+function updateToolbar() {
+  const hasStructure = !!state.currentStructure;
+  const hasOperation = !!state.currentOperation;
+  const btn = document.getElementById('executeBtn');
+  const btnText = document.getElementById('executeBtnText');
+  if (hasOperation) {
+    // 找到当前操作的中文名
+    const ops = state.currentOperations || [];
+    const op = ops.find(o => o.key === state.currentOperation);
+    btnText.textContent = op ? op.name : state.currentOperation;
+  } else if (hasStructure) {
+    btnText.textContent = '请选择操作';
+  } else {
+    btnText.textContent = '请选择数据结构';
+  }
+  btn.disabled = !hasStructure || !hasOperation;
+  // 栈/队列只能从特定位置删除（栈顶/队首），不允许任意位置删除
+  const noArbitraryDelete = ['stack', 'queue'].includes(state.currentStructure);
+  document.getElementById('removeNodeBtn').disabled = !state.selectedNodeId || noArbitraryDelete;
+}
+
+function resetCodePanel() {
+  document.getElementById('codeTab').innerHTML = 
+    '<div style="color:rgba(255,255,255,0.3); text-align:center; padding:40px 0;">// 选择操作并执行后，此处将显示代码</div>';
+  document.getElementById('codeSteps').textContent = '步骤: 0 / 0';
+  document.getElementById('stepDescription').innerHTML = 
+    '<div style="color:rgba(255,255,255,0.5);">执行操作后，此处将显示步骤描述</div>';
+  document.getElementById('playAllBtn').disabled = true;
+  document.getElementById('prevStepBtn').disabled = true;
+  document.getElementById('nextStepBtn').disabled = true;
+}
+
+// ==================== Canvas + Drag ====================
+let canvas, ctx;
+
+function initCanvas() {
+  canvas = document.getElementById('mainCanvas');
+  ctx = canvas.getContext('2d');
+  
+  resizeCanvas();
+  window.addEventListener('resize', () => {
+    resizeCanvas();
+    drawCanvas();
+  });
+
+  canvas.addEventListener('mousedown', handleMouseDown);
+  canvas.addEventListener('mousemove', handleMouseMove);
+  canvas.addEventListener('mouseup', handleMouseUp);
+  canvas.addEventListener('mouseleave', handleMouseUp);
+}
+
+function resizeCanvas() {
+  const wrapper = canvas.parentElement;
+  canvas.width = wrapper.clientWidth;
+  canvas.height = wrapper.clientHeight;
+}
+
+function drawCanvas() {
+  if (!ctx || !canvas) return;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  drawGrid();
+
+  // 播放模式下使用重建的中间状态，否则使用最终状态
+  const nodes = state.isPlayback ? state.playbackNodes : state.nodes;
+  const edges = state.isPlayback ? state.playbackEdges : state.edges;
+  const pointers = state.isPlayback ? state.playbackPointers : state.pointers;
+
+  if (nodes.length === 0) return;
+  drawEdges(edges, nodes);
+  nodes.forEach(node => drawNode(node));
+  drawPointers(pointers, nodes);
+  if (!state.isPlayback && state.selectedNodeId) {
+    const node = nodes.find(n => n.id === state.selectedNodeId);
+    if (node) drawSelectionRing(node);
+  }
+}
+
+function drawGrid() {
+  ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+  ctx.lineWidth = 1;
+  const gridSize = 30;
+  for (let x = 0; x < canvas.width; x += gridSize) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, canvas.height);
+    ctx.stroke();
+  }
+  for (let y = 0; y < canvas.height; y += gridSize) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(canvas.width, y);
+    ctx.stroke();
+  }
+}
+
+function drawEdges(edges, nodes) {
+  edges.forEach(edge => {
+    const fromNode = nodes.find(n => n.id === edge.from);
+    const toNode = nodes.find(n => n.id === edge.to);
+    if (!fromNode || !toNode) return;
+
+    const fx = fromNode.position_x;
+    const fy = fromNode.position_y;
+    const tx = toNode.position_x;
+    const ty = toNode.position_y;
+
+    // 播放时高亮当前步骤涉及的边
+    const isHighlighted = state.isPlayback &&
+      (state.highlightedNodes.includes(edge.from) || state.highlightedNodes.includes(edge.to));
+    ctx.strokeStyle = isHighlighted ? 'rgba(240,147,251,0.9)' : 'rgba(255,255,255,0.4)';
+    ctx.lineWidth = isHighlighted ? 3 : 2;
+    ctx.beginPath();
+    ctx.moveTo(fx, fy);
+    ctx.lineTo(tx, ty);
+    ctx.stroke();
+
+    const angle = Math.atan2(ty - fy, tx - fx);
+    const arrowSize = 8;
+    ctx.fillStyle = isHighlighted ? 'rgba(240,147,251,0.9)' : 'rgba(255,255,255,0.4)';
+    ctx.beginPath();
+    ctx.moveTo(tx, ty);
+    ctx.lineTo(tx - arrowSize * Math.cos(angle - 0.4), ty - arrowSize * Math.sin(angle - 0.4));
+    ctx.lineTo(tx - arrowSize * Math.cos(angle + 0.4), ty - arrowSize * Math.sin(angle + 0.4));
+    ctx.closePath();
+    ctx.fill();
+  });
+}
+
+function drawNode(node) {
+  const x = node.position_x;
+  const y = node.position_y;
+  const radius = 24;
+  const isHighlighted = state.isPlayback && state.highlightedNodes.includes(node.id);
+
+  // 外发光：高亮时更强烈 + 颜色变化
+  const glowColor = isHighlighted ? 'rgba(240,147,251,0.6)' : 'rgba(102,126,234,0.4)';
+  const gradient = ctx.createRadialGradient(x, y, radius * 0.5, x, y, radius * (isHighlighted ? 2.5 : 2));
+  gradient.addColorStop(0, glowColor);
+  gradient.addColorStop(1, isHighlighted ? 'rgba(240,147,251,0)' : 'rgba(102,126,234,0)');
+  ctx.fillStyle = gradient;
+  ctx.beginPath();
+  ctx.arc(x, y, radius * (isHighlighted ? 2.5 : 2), 0, Math.PI * 2);
+  ctx.fill();
+
+  // 节点主体：高亮时用粉紫色，否则用蓝紫色
+  const nodeGradient = ctx.createLinearGradient(x - radius, y - radius, x + radius, y + radius);
+  if (isHighlighted) {
+    nodeGradient.addColorStop(0, '#f093fb');
+    nodeGradient.addColorStop(1, '#f5576c');
+  } else {
+    nodeGradient.addColorStop(0, '#667eea');
+    nodeGradient.addColorStop(1, '#764ba2');
+  }
+  ctx.fillStyle = nodeGradient;
+  ctx.beginPath();
+  ctx.arc(x, y, radius, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 边框：高亮时更亮更粗
+  ctx.strokeStyle = isHighlighted ? 'rgba(255,255,255,1)' : 'rgba(255,255,255,0.6)';
+  ctx.lineWidth = isHighlighted ? 3 : 2;
+  ctx.stroke();
+
+  // 高亮时加脉冲圈
+  if (isHighlighted) {
+    const pulse = Math.sin(Date.now() / 200) * 4 + 32;
+    ctx.strokeStyle = 'rgba(240,147,251,0.5)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(x, y, pulse, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 14px ' + getComputedStyle(document.body).fontFamily;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(String(node.value), x, y);
+
+  ctx.fillStyle = 'rgba(255,255,255,0.4)';
+  ctx.font = '10px monospace';
+  ctx.fillText(node.id, x, y + radius + 14);
+}
+
+function drawPointers(pointers, nodes) {
+  if (!pointers) return;
+  Object.entries(pointers).forEach(([pointerName, targetId]) => {
+    const node = nodes.find(n => n.id === targetId);
+    if (!node) return;
+
+    const x = node.position_x;
+    const y = node.position_y - 38;
+
+    ctx.fillStyle = 'rgba(240,147,251,0.9)';
+    ctx.font = 'bold 10px monospace';
+    const textWidth = ctx.measureText(pointerName).width;
+    const labelW = textWidth + 12;
+    const labelH = 20;
+    ctx.beginPath();
+    ctx.roundRect(x - labelW / 2, y - labelH / 2, labelW, labelH, 6);
+    ctx.fill();
+
+    ctx.fillStyle = '#fff';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(pointerName, x, y);
+
+    ctx.strokeStyle = 'rgba(240,147,251,0.6)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(x, y + labelH / 2);
+    ctx.lineTo(x, node.position_y - 24);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  });
+}
+
+function drawSelectionRing(node) {
+  ctx.strokeStyle = '#f093fb';
+  ctx.lineWidth = 3;
+  ctx.setLineDash([6, 4]);
+  ctx.beginPath();
+  ctx.arc(node.position_x, node.position_y, 30, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+// ── Drag handling ──
+// 将鼠标客户端坐标换算为 canvas 内部坐标系（兼容 CSS 尺寸 ≠ 属性尺寸的情况）
+function getCanvasPos(e) {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / Math.max(1, rect.width);
+  const scaleY = canvas.height / Math.max(1, rect.height);
+  return {
+    x: (e.clientX - rect.left) * scaleX,
+    y: (e.clientY - rect.top) * scaleY,
+  };
+}
+
+function handleMouseDown(e) {
+  const { x, y } = getCanvasPos(e);
+
+  const node = state.nodes.find(n => {
+    const dx = x - n.position_x;
+    const dy = y - n.position_y;
+    return dx * dx + dy * dy < 30 * 30;
+  });
+
+  if (node) {
+    state.dragging = node.id;
+    state.dragOffset.x = x - node.position_x;
+    state.dragOffset.y = y - node.position_y;
+    state.selectedNodeId = node.id;
+    canvas.classList.add('dragging');
+    updateToolbar();
+  } else {
+    state.selectedNodeId = null;
+    updateToolbar();
+  }
+  drawCanvas();
+}
+
+function handleMouseMove(e) {
+  if (!state.dragging) return;
+  const { x, y } = getCanvasPos(e);
+
+  const node = state.nodes.find(n => n.id === state.dragging);
+  if (node) {
+    node.position_x = Math.max(30, Math.min(canvas.width - 30, x - state.dragOffset.x));
+    node.position_y = Math.max(30, Math.min(canvas.height - 30, y - state.dragOffset.y));
+    drawCanvas();
+  }
+}
+
+function handleMouseUp(e) {
+  if (state.dragging) {
+    state.dragging = null;
+    canvas.classList.remove('dragging');
+  }
+}
+
+// ==================== Operations ====================
+
+// 判断操作类型
+function isInsertOp(op) {
+  if (!op) return false;
+  return op.includes('insert') || op === 'push' || op === 'enqueue';
+}
+function isDeleteOp(op) {
+  if (!op) return false;
+  return op.includes('delete') || op === 'pop' || op === 'dequeue' || op === 'delete_max';
+}
+
+// 根据数据结构类型获取默认的插入/删除操作 key
+function getDefaultOperation(action) {
+  const map = {
+    'singly_linked_list': { insert: 'insert_at_tail', delete: 'delete_by_value' },
+    'doubly_linked_list': { insert: 'insert_at_tail', delete: 'delete_at_tail' },
+    'circular_linked_list': { insert: 'insert_at_tail', delete: 'delete_by_value' },
+    'stack': { insert: 'push', delete: 'pop' },
+    'queue': { insert: 'enqueue', delete: 'dequeue' },
+    'binary_search_tree': { insert: 'insert', delete: 'delete' },
+    'avl_tree': { insert: 'insert', delete: 'delete' },
+    'red_black_tree': { insert: 'insert', delete: 'delete' },
+    'heap': { insert: 'insert', delete: 'delete_max' },
+    'hash_table': { insert: 'insert', delete: 'delete' },
+  };
+  const ops = map[state.currentStructure];
+  if (ops && ops[action]) return ops[action];
+  return action === 'insert' ? 'insert' : 'delete';
+}
+
+// 统一调用后端执行操作 + 应用返回的 final_state + 显示代码
+// 后端内置结构走快速路径（毫秒级，不调 LLM），返回状态感知的 final_state
+async function callBackendOperation(opType, params) {
+  showLoading(true);
+  try {
+    const reqBody = {
+      structure_key: state.currentStructure,
+      operation_type: opType,
+      params: params,
+      current_state: { nodes: state.nodes, edges: state.edges, pointers: state.pointers }
+    };
+    console.log('[callBackendOperation] SEND:', opType, 'pointers=', JSON.stringify(state.pointers), 'nodes=', state.nodes.map(n => n.id + '(y=' + n.position_y + ')'));
+    const res = await fetch('/algorithm-lab/execute', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(reqBody)
+    });
+    const data = await res.json();
+    showLoading(false);
+    if (data.success) {
+      console.log('[callBackendOperation] RECV:', opType, 'final_pointers=', JSON.stringify(data.data.final_state?.pointers), 'final_nodes=', data.data.final_state?.nodes?.map(n => n.id + '(y=' + n.position_y + ')'));
+      addOperationToHistory(data.data, params);
+      console.log('[callBackendOperation] AFTER APPLY:', 'state.pointers=', JSON.stringify(state.pointers), 'state.nodes=', state.nodes.map(n => n.id + '(y=' + n.position_y + ')'));
+      return true;
+    }
+    showToast(data.error || data.detail || '执行失败', 'error');
+    return false;
+  } catch (e) {
+    showLoading(false);
+    showToast('执行失败: ' + e.message, 'error');
+    return false;
+  }
+}
+
+// 统一执行：左侧选了什么操作就执行什么，按钮文字也跟着变
+async function executeSelectedOperation() {
+  if (!state.currentStructure || !state.currentOperation) {
+    showToast('请先选择数据结构和操作', 'error');
+    return;
+  }
+  const paramInput = document.getElementById('paramInput');
+  const params = {};
+  // 需要参数的操作才读取输入框
+  const op = (state.currentOperations || []).find(o => o.key === state.currentOperation);
+  if (op && op.params && op.params.length > 0) {
+    const raw = paramInput.value.trim();
+    params.value = raw ? parseInt(raw) : Math.floor(Math.random() * 90) + 10;
+    if (isNaN(params.value)) { showToast('请输入有效的数字', 'error'); return; }
+  }
+
+  const ok = await callBackendOperation(state.currentOperation, params);
+  if (ok) {
+    showToast('操作执行成功！代码已生成', 'success');
+    if (paramInput.value.trim()) paramInput.value = '';
+  }
+}
+
+// 删除节点：选中节点 -> 调后端（快速路径）-> 右侧立即显示代码
+async function removeNode() {
+  if (!state.selectedNodeId) { showToast('请先选中要删除的节点', 'error'); return; }
+  const node = state.nodes.find(n => n.id === state.selectedNodeId);
+  if (!node) return;
+
+  // 优先使用左侧选中的删除操作，否则用默认删除
+  const op = (state.currentOperation && isDeleteOp(state.currentOperation))
+    ? state.currentOperation
+    : getDefaultOperation('delete');
+  // 传 node_id 让后端精确定位（避免按 value 匹配删错节点）
+  const ok = await callBackendOperation(op, { value: node.value, node_id: node.id });
+  if (ok) {
+    state.selectedNodeId = null;
+    updateToolbar();
+    showToast(`已删除节点 ${node.value}`, 'success');
+  }
+}
+
+// ==================== 自定义数据结构管理 ====================
+function showAddStructureDialog() {
+  document.getElementById('addStructureModal').style.display = 'flex';
+  document.getElementById('newStructName').value = '';
+  document.getElementById('newStructDesc').value = '';
+  document.getElementById('newStructCategory').value = '自定义';
+}
+
+function closeAddStructureDialog() {
+  document.getElementById('addStructureModal').style.display = 'none';
+}
+
+async function addCustomStructure() {
+  const name = document.getElementById('newStructName').value.trim();
+  const desc = document.getElementById('newStructDesc').value.trim();
+  const category = document.getElementById('newStructCategory').value.trim() || '自定义';
+
+  if (!name) {
+    showToast('请输入数据结构名称', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('addStructBtn');
+  btn.disabled = true;
+  btn.textContent = '添加中...';
+
+  try {
+    const res = await fetch('/algorithm-lab/custom-structures', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id: state.userId,
+        name: name,
+        description: desc,
+        category: category
+      })
+    });
+    const data = await res.json();
+    btn.disabled = false;
+    btn.textContent = '添加';
+
+    if (data.success) {
+      showToast(`数据结构「${name}」添加成功`, 'success');
+      closeAddStructureDialog();
+      await loadStructures();
+    } else {
+      showToast(data.detail || data.message || '添加失败', 'error');
+    }
+  } catch (e) {
+    btn.disabled = false;
+    btn.textContent = '添加';
+    showToast('添加失败: ' + e.message, 'error');
+  }
+}
+
+async function deleteCustomStructure(key, name) {
+  if (!confirm(`确定删除自定义数据结构「${name}」？`)) return;
+  try {
+    const res = await fetch(`/algorithm-lab/custom-structures?user_id=${encodeURIComponent(state.userId)}&key=${encodeURIComponent(key)}`, {
+      method: 'DELETE'
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('删除成功', 'success');
+      await loadStructures();
+    } else {
+      showToast(data.detail || '删除失败', 'error');
+    }
+  } catch (e) {
+    showToast('删除失败: ' + e.message, 'error');
+  }
+}
+
+async function executeCustomOperation() {
+  if (!state.currentStructure) {
+    showToast('请先选择数据结构', 'error');
+    return;
+  }
+
+  const desc = document.getElementById('customOpInput').value.trim();
+  if (!desc) {
+    showToast('请描述要执行的操作', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('customOpBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ AI生成中...';
+  showLoading(true);
+  showToast('AI正在生成代码...', 'info');
+
+  try {
+    const res = await fetch('/algorithm-lab/execute-custom', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        structure_key: state.currentStructure,
+        operation_description: desc,
+        params: {},
+        current_state: {
+          nodes: state.nodes,
+          edges: state.edges,
+          pointers: state.pointers
+        },
+        user_id: state.userId
+      })
+    });
+
+    const data = await res.json();
+    showLoading(false);
+    btn.disabled = false;
+    btn.textContent = '✨ AI生成并执行';
+
+    if (data.success) {
+      // 自定义操作：不传 localApplyFn，由 addOperationToHistory 用后端 final_state（带位置校验）
+      addOperationToHistory(data.data, {}, desc);
+      showToast('AI生成成功！代码已添加', 'success');
+      document.getElementById('customOpInput').value = '';
+    } else {
+      showToast(data.error || '生成失败', 'error');
+    }
+  } catch (e) {
+    showLoading(false);
+    btn.disabled = false;
+    btn.textContent = '✨ AI生成并执行';
+    showToast('生成失败: ' + e.message, 'error');
+  }
+}
+
+// ==================== Operation History ====================
+// 后端现在返回状态感知的 final_state（真实节点 ID + 坐标），直接应用即可
+function addOperationToHistory(result, params, customDesc) {
+  const steps = result.steps || [];
+  const opName = customDesc || result.pseudocode?.title || result.operation_type || '操作';
+
+  // 为每个step附加全局信息
+  const baseStepId = state.allSteps.length;
+  steps.forEach((s, i) => {
+    s.global_step_id = baseStepId + i + 1;
+    s.operation_name = opName;
+  });
+
+  const historyEntry = {
+    id: state.operationHistory.length + 1,
+    name: opName,
+    params: params,
+    pseudocode: result.pseudocode,
+    steps: steps,
+    step_range: [baseStepId, baseStepId + Math.max(0, steps.length - 1)],
+    state_before: {
+      nodes: JSON.parse(JSON.stringify(state.nodes)),
+      edges: JSON.parse(JSON.stringify(state.edges)),
+      pointers: JSON.parse(JSON.stringify(state.pointers))
+    },
+  };
+
+  state.operationHistory.push(historyEntry);
+  state.allSteps = state.allSteps.concat(steps);
+
+  // 直接应用后端返回的 final_state（后端已状态感知，含真实节点 ID 和坐标）
+  if (result.final_state) {
+    const fs = result.final_state;
+    if (Array.isArray(fs.nodes)) {
+      const W = canvas ? canvas.width : 800;
+      const H = canvas ? canvas.height : 400;
+      const margin = 50;
+      const usableW = W - 2 * margin;
+      const usableH = H - 2 * margin;
+
+      if (fs.nodes.length > 0) {
+        const xs = fs.nodes.map(n => n.position_x || 100);
+        const ys = fs.nodes.map(n => n.position_y || 180);
+        let minX = Math.min(...xs), maxX = Math.max(...xs);
+        let minY = Math.min(...ys), maxY = Math.max(...ys);
+        let spanX = maxX - minX;
+        let spanY = maxY - minY;
+
+        // 如果跨度超出可用范围，压缩间距（保持节点间相对比例）
+        let scale = 1;
+        if (spanX > usableW && spanX > 0) scale = Math.min(scale, usableW / spanX);
+        if (spanY > usableH && spanY > 0) scale = Math.min(scale, usableH / spanY);
+
+        // 压缩后平移到画布内
+        if (scale < 1) {
+          fs.nodes.forEach(n => {
+            n.position_x = minX + (n.position_x - minX) * scale;
+            n.position_y = minY + (n.position_y - minY) * scale;
+          });
+          maxX = minX + spanX * scale;
+          maxY = minY + spanY * scale;
+        }
+
+        // 平移使整体居中在可用区域内
+        const dx = margin + (usableW - (maxX - minX)) / 2 - minX;
+        const dy = margin + (usableH - (maxY - minY)) / 2 - minY;
+        state.nodes = fs.nodes.map(n => ({
+          ...n,
+          position_x: (n.position_x || 100) + dx,
+          position_y: (n.position_y || 180) + dy,
+        }));
+      } else {
+        state.nodes = [];
+      }
+    }
+    if (Array.isArray(fs.edges)) state.edges = fs.edges;
+    if (fs.pointers) state.pointers = fs.pointers;
+  }
+
+  renderPseudocode(result.pseudocode);
+  // 新操作执行后，退出播放模式，显示最终状态
+  exitPlayback();
+  drawCanvas();
+  updateHistory();
+  updateStepControls();
+}
+
+function updateHistory() {
+  const list = document.getElementById('historyTab');
+  document.getElementById('historyCount').textContent = state.operationHistory.length;
+
+  if (state.operationHistory.length === 0) {
+    list.innerHTML = '<div class="history-empty">暂无操作历史</div>';
+    return;
+  }
+
+  list.innerHTML = '';
+  state.operationHistory.forEach((op, idx) => {
+    const item = document.createElement('div');
+    item.className = 'history-item';
+    const isCurrent = state.currentStepIndex >= op.step_range[0] && state.currentStepIndex <= op.step_range[1];
+    if (isCurrent) item.classList.add('current');
+
+    item.innerHTML = `
+      <div class="step-num">${idx + 1}</div>
+      <div style="flex:1;">
+        <div style="color:#fff; font-size:12px;">${op.name}</div>
+        <div style="color:rgba(255,255,255,0.4); font-size:11px;">步骤 ${op.step_range[0]+1}-${op.step_range[1]+1}</div>
+      </div>
+    `;
+    item.addEventListener('click', () => {
+      state.currentStepIndex = op.step_range[0] - 1;
+      switchTab('code');
+      nextStep();
+    });
+    list.appendChild(item);
+  });
+}
+
+// ==================== Pseudocode & Steps ====================
+function renderPseudocode(pseudocode) {
+  if (!pseudocode) return;
+  const codeContent = document.getElementById('codeTab');
+  const lines = pseudocode.code_lines || [];
+
+  codeContent.innerHTML = lines.map(line => {
+    const classes = ['code-line'];
+    if (line.is_method) classes.push('method-def');
+    if (line.code.trim().startsWith('#')) classes.push('comment');
+    return `<div class="${classes.join(' ')}" data-line="${line.line}">
+      <span class="line-num">${line.line}</span>
+      <span class="line-code">${escapeHtml(line.code) || '&nbsp;'}</span>
+    </div>`;
+  }).join('');
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function updateStepControls() {
+  const total = state.allSteps.length;
+  document.getElementById('codeSteps').textContent = `步骤: 0 / ${total}`;
+  document.getElementById('playAllBtn').disabled = total === 0;
+  document.getElementById('prevStepBtn').disabled = true;
+  document.getElementById('nextStepBtn').disabled = total === 0;
+}
+
+function highlightLine(lineNum) {
+  document.querySelectorAll('.code-line').forEach(el => {
+    el.classList.toggle('highlight', parseInt(el.dataset.line) === lineNum);
+  });
+}
+
+function nextStep() {
+  if (state.currentStepIndex >= state.allSteps.length - 1) {
+    stopPlay();
+    return;
+  }
+  state.currentStepIndex++;
+  updateStepUI();
+}
+
+function prevStep() {
+  if (state.currentStepIndex <= 0) {
+    // 回到起点，退出播放模式
+    state.currentStepIndex = -1;
+    exitPlayback();
+    // 重置代码高亮和描述
+    document.getElementById('stepDescription').innerHTML = '<div style="color:rgba(255,255,255,0.4)">点击 ▶ 从头播放 或 → 单步执行</div>';
+    document.getElementById('codeSteps').textContent = `步骤: 0 / ${state.allSteps.length}`;
+    document.getElementById('prevStepBtn').disabled = true;
+    document.getElementById('nextStepBtn').disabled = state.allSteps.length === 0;
+    highlightLine(-1);
+    return;
+  }
+  state.currentStepIndex--;
+  updateStepUI();
+}
+
+function updateStepUI() {
+  const step = state.allSteps[state.currentStepIndex];
+  if (!step) return;
+
+  // 找到该step属于哪个操作
+  const op = state.operationHistory.find(o =>
+    state.currentStepIndex >= o.step_range[0] && state.currentStepIndex <= o.step_range[1]
+  );
+  if (op && op.pseudocode) {
+    renderPseudocode(op.pseudocode);
+  }
+
+  highlightLine(step.code_line);
+
+  document.getElementById('stepDescription').innerHTML = `
+    <div class="step-dot">${step.global_step_id}</div>
+    <div><strong>${step.operation_name}</strong><br>${step.description || step.message}</div>
+  `;
+
+  const total = state.allSteps.length;
+  document.getElementById('codeSteps').textContent = `步骤: ${state.currentStepIndex + 1} / ${total}`;
+  document.getElementById('prevStepBtn').disabled = state.currentStepIndex <= 0;
+  document.getElementById('nextStepBtn').disabled = state.currentStepIndex >= total - 1;
+
+  updateHistory();
+
+  const el = document.querySelector(`.code-line[data-line="${step.code_line}"]`);
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  // ── 核心：重建播放状态，让画布动态展示当前步骤的中间状态 ──
+  buildPlaybackState(state.currentStepIndex);
+}
+
+// 从操作前的状态开始，逐步应用 node_changes/pointer_changes，重建到指定步骤的画布状态
+function buildPlaybackState(stepIndex) {
+  const step = state.allSteps[stepIndex];
+  if (!step) { exitPlayback(); return; }
+
+  // 找到该步骤所属的操作
+  const op = state.operationHistory.find(o =>
+    stepIndex >= o.step_range[0] && stepIndex <= o.step_range[1]
+  );
+  if (!op || !op.state_before) { exitPlayback(); return; }
+
+  // 深拷贝操作前的状态作为起点
+  let nodes = JSON.parse(JSON.stringify(op.state_before.nodes || []));
+  let edges = JSON.parse(JSON.stringify(op.state_before.edges || []));
+  let pointers = JSON.parse(JSON.stringify(op.state_before.pointers || {}));
+
+  // 从操作的第一个步骤到当前步骤，逐步应用变更
+  const startStep = op.step_range[0];
+  for (let i = startStep; i <= stepIndex; i++) {
+    const s = state.allSteps[i];
+    if (!s) continue;
+
+    // 应用 node_changes
+    if (s.node_changes) {
+      for (const change of s.node_changes) {
+        nodes = applyNodeChange(nodes, edges, change);
+      }
+    }
+    // 应用 pointer_changes
+    if (s.pointer_changes) {
+      for (const pc of s.pointer_changes) {
+        // pointer_changes 格式: {pointer: "head", target: "node_xxx"}
+        // target 为 null 时表示删除指针
+        if (pc.target === null || pc.target === undefined) {
+          delete pointers[pc.pointer];
+        } else {
+          pointers[pc.pointer] = pc.target;
+        }
+      }
+    }
+  }
+
+  // 设置播放状态
+  state.isPlayback = true;
+  state.playbackNodes = nodes;
+  state.playbackEdges = edges;
+  state.playbackPointers = pointers;
+  state.highlightedNodes = step.highlight_nodes || [];
+
+  drawCanvas();
+
+  // 高亮节点有脉冲动画，需要持续重绘
+  if (state.highlightedNodes.length > 0 && state.isPlaying) {
+    if (state._pulseAnim) cancelAnimationFrame(state._pulseAnim);
+    const animate = () => {
+      if (!state.isPlayback || !state.isPlaying) return;
+      drawCanvas();
+      state._pulseAnim = requestAnimationFrame(animate);
+    };
+    state._pulseAnim = requestAnimationFrame(animate);
+  }
+}
+
+// 应用单个 node_change 到 nodes/edges（返回新的 nodes 数组）
+function applyNodeChange(nodes, edges, change) {
+  const action = change.action;
+  if (action === 'create') {
+    // 创建新节点（如果已存在同 id 则跳过）
+    if (!nodes.find(n => n.id === change.node_id)) {
+      // 从最终状态 state.nodes 中查找该节点的位置信息
+      const finalNode = state.nodes.find(n => n.id === change.node_id);
+      const newNode = {
+        id: change.node_id,
+        value: change.value !== undefined ? change.value : (finalNode ? finalNode.value : '?'),
+        position_x: finalNode ? finalNode.position_x : (change.position_x !== undefined ? change.position_x : 200 + Math.random() * 100),
+        position_y: finalNode ? finalNode.position_y : (change.position_y !== undefined ? change.position_y : 180),
+        // 保留 final_state 中的额外字段（如 bucket 等）
+        ...(finalNode ? Object.fromEntries(Object.entries(finalNode).filter(([k]) =>
+          !['id', 'value', 'position_x', 'position_y'].includes(k))) : {}),
+      };
+      nodes.push(newNode);
+    }
+  } else if (action === 'delete') {
+    const idx = nodes.findIndex(n => n.id === change.node_id);
+    if (idx >= 0) nodes.splice(idx, 1);
+    // 同时删除相关边
+    for (let i = edges.length - 1; i >= 0; i--) {
+      if (edges[i].from === change.node_id || edges[i].to === change.node_id) {
+        edges.splice(i, 1);
+      }
+    }
+  } else if (action === 'link') {
+    // 添加边
+    if (!edges.find(e => e.from === change.from && e.to === change.to && e.type === change.type)) {
+      edges.push({ from: change.from, to: change.to, type: change.type || 'next' });
+    }
+  } else if (action === 'unlink') {
+    // 删除边
+    for (let i = edges.length - 1; i >= 0; i--) {
+      if (edges[i].from === change.from && edges[i].to === change.to) {
+        edges.splice(i, 1);
+      }
+    }
+  } else if (action === 'update') {
+    // 更新节点值
+    const node = nodes.find(n => n.id === change.node_id);
+    if (node && change.value !== undefined) {
+      node.value = change.value;
+    }
+  }
+  return nodes;
+}
+
+// 退出播放模式，恢复到最终状态
+function exitPlayback() {
+  state.isPlayback = false;
+  state.highlightedNodes = [];
+  state.playbackNodes = [];
+  state.playbackEdges = [];
+  state.playbackPointers = {};
+  if (state._pulseAnim) {
+    cancelAnimationFrame(state._pulseAnim);
+    state._pulseAnim = null;
+  }
+  drawCanvas();
+}
+
+// ── Play all from start ──
+function playAll() {
+  if (state.isPlaying) {
+    stopPlay();
+    return;
+  }
+
+  if (state.allSteps.length === 0) {
+    showToast('暂无可播放的步骤', 'error');
+    return;
+  }
+
+  state.isPlaying = true;
+  document.getElementById('playAllBtn').textContent = '⏸ 暂停';
+  state.currentStepIndex = -1;
+  playNext();
+}
+
+function playNext() {
+  if (!state.isPlaying) return;
+
+  if (state.currentStepIndex < state.allSteps.length - 1) {
+    nextStep();
+    const speed = parseInt(document.getElementById('speedSelect').value);
+    state.playTimer = setTimeout(playNext, speed);
+  } else {
+    stopPlay();
+    showToast('播放完成', 'success');
+  }
+}
+
+function stopPlay() {
+  state.isPlaying = false;
+  document.getElementById('playAllBtn').textContent = '▶ 从头播放';
+  if (state.playTimer) {
+    clearTimeout(state.playTimer);
+    state.playTimer = null;
+  }
+  // 播放结束，退出播放模式，恢复最终状态
+  exitPlayback();
+}
+
+// ==================== Tabs ====================
+function switchTab(tab) {
+  document.querySelectorAll('.code-tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('codeTab').style.display = tab === 'code' ? 'block' : 'none';
+  document.getElementById('historyTab').style.display = tab === 'history' ? 'block' : 'none';
+}
+
+// ==================== Utils ====================
+function clearHistory() {
+  state.operationHistory = [];
+  state.allSteps = [];
+  state.currentStepIndex = -1;
+  stopPlay();
+  exitPlayback();
+  resetCodePanel();
+  updateHistory();
+  updateStepControls();
+  showToast('操作历史已清空', 'info');
+}
+
+function resetCanvas() {
+  state.nodes = [];
+  state.edges = [];
+  state.pointers = {};
+  state.selectedNodeId = null;
+  state.operationHistory = [];
+  state.allSteps = [];
+  state.currentStepIndex = -1;
+
+  if (state.currentStructure) {
+    initFallbackState(state.currentStructure);
+    drawCanvas();
+  } else {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+
+  resetCodePanel();
+  updateToolbar();
+  updateHistory();
+  showToast('画布已重置', 'info');
+}
+
+function showLoading(show) {
+  const bar = document.getElementById('loadingBar');
+  bar.style.display = show ? 'block' : 'none';
+  bar.classList.toggle('active', show);
+}
+
+function showToast(msg, type = 'info') {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.className = `toast show ${type}`;
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+// Polyfill for roundRect
+if (!CanvasRenderingContext2D.prototype.roundRect) {
+  CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+    this.beginPath();
+    this.moveTo(x + r, y);
+    this.arcTo(x + w, y, x + w, y + h, r);
+    this.arcTo(x + w, y + h, x, y + h, r);
+    this.arcTo(x, y + h, x, y, r);
+    this.arcTo(x, y, x + w, y, r);
+    this.closePath();
+    return this;
+  };
+}
+</script>
+</body>
+</html>

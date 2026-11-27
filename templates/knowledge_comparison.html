@@ -1,0 +1,1777 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>知识点智能对比</title>
+<style>
+:root {
+  --primary: #667eea;
+  --primary-dark: #5a6fd6;
+  --secondary: #764ba2;
+  --accent: #f093fb;
+  --bg-dark: #0f0c29;
+  --bg-mid: #1a1a4e;
+  --glass-bg: rgba(255,255,255,0.12);
+  --glass-border: rgba(255,255,255,0.18);
+  --shadow: 0 8px 32px rgba(0,0,0,0.25);
+  --radius: 14px;
+  --color-a: #4caf50;
+  --color-b: #ff9800;
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: var(--font);
+  background: linear-gradient(135deg, var(--bg-dark) 0%, #302b63 50%, #24243e 100%);
+  color: #333;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  width: 400px; height: 400px;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.15;
+  z-index: 0;
+  pointer-events: none;
+  animation: floatBg 20s ease-in-out infinite;
+  background: var(--primary);
+  top: -100px; left: -100px;
+}
+
+@keyframes floatBg {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(40px, 60px) scale(1.1); }
+}
+
+.container {
+  position: relative;
+  z-index: 10;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 20px;
+}
+
+/* Header */
+.header {
+  text-align: center;
+  margin-bottom: 24px;
+  color: #fff;
+}
+
+.header h1 {
+  font-size: 28px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #fff, var(--accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.header p {
+  font-size: 14px;
+  opacity: 0.7;
+  margin-top: 6px;
+}
+
+/* User ID bar */
+.user-bar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.user-bar label {
+  color: rgba(255,255,255,0.6);
+  font-size: 13px;
+}
+
+.user-bar input {
+  padding: 6px 12px;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.1);
+  border-radius: 8px;
+  color: #fff;
+  font-size: 13px;
+  width: 160px;
+  outline: none;
+}
+
+.user-bar input:focus {
+  border-color: var(--primary);
+}
+
+/* View toggle */
+.view-toggle {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.view-toggle button {
+  padding: 10px 24px;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.7);
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s;
+  backdrop-filter: blur(12px);
+}
+
+.view-toggle button:hover {
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+}
+
+.view-toggle button.active {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 4px 16px rgba(102,126,234,0.3);
+}
+
+/* Main panels */
+.panel {
+  display: none;
+  animation: fadeIn 0.4s ease;
+}
+
+.panel.active { display: block; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Knowledge Select Panel ── */
+.knowledge-selector {
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 20px;
+  padding: 28px;
+}
+
+.selector-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.selector-title {
+  color: #fff;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.selected-info {
+  color: rgba(255,255,255,0.6);
+  font-size: 14px;
+}
+
+.selected-highlight {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* ── Drop Zone (中央拖拽区域) ── */
+.drop-zone-container {
+  display: flex;
+  gap: 16px;
+  align-items: stretch;
+  margin-bottom: 24px;
+}
+
+.drop-slot {
+  flex: 1;
+  min-height: 120px;
+  padding: 20px;
+  border-radius: 14px;
+  border: 2px dashed rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.05);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  position: relative;
+}
+
+.drop-slot:hover {
+  border-color: rgba(255,255,255,0.4);
+  background: rgba(255,255,255,0.08);
+}
+
+.drop-slot.drag-over-a {
+  border-color: var(--color-a);
+  background: rgba(76,175,80,0.15);
+  transform: scale(1.03);
+}
+
+.drop-slot.drag-over-b {
+  border-color: var(--color-b);
+  background: rgba(255,152,0,0.15);
+  transform: scale(1.03);
+}
+
+.drop-slot.filled-a {
+  border-style: solid;
+  border-color: var(--color-a);
+  background: linear-gradient(135deg, rgba(76,175,80,0.2), rgba(46,204,113,0.1));
+}
+
+.drop-slot.filled-b {
+  border-style: solid;
+  border-color: var(--color-b);
+  background: linear-gradient(135deg, rgba(255,152,0,0.2), rgba(243,156,18,0.1));
+}
+
+.drop-slot .slot-label {
+  font-size: 12px;
+  color: rgba(255,255,255,0.5);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.drop-slot .slot-badge {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.drop-slot.filled-a .slot-badge { background: var(--color-a); }
+.drop-slot.filled-b .slot-badge { background: var(--color-b); }
+.drop-slot:not(.filled-a):not(.filled-b) .slot-badge {
+  background: rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.4);
+}
+
+.drop-slot .slot-value {
+  font-size: 18px;
+  color: #fff;
+  font-weight: 600;
+}
+
+.drop-slot .slot-placeholder {
+  font-size: 14px;
+  color: rgba(255,255,255,0.35);
+}
+
+.drop-slot .slot-hint {
+  font-size: 11px;
+  color: rgba(255,255,255,0.3);
+  margin-top: 6px;
+}
+
+.drop-slot .clear-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.drop-slot .clear-btn:hover {
+  background: rgba(255,107,107,0.5);
+}
+
+.drop-slot.filled-a .clear-btn,
+.drop-slot.filled-b .clear-btn {
+  display: flex;
+}
+
+.compare-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  color: var(--accent);
+  font-weight: 700;
+  min-width: 50px;
+  animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+.compare-btn {
+  display: block;
+  width: 100%;
+  padding: 16px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-top: 8px;
+}
+
+.compare-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(102,126,234,0.4);
+}
+
+.compare-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.compare-btn.loading {
+  opacity: 0.8;
+  cursor: wait;
+}
+
+/* ── Add custom knowledge ── */
+.add-custom-bar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  align-items: center;
+}
+
+.add-custom-bar input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.08);
+  border-radius: 10px;
+  color: #fff;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.3s;
+}
+
+.add-custom-bar input::placeholder {
+  color: rgba(255,255,255,0.4);
+}
+
+.add-custom-bar input:focus {
+  border-color: var(--primary);
+  background: rgba(255,255,255,0.12);
+}
+
+.add-custom-bar select {
+  padding: 10px 14px;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.08);
+  border-radius: 10px;
+  color: #fff;
+  font-size: 14px;
+  outline: none;
+  cursor: pointer;
+}
+
+.add-custom-bar select option {
+  background: #1a1a4e;
+  color: #fff;
+}
+
+.add-custom-bar button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--color-a), #2ecc71);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  white-space: nowrap;
+}
+
+.add-custom-bar button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(76,175,80,0.3);
+}
+
+/* Search */
+.search-box {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 12px 16px 12px 44px;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.08);
+  border-radius: 10px;
+  color: #fff;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.3s;
+}
+
+.search-box input::placeholder {
+  color: rgba(255,255,255,0.4);
+}
+
+.search-box input:focus {
+  border-color: var(--primary);
+  background: rgba(255,255,255,0.12);
+}
+
+.search-box .search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(255,255,255,0.5);
+  font-size: 16px;
+}
+
+/* Knowledge graph */
+.knowledge-graph {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.knowledge-node {
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.1);
+  cursor: grab;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  user-select: none;
+}
+
+.knowledge-node:active {
+  cursor: grabbing;
+}
+
+.knowledge-node::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.knowledge-node:hover {
+  transform: translateY(-4px);
+  border-color: var(--primary);
+  box-shadow: 0 8px 24px rgba(102,126,234,0.3);
+}
+
+.knowledge-node:hover::before { opacity: 0.1; }
+
+.knowledge-node.dragging {
+  opacity: 0.4;
+  transform: scale(0.95);
+}
+
+.knowledge-node.selected-a {
+  border-color: var(--color-a);
+  background: linear-gradient(135deg, rgba(76,175,80,0.2), rgba(46,204,113,0.1));
+  box-shadow: 0 4px 16px rgba(76,175,80,0.3);
+}
+
+.knowledge-node.selected-b {
+  border-color: var(--color-b);
+  background: linear-gradient(135deg, rgba(255,152,0,0.2), rgba(243,156,18,0.1));
+  box-shadow: 0 4px 16px rgba(255,152,0,0.3);
+}
+
+.knowledge-node .node-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  position: relative;
+  z-index: 1;
+}
+
+.knowledge-node .node-cat {
+  font-size: 11px;
+  color: rgba(255,255,255,0.5);
+  margin-top: 4px;
+  position: relative;
+  z-index: 1;
+}
+
+.knowledge-node .node-drag-icon {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  font-size: 10px;
+  color: rgba(255,255,255,0.25);
+  z-index: 1;
+}
+
+.knowledge-node .node-del {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(255,107,107,0.2);
+  border: none;
+  color: #ff6b6b;
+  cursor: pointer;
+  font-size: 12px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.knowledge-node.custom .node-del {
+  display: flex;
+}
+
+.knowledge-node .node-del:hover {
+  background: rgba(255,107,107,0.4);
+}
+
+/* Category groups */
+.category-group {
+  margin-top: 24px;
+}
+
+.category-title {
+  color: rgba(255,255,255,0.6);
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  padding-left: 4px;
+  border-left: 3px solid var(--primary);
+}
+
+.category-title .custom-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  background: rgba(76,175,80,0.2);
+  color: #81c784;
+  margin-left: 8px;
+}
+
+/* Recommendations */
+.recommendations {
+  margin-top: 32px;
+  padding: 20px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.rec-title {
+  color: rgba(255,255,255,0.7);
+  font-size: 14px;
+  margin-bottom: 14px;
+  font-weight: 600;
+}
+
+.rec-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.rec-item {
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+  cursor: pointer;
+  transition: all 0.25s;
+}
+
+.rec-item:hover {
+  background: rgba(102,126,234,0.15);
+  border-color: var(--primary);
+  transform: translateX(3px);
+}
+
+.rec-pair {
+  font-size: 14px;
+  color: #fff;
+  font-weight: 500;
+}
+
+.rec-pair .vs {
+  color: var(--accent);
+  margin: 0 6px;
+}
+
+.rec-reason {
+  font-size: 12px;
+  color: rgba(255,255,255,0.5);
+  margin-top: 4px;
+}
+
+/* ── Comparison Result Panel ── */
+.comparison-result {
+  animation: fadeIn 0.5s ease;
+}
+
+.result-header {
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  padding: 24px 32px;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow);
+}
+
+.result-title {
+  text-align: center;
+  font-size: 24px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.result-title .kp-a { color: var(--color-a); }
+.result-title .kp-b { color: var(--color-b); }
+.result-title .vs { color: #666; margin: 0 12px; font-weight: 400; }
+
+.result-subtitle {
+  text-align: center;
+  color: #888;
+  font-size: 14px;
+}
+
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 1px solid #ddd;
+  background: #fff;
+  border-radius: 8px;
+  color: #666;
+  cursor: pointer;
+  font-size: 13px;
+  margin-bottom: 16px;
+  transition: all 0.25s;
+}
+
+.back-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+/* Visualization section */
+.visualization-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.viz-card {
+  background: rgba(255,255,255,0.95);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
+
+.viz-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #eee;
+}
+
+.viz-badge {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.viz-badge.a { background: var(--color-a); }
+.viz-badge.b { background: var(--color-b); }
+
+.viz-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.viz-desc {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 12px;
+}
+
+.viz-diagram {
+  background: #1a1a2e;
+  color: #e0e0f0;
+  padding: 16px;
+  border-radius: 10px;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-x: auto;
+  margin-bottom: 12px;
+}
+
+.viz-highlights {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.highlight-tag {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  background: rgba(102,126,234,0.1);
+  color: var(--primary-dark);
+}
+
+/* Comparison table */
+.comparison-table-section {
+  background: rgba(255,255,255,0.95);
+  border-radius: 20px;
+  padding: 28px;
+  box-shadow: var(--shadow);
+  margin-bottom: 24px;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+  overflow: hidden;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+
+.comparison-table thead {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #fff;
+}
+
+.comparison-table th {
+  padding: 14px 20px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.comparison-table th:first-child {
+  width: 25%;
+}
+
+.comparison-table th.kp-a { background: rgba(76,175,80,0.8); }
+.comparison-table th.kp-b { background: rgba(255,152,0,0.8); }
+
+.comparison-table td {
+  padding: 14px 20px;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 13px;
+  color: #555;
+  line-height: 1.6;
+}
+
+.comparison-table td.dimension {
+  font-weight: 600;
+  color: #333;
+  background: #f8f9fa;
+}
+
+.comparison-table tbody tr:hover {
+  background: #f8f9ff;
+}
+
+.comparison-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Key differences */
+.key-differences {
+  background: rgba(255,255,255,0.95);
+  border-radius: 20px;
+  padding: 28px;
+  box-shadow: var(--shadow);
+  margin-bottom: 24px;
+}
+
+.differences-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.difference-item {
+  display: flex;
+  gap: 12px;
+  padding: 14px;
+  background: linear-gradient(135deg, rgba(102,126,234,0.05), rgba(118,75,162,0.05));
+  border-radius: 10px;
+  border-left: 3px solid var(--primary);
+}
+
+.difference-icon {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  background: var(--primary);
+  color: #fff;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.difference-text {
+  font-size: 13px;
+  color: #555;
+  line-height: 1.6;
+}
+
+/* Summary */
+.summary-section {
+  background: linear-gradient(135deg, rgba(102,126,234,0.15), rgba(118,75,162,0.15));
+  border: 1px solid rgba(102,126,234,0.3);
+  border-radius: 16px;
+  padding: 20px 24px;
+}
+
+.summary-text {
+  font-size: 14px;
+  color: #444;
+  line-height: 1.8;
+}
+
+/* Loading overlay */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(8px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.loading-overlay.show { display: flex; }
+
+.loading-card {
+  background: rgba(255,255,255,0.95);
+  border-radius: 20px;
+  padding: 40px 48px;
+  text-align: center;
+  box-shadow: var(--shadow);
+}
+
+.loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(102,126,234,0.2);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 20px;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.loading-text {
+  font-size: 16px;
+  color: #333;
+  font-weight: 500;
+}
+
+.loading-sub {
+  font-size: 13px;
+  color: #888;
+  margin-top: 6px;
+}
+
+/* Toast */
+.toast {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-12px);
+  z-index: 9999;
+  padding: 12px 28px;
+  border-radius: 12px;
+  font-size: 14px;
+  color: #fff;
+  opacity: 0;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
+}
+
+.toast.success { background: rgba(46,204,113,0.9); }
+.toast.error { background: rgba(231,76,60,0.9); }
+.toast.info { background: rgba(52,152,219,0.9); }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .visualization-section {
+    grid-template-columns: 1fr;
+  }
+
+  .drop-zone-container {
+    flex-direction: column;
+  }
+
+  .compare-arrow {
+    transform: rotate(90deg);
+  }
+
+  .comparison-table th,
+  .comparison-table td {
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+
+  .knowledge-graph {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  }
+
+  .add-custom-bar {
+    flex-wrap: wrap;
+  }
+
+  .add-custom-bar input {
+    flex: 1 1 100%;
+  }
+}
+
+/* Sparkle particles */
+.sparkle {
+  position: fixed;
+  pointer-events: none;
+  z-index: 0;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.3);
+  animation: sparkleFloat linear infinite;
+}
+
+@keyframes sparkleFloat {
+  0% { transform: translateY(0) scale(0); opacity: 0; }
+  20% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { transform: translateY(-100vh) scale(1); opacity: 0; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- Header -->
+  <div class="header">
+    <h1>🧠 知识点智能对比</h1>
+    <p>拖拽知识点到中央区域，或点击选择，一键对比差异</p>
+  </div>
+
+  <!-- User ID -->
+  <div class="user-bar">
+    <label>用户ID:</label>
+    <input type="text" id="userIdInput" value="user_001" onchange="onUserIdChange()">
+  </div>
+
+  <!-- View toggle -->
+  <div class="view-toggle">
+    <button id="selectViewBtn" class="active" onclick="switchView('select')">📚 知识点选择</button>
+    <button id="resultViewBtn" onclick="switchView('result')">📊 对比结果</button>
+  </div>
+
+  <!-- ── Selection View ── -->
+  <div id="selectView" class="panel active">
+    <div class="knowledge-selector">
+      <div class="selector-header">
+        <div class="selector-title">选择两个知识点进行对比</div>
+        <div class="selected-info">
+          已选: <span id="selectedCount" class="selected-highlight">0</span> / 2
+        </div>
+      </div>
+
+      <!-- Drop zones -->
+      <div class="drop-zone-container">
+        <div id="slotA" class="drop-slot" data-slot="a"
+             ondragover="onDragOver(event, 'a')"
+             ondragleave="onDragLeave(event, 'a')"
+             ondrop="onDrop(event, 'a')"
+             onclick="clearSlot('a')">
+          <div class="slot-badge">A</div>
+          <div class="slot-label">知识点 A</div>
+          <div class="slot-value slot-placeholder">拖拽或点击选择</div>
+          <div class="slot-hint">将知识点拖到此处</div>
+          <button class="clear-btn" onclick="event.stopPropagation(); clearSlot('a')">&times;</button>
+        </div>
+
+        <div class="compare-arrow">VS</div>
+
+        <div id="slotB" class="drop-slot" data-slot="b"
+             ondragover="onDragOver(event, 'b')"
+             ondragleave="onDragLeave(event, 'b')"
+             ondrop="onDrop(event, 'b')"
+             onclick="clearSlot('b')">
+          <div class="slot-badge">B</div>
+          <div class="slot-label">知识点 B</div>
+          <div class="slot-value slot-placeholder">拖拽或点击选择</div>
+          <div class="slot-hint">将知识点拖到此处</div>
+          <button class="clear-btn" onclick="event.stopPropagation(); clearSlot('b')">&times;</button>
+        </div>
+      </div>
+
+      <button id="compareBtn" class="compare-btn" onclick="startComparison()" disabled>
+        🔍 开始对比分析
+      </button>
+
+      <!-- Add custom knowledge -->
+      <div class="add-custom-bar" style="margin-top: 28px;">
+        <input type="text" id="customNameInput" placeholder="输入自定义知识点名称..." onkeypress="if(event.key==='Enter') addCustomKnowledge()">
+        <select id="customCategorySelect">
+          <option value="自定义">自定义</option>
+          <option value="线性结构">线性结构</option>
+          <option value="树形结构">树形结构</option>
+          <option value="图形结构">图形结构</option>
+          <option value="哈希结构">哈希结构</option>
+          <option value="排序算法">排序算法</option>
+          <option value="查找算法">查找算法</option>
+          <option value="其他">其他</option>
+        </select>
+        <button onclick="addCustomKnowledge()">➕ 添加</button>
+      </div>
+
+      <!-- Search -->
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" placeholder="搜索知识点..." oninput="filterKnowledge()">
+      </div>
+
+      <!-- Knowledge graph -->
+      <div id="knowledgeContainer">
+        <!-- Dynamically populated -->
+      </div>
+
+      <!-- Recommendations -->
+      <div class="recommendations" id="recommendationsSection" style="display:none;">
+        <div class="rec-title">💡 推荐对比组合</div>
+        <div class="rec-list" id="recList"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Result View ── -->
+  <div id="resultView" class="panel">
+    <div class="comparison-result" id="comparisonResult">
+      <!-- Dynamically populated -->
+    </div>
+  </div>
+</div>
+
+<!-- Loading overlay -->
+<div id="loadingOverlay" class="loading-overlay">
+  <div class="loading-card">
+    <div class="loading-spinner"></div>
+    <div class="loading-text" id="loadingText">正在分析知识点...</div>
+    <div class="loading-sub" id="loadingSub">AI 正在进行多维度对比</div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast"></div>
+
+<script>
+// State
+let currentUser = 'user_001';
+let selectedA = null;
+let selectedB = null;
+let allKnowledge = [];
+let recommendations = [];
+let draggedName = null;
+
+// DOM refs
+const slotA = document.getElementById('slotA');
+const slotB = document.getElementById('slotB');
+const compareBtn = document.getElementById('compareBtn');
+const loadingOverlay = document.getElementById('loadingOverlay');
+const loadingText = document.getElementById('loadingText');
+const loadingSub = document.getElementById('loadingSub');
+
+// Init
+window.addEventListener('DOMContentLoaded', () => {
+  loadKnowledgeList();
+});
+
+function onUserIdChange() {
+  currentUser = document.getElementById('userIdInput').value.trim() || 'user_001';
+  loadKnowledgeList();
+}
+
+// 监听父页面(unified.html)传来的userId
+window.addEventListener('message', function(e) {
+  if (e.data && e.data.type === 'setUserId' && e.data.userId) {
+    var inp = document.getElementById('userIdInput');
+    if (inp && inp.value !== e.data.userId) {
+      inp.value = e.data.userId;
+      onUserIdChange();
+    }
+  }
+  if (e.data && e.data.type === 'getUserId') {
+    e.source.postMessage({ type: 'setUserId', userId: currentUser }, '*');
+  }
+});
+
+// Switch view
+function switchView(view) {
+  const selectView = document.getElementById('selectView');
+  const resultView = document.getElementById('resultView');
+  const selectBtn = document.getElementById('selectViewBtn');
+  const resultBtn = document.getElementById('resultViewBtn');
+
+  if (view === 'select') {
+    selectView.classList.add('active');
+    resultView.classList.remove('active');
+    selectBtn.classList.add('active');
+    resultBtn.classList.remove('active');
+  } else {
+    selectView.classList.remove('active');
+    resultView.classList.add('active');
+    selectBtn.classList.remove('active');
+    resultBtn.classList.add('active');
+  }
+}
+
+// Load knowledge list
+async function loadKnowledgeList() {
+  try {
+    const res = await fetch(`/knowledge-comparison/list?user_id=${encodeURIComponent(currentUser)}`);
+    const data = await res.json();
+
+    if (data.success && data.data) {
+      allKnowledge = data.data;
+      renderKnowledgeGraph();
+    }
+  } catch (e) {
+    console.error('加载知识点列表失败:', e);
+    allKnowledge = getBuiltinKnowledge();
+    renderKnowledgeGraph();
+  }
+
+  // Load recommendations
+  loadRecommendations();
+}
+
+function getBuiltinKnowledge() {
+  return [
+    {
+      name: '全部知识点',
+      category: '',
+      children: [
+        { category: '线性结构', items: [
+          { name: '顺序表', category: '线性结构' },
+          { name: '单链表', category: '线性结构' },
+          { name: '双向链表', category: '线性结构' },
+          { name: '循环链表', category: '线性结构' },
+          { name: '栈', category: '线性结构' },
+          { name: '队列', category: '线性结构' },
+          { name: '双端队列', category: '线性结构' },
+        ]},
+        { category: '树形结构', items: [
+          { name: '二叉搜索树', category: '树形结构' },
+          { name: 'AVL平衡树', category: '树形结构' },
+          { name: '红黑树', category: '树形结构' },
+          { name: 'B树', category: '树形结构' },
+          { name: 'B+树', category: '树形结构' },
+          { name: '堆', category: '树形结构' },
+          { name: 'Trie树', category: '树形结构' },
+        ]},
+        { category: '图形结构', items: [
+          { name: '图(邻接表)', category: '图形结构' },
+          { name: '图(邻接矩阵)', category: '图形结构' },
+        ]},
+        { category: '哈希结构', items: [
+          { name: '哈希表', category: '哈希结构' },
+          { name: '布隆过滤器', category: '哈希结构' },
+        ]},
+        { category: '排序算法', items: [
+          { name: '快速排序', category: '排序算法' },
+          { name: '归并排序', category: '排序算法' },
+          { name: '堆排序', category: '排序算法' },
+          { name: '冒泡排序', category: '排序算法' },
+          { name: '插入排序', category: '排序算法' },
+        ]},
+        { category: '查找算法', items: [
+          { name: '二分查找', category: '查找算法' },
+          { name: '哈希查找', category: '查找算法' },
+          { name: 'BFS广度优先', category: '查找算法' },
+          { name: 'DFS深度优先', category: '查找算法' },
+        ]},
+      ]
+    }
+  ];
+}
+
+function renderKnowledgeGraph() {
+  const container = document.getElementById('knowledgeContainer');
+  container.innerHTML = '';
+
+  const root = allKnowledge[0];
+  if (!root || !root.children) return;
+
+  root.children.forEach(group => {
+    const groupDiv = document.createElement('div');
+    groupDiv.className = 'category-group';
+
+    const titleDiv = document.createElement('div');
+    titleDiv.className = 'category-title';
+    titleDiv.textContent = group.category;
+    if (group.is_custom) {
+      titleDiv.innerHTML = `${group.category} <span class="custom-badge">用户自定义</span>`;
+    }
+    groupDiv.appendChild(titleDiv);
+
+    const graphDiv = document.createElement('div');
+    graphDiv.className = 'knowledge-graph';
+
+    group.items.forEach(item => {
+      const node = document.createElement('div');
+      node.className = 'knowledge-node' + (group.is_custom ? ' custom' : '');
+      node.draggable = true;
+      node.dataset.name = item.name;
+      node.dataset.category = item.category;
+      node.innerHTML = `
+        <div class="node-drag-icon">⋮⋮</div>
+        <button class="node-del" title="删除" onclick="event.stopPropagation(); removeCustomKnowledge('${item.name}')">&times;</button>
+        <div class="node-name">${item.name}</div>
+        <div class="node-cat">${item.category}</div>
+      `;
+
+      // Drag events
+      node.addEventListener('dragstart', (e) => {
+        draggedName = item.name;
+        node.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'copy';
+        e.dataTransfer.setData('text/plain', item.name);
+      });
+
+      node.addEventListener('dragend', () => {
+        node.classList.remove('dragging');
+        draggedName = null;
+      });
+
+      // Click to select
+      node.addEventListener('click', () => selectKnowledge(item.name, node));
+      graphDiv.appendChild(node);
+    });
+
+    groupDiv.appendChild(graphDiv);
+    container.appendChild(groupDiv);
+  });
+
+  // Re-apply selection highlights
+  updateNodeHighlights();
+}
+
+// ── Drag and Drop ──
+function onDragOver(event, slot) {
+  event.preventDefault();
+  event.dataTransfer.dropEffect = 'copy';
+  const el = slot === 'a' ? slotA : slotB;
+  el.classList.add(slot === 'a' ? 'drag-over-a' : 'drag-over-b');
+}
+
+function onDragLeave(event, slot) {
+  const el = slot === 'a' ? slotA : slotB;
+  el.classList.remove(slot === 'a' ? 'drag-over-a' : 'drag-over-b');
+}
+
+function onDrop(event, slot) {
+  event.preventDefault();
+  const name = event.dataTransfer.getData('text/plain') || draggedName;
+  const el = slot === 'a' ? slotA : slotB;
+
+  el.classList.remove(slot === 'a' ? 'drag-over-a' : 'drag-over-b');
+
+  if (!name) return;
+
+  // If dropping the same name that's already in the other slot, swap
+  if (slot === 'a' && selectedB === name) {
+    selectedB = selectedA;
+    selectedA = name;
+  } else if (slot === 'b' && selectedA === name) {
+    selectedA = selectedB;
+    selectedB = name;
+  } else {
+    if (slot === 'a') selectedA = name;
+    else selectedB = name;
+  }
+
+  updateSlots();
+  updateNodeHighlights();
+}
+
+// ── Click selection ──
+function selectKnowledge(name, element) {
+  // If clicking already selected, deselect
+  if (selectedA === name) {
+    clearSlot('a');
+    return;
+  }
+  if (selectedB === name) {
+    clearSlot('b');
+    return;
+  }
+
+  // If already 2 selected, replace A with B, B with new
+  if (selectedA && selectedB) {
+    selectedA = selectedB;
+    selectedB = name;
+  } else if (!selectedA) {
+    selectedA = name;
+  } else if (!selectedB) {
+    selectedB = name;
+  }
+
+  updateSlots();
+  updateNodeHighlights();
+}
+
+function updateSlots() {
+  // Update slot A
+  if (selectedA) {
+    slotA.classList.add('filled-a');
+    slotA.querySelector('.slot-value').textContent = selectedA;
+    slotA.querySelector('.slot-value').classList.remove('slot-placeholder');
+  } else {
+    slotA.classList.remove('filled-a');
+    slotA.querySelector('.slot-value').textContent = '拖拽或点击选择';
+    slotA.querySelector('.slot-value').classList.add('slot-placeholder');
+  }
+
+  // Update slot B
+  if (selectedB) {
+    slotB.classList.add('filled-b');
+    slotB.querySelector('.slot-value').textContent = selectedB;
+    slotB.querySelector('.slot-value').classList.remove('slot-placeholder');
+  } else {
+    slotB.classList.remove('filled-b');
+    slotB.querySelector('.slot-value').textContent = '拖拽或点击选择';
+    slotB.querySelector('.slot-value').classList.add('slot-placeholder');
+  }
+
+  // Update count
+  const count = (selectedA ? 1 : 0) + (selectedB ? 1 : 0);
+  document.getElementById('selectedCount').textContent = count;
+
+  // Enable/disable compare button
+  compareBtn.disabled = !(selectedA && selectedB);
+}
+
+function updateNodeHighlights() {
+  document.querySelectorAll('.knowledge-node').forEach(node => {
+    node.classList.remove('selected-a', 'selected-b');
+    if (selectedA && node.dataset.name === selectedA) {
+      node.classList.add('selected-a');
+    }
+    if (selectedB && node.dataset.name === selectedB) {
+      node.classList.add('selected-b');
+    }
+  });
+}
+
+function clearSlot(slot) {
+  if (slot === 'a') selectedA = null;
+  else selectedB = null;
+  updateSlots();
+  updateNodeHighlights();
+}
+
+function clearSelection() {
+  // Legacy: clear all
+  clearSlot('a');
+  clearSlot('b');
+}
+
+// ── Custom knowledge management ──
+async function addCustomKnowledge() {
+  const nameInput = document.getElementById('customNameInput');
+  const catSelect = document.getElementById('customCategorySelect');
+  const name = nameInput.value.trim();
+  const category = catSelect.value;
+
+  if (!name) {
+    showToast('请输入知识点名称', 'error');
+    return;
+  }
+
+  try {
+    const res = await fetch('/knowledge-comparison/custom/add', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id: currentUser,
+        name: name,
+        category: category
+      })
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      showToast(`✅ 已添加「${name}」`, 'success');
+      nameInput.value = '';
+      await loadKnowledgeList();
+    } else {
+      showToast(data.message || '添加失败', 'error');
+    }
+  } catch (e) {
+    showToast('添加失败: ' + e.message, 'error');
+  }
+}
+
+async function removeCustomKnowledge(name) {
+  if (!confirm(`确定删除自定义知识点「${name}」吗？`)) return;
+
+  try {
+    const res = await fetch('/knowledge-comparison/custom/remove', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id: currentUser,
+        name: name
+      })
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      showToast(`已删除「${name}」`, 'info');
+      // If deleted item was selected, clear it
+      if (selectedA === name) clearSlot('a');
+      if (selectedB === name) clearSlot('b');
+      await loadKnowledgeList();
+    } else {
+      showToast(data.message || '删除失败', 'error');
+    }
+  } catch (e) {
+    showToast('删除失败: ' + e.message, 'error');
+  }
+}
+
+// Filter knowledge by search
+function filterKnowledge() {
+  const query = document.getElementById('searchInput').value.toLowerCase().trim();
+  const nodes = document.querySelectorAll('.knowledge-node');
+
+  nodes.forEach(node => {
+    const name = node.dataset.name.toLowerCase();
+    const cat = node.dataset.category.toLowerCase();
+
+    if (!query || name.includes(query) || cat.includes(query)) {
+      node.style.display = '';
+    } else {
+      node.style.display = 'none';
+    }
+  });
+
+  // Also filter category groups
+  document.querySelectorAll('.category-group').forEach(group => {
+    const allNodes = group.querySelectorAll('.knowledge-node');
+    const hasVisible = Array.from(allNodes).some(n => n.style.display !== 'none');
+    group.style.display = hasVisible ? '' : 'none';
+  });
+}
+
+// Load recommendations
+async function loadRecommendations() {
+  try {
+    const res = await fetch('/knowledge-comparison/recommendations');
+    const data = await res.json();
+
+    if (data.success && data.data && data.data.length > 0) {
+      recommendations = data.data;
+      renderRecommendations();
+    }
+  } catch (e) {
+    recommendations = [
+      { knowledge_a: '顺序表', knowledge_b: '单链表', reason: '存储结构不同，适用场景有重叠' },
+      { knowledge_a: '栈', knowledge_b: '队列', reason: '都是线性结构，但操作受限不同' },
+      { knowledge_a: '二叉搜索树', knowledge_b: 'AVL平衡树', reason: 'BST的优化版本，理解平衡树的必要性' },
+      { knowledge_a: 'B树', knowledge_b: 'B+树', reason: '磁盘索引的两种主要实现' },
+      { knowledge_a: '哈希表', knowledge_b: '二叉搜索树', reason: '查找效率对比，空间换时间' },
+    ];
+    renderRecommendations();
+  }
+}
+
+function renderRecommendations() {
+  const section = document.getElementById('recommendationsSection');
+  const list = document.getElementById('recList');
+
+  if (!recommendations || recommendations.length === 0) {
+    section.style.display = 'none';
+    return;
+  }
+
+  section.style.display = 'block';
+  list.innerHTML = '';
+
+  recommendations.forEach(rec => {
+    const item = document.createElement('div');
+    item.className = 'rec-item';
+    item.innerHTML = `
+      <div class="rec-pair">${rec.knowledge_a} <span class="vs">VS</span> ${rec.knowledge_b}</div>
+      <div class="rec-reason">${rec.reason || ''}</div>
+    `;
+    item.addEventListener('click', () => {
+      selectedA = rec.knowledge_a;
+      selectedB = rec.knowledge_b;
+      updateSlots();
+      updateNodeHighlights();
+      // Scroll to top
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+    list.appendChild(item);
+  });
+}
+
+// Start comparison
+async function startComparison() {
+  if (!selectedA || !selectedB) {
+    showToast('请选择两个知识点', 'error');
+    return;
+  }
+
+  // Show loading
+  loadingOverlay.classList.add('show');
+  compareBtn.classList.add('loading');
+  compareBtn.disabled = true;
+
+  try {
+    const res = await fetch('/knowledge-comparison/compare', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        knowledge_point_a: selectedA,
+        knowledge_point_b: selectedB
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.detail || '对比分析失败');
+    }
+
+    const data = await res.json();
+
+    // Hide loading
+    loadingOverlay.classList.remove('show');
+    compareBtn.classList.remove('loading');
+    compareBtn.disabled = false;
+
+    if (data.success) {
+      renderComparisonResult(data.data);
+      switchView('result');
+      showToast('对比分析完成！', 'success');
+    } else {
+      throw new Error(data.error || '对比分析失败');
+    }
+
+  } catch (e) {
+    loadingOverlay.classList.remove('show');
+    compareBtn.classList.remove('loading');
+    compareBtn.disabled = false;
+    showToast(`对比分析失败: ${e.message}`, 'error');
+    console.error(e);
+  }
+}
+
+// Render comparison result
+function renderComparisonResult(data) {
+  const container = document.getElementById('comparisonResult');
+  const comparison = data.comparison || {};
+  const vizA = data.visualization_a || {};
+  const vizB = data.visualization_b || {};
+
+  container.innerHTML = `
+    <!-- Back button and title -->
+    <button class="back-btn" onclick="switchView('select')">← 返回重新选择知识点</button>
+
+    <div class="result-header">
+      <div class="result-title">
+        <span class="kp-a">${data.knowledge_point_a}</span>
+        <span class="vs">VS</span>
+        <span class="kp-b">${data.knowledge_point_b}</span>
+      </div>
+      <div class="result-subtitle">${comparison.summary || ''}</div>
+    </div>
+
+    <!-- Visualization -->
+    <div class="visualization-section">
+      <div class="viz-card">
+        <div class="viz-card-header">
+          <div class="viz-badge a">A</div>
+          <div class="viz-title">${data.knowledge_point_a}</div>
+        </div>
+        <div class="viz-desc">${vizA.description || comparison.concept_a || ''}</div>
+        <div class="viz-diagram">${vizA.ascii_diagram || '暂无可视化'}</div>
+        <div class="viz-highlights">
+          ${(vizA.highlights || []).map(h => `<span class="highlight-tag">${h}</span>`).join('')}
+        </div>
+      </div>
+
+      <div class="viz-card">
+        <div class="viz-card-header">
+          <div class="viz-badge b">B</div>
+          <div class="viz-title">${data.knowledge_point_b}</div>
+        </div>
+        <div class="viz-desc">${vizB.description || comparison.concept_b || ''}</div>
+        <div class="viz-diagram">${vizB.ascii_diagram || '暂无可视化'}</div>
+        <div class="viz-highlights">
+          ${(vizB.highlights || []).map(h => `<span class="highlight-tag">${h}</span>`).join('')}
+        </div>
+      </div>
+    </div>
+
+    <!-- Comparison table -->
+    <div class="comparison-table-section">
+      <div class="section-title">📊 多维度对比分析</div>
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th>对比维度</th>
+            <th class="kp-a">${data.knowledge_point_a}</th>
+            <th class="kp-b">${data.knowledge_point_b}</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${(comparison.comparisons || []).map(c => `
+            <tr>
+              <td class="dimension">${c.dimension}</td>
+              <td>${c.value_a}</td>
+              <td>${c.value_b}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Key differences -->
+    ${(comparison.key_differences && comparison.key_differences.length > 0) ? `
+      <div class="key-differences">
+        <div class="section-title">🔑 关键区别</div>
+        <div class="differences-list">
+          ${comparison.key_differences.map((diff, i) => `
+            <div class="difference-item">
+              <div class="difference-icon">${i + 1}</div>
+              <div class="difference-text">${diff}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    ` : ''}
+
+    <!-- Summary -->
+    ${comparison.summary ? `
+      <div class="summary-section">
+        <div class="section-title" style="margin-bottom: 10px;">📝 总结</div>
+        <div class="summary-text">${comparison.summary}</div>
+      </div>
+    ` : ''}
+  `;
+}
+
+// Toast
+function showToast(msg, type = 'info') {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.className = `toast ${type} show`;
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+// Sparkle particles
+(function createSparkles() {
+  const container = document.body;
+  for (let i = 0; i < 30; i++) {
+    const el = document.createElement('div');
+    el.className = 'sparkle';
+    el.style.left = Math.random() * 100 + '%';
+    el.style.top = Math.random() * 100 + '%';
+    el.style.width = el.style.height = (1 + Math.random() * 2) + 'px';
+    el.style.animationDuration = (8 + Math.random() * 12) + 's';
+    el.style.animationDelay = (Math.random() * 10) + 's';
+    el.style.opacity = 0.2 + Math.random() * 0.3;
+    container.appendChild(el);
+  }
+})();
+</script>
+</body>
+</html>

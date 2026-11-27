@@ -1,0 +1,320 @@
+<!-- ★★★ 全局浮动摄像头状态面板 ★★★ -->
+<style>
+#cameraWidget {
+  position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+  font-family: 'Segoe UI', sans-serif;
+}
+#cameraWidget .cw-toggle {
+  width: 52px; height: 52px; border-radius: 50%;
+  background: #fff; border: 2px solid #e0e0e0;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 22px; transition: all 0.3s;
+  margin-left: auto; /* 右对齐 */
+}
+#cameraWidget .cw-toggle:hover { transform: scale(1.1); box-shadow: 0 6px 20px rgba(0,0,0,0.2); }
+#cameraWidget .cw-toggle .cw-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  position: absolute; top: 2px; right: 2px;
+  background: #9ca3af; border: 2px solid #fff;
+  transition: background 0.3s;
+}
+#cameraWidget .cw-toggle .cw-dot.online { background: #22c55e; }
+#cameraWidget .cw-toggle .cw-dot.active { background: #06b6d4; }
+#cameraWidget .cw-toggle .cw-dot.error { background: #ef4444; }
+
+#cameraWidget .cw-panel {
+  display: none; width: 320px;
+  background: #fff; border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  margin-bottom: 12px; overflow: hidden;
+  border: 1px solid #e5e7eb;
+}
+#cameraWidget .cw-panel.open { display: block; }
+
+#cameraWidget .cw-header {
+  padding: 14px 16px; background: #f8f9fa;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 14px; font-weight: 600; color: #374151;
+}
+#cameraWidget .cw-header .cw-status {
+  font-size: 12px; font-weight: 400;
+  padding: 2px 10px; border-radius: 10px;
+}
+#cameraWidget .cw-header .cw-status.off { background: #f3f4f6; color: #9ca3af; }
+#cameraWidget .cw-header .cw-status.on { background: #dcfce7; color: #16a34a; }
+#cameraWidget .cw-header .cw-status.err { background: #fef2f2; color: #ef4444; }
+
+#cameraWidget .cw-body { padding: 12px 16px; }
+#cameraWidget .cw-metrics {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+  margin-bottom: 12px;
+}
+#cameraWidget .cw-metric {
+  background: #f9fafb; border-radius: 10px; padding: 10px 12px;
+  text-align: center;
+}
+#cameraWidget .cw-metric .cw-label { font-size: 11px; color: #9ca3af; margin-bottom: 4px; }
+#cameraWidget .cw-metric .cw-value { font-size: 18px; font-weight: 700; color: #1f2937; }
+#cameraWidget .cw-metric .cw-value.high { color: #22c55e; }
+#cameraWidget .cw-metric .cw-value.medium { color: #f59e0b; }
+#cameraWidget .cw-metric .cw-value.low { color: #ef4444; }
+
+#cameraWidget .cw-emotion-row {
+  display: flex; gap: 6px; flex-wrap: wrap;
+  justify-content: center; margin-bottom: 12px;
+}
+#cameraWidget .cw-emotion-tag {
+  padding: 3px 10px; border-radius: 12px;
+  font-size: 12px; font-weight: 500;
+}
+#cameraWidget .cw-btn {
+  width: 100%; padding: 8px; border: none; border-radius: 10px;
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  transition: background 0.2s;
+}
+#cameraWidget .cw-btn.start { background: #6366f1; color: #fff; }
+#cameraWidget .cw-btn.start:hover { background: #4f46e5; }
+#cameraWidget .cw-btn.stop { background: #ef4444; color: #fff; }
+#cameraWidget .cw-btn.stop:hover { background: #dc2626; }
+
+#cameraWidget .cw-log { margin-top: 8px; font-size: 11px; color: #9ca3af; text-align: center; }
+</style>
+
+<div id="cameraWidget">
+  <div class="cw-panel" id="cwPanel">
+    <div class="cw-header">
+      <span>📷 摄像头分析</span>
+      <span class="cw-status off" id="cwStatusLabel">未连接</span>
+    </div>
+    <div class="cw-body">
+      <div class="cw-metrics">
+        <div class="cw-metric">
+          <div class="cw-label">🎯 专注度</div>
+          <div class="cw-value" id="cwAttn">--</div>
+        </div>
+        <div class="cw-metric">
+          <div class="cw-label">👁 视线方向</div>
+          <div class="cw-value" id="cwGaze">--</div>
+        </div>
+        <div class="cw-metric">
+          <div class="cw-label">😊 情绪</div>
+          <div class="cw-value" id="cwEmotion">--</div>
+        </div>
+        <div class="cw-metric">
+          <div class="cw-label">😴 困倦度</div>
+          <div class="cw-value" id="cwDrowsy">--</div>
+        </div>
+      </div>
+      <div class="cw-emotion-row" id="cwEmotionTags"></div>
+      <button class="cw-btn start" id="cwBtn" onclick="cwToggle()">▶ 启动摄像头</button>
+      <div class="cw-log" id="cwLog"></div>
+    </div>
+  </div>
+  <div class="cw-toggle" onclick="cwTogglePanel()" title="摄像头状态">
+    📷
+    <span class="cw-dot" id="cwDot"></span>
+  </div>
+</div>
+
+<script>
+// ★★★ 全局浮动摄像头控制器 ★★★
+var cw = {
+  ws: null,
+  pc: null,
+  localStream: null,
+  running: false,
+  sessionId: 'cam_widget_' + Date.now(),
+  _reconnectTimer: null,
+};
+
+function cwGetUserId() {
+  var el = document.getElementById('userId');
+  return (el && el.value && el.value.trim()) || window.camUserId || 'user_001';
+}
+
+function cwLog(msg) {
+  var el = document.getElementById('cwLog');
+  if (el) el.textContent = msg;
+}
+
+function cwSetStatus(state, label) {
+  var el = document.getElementById('cwStatusLabel');
+  if (!el) return;
+  el.className = 'cw-status ' + state;
+  el.textContent = label;
+  // 更新小圆点
+  var dot = document.getElementById('cwDot');
+  if (!dot) return;
+  var dotMap = { off: '', on: 'online', active: 'active', err: 'error' };
+  dot.className = 'cw-dot' + (dotMap[state] ? ' ' + dotMap[state] : '');
+}
+
+function cwTogglePanel() {
+  var panel = document.getElementById('cwPanel');
+  panel.classList.toggle('open');
+}
+
+function cwToggle() {
+  if (cw.running) { cwStop(); }
+  else { cwStart(); }
+}
+
+async function cwStart() {
+  var btn = document.getElementById('cwBtn');
+  if (!btn || cw.running) return;
+
+  try {
+    cwLog('正在请求摄像头...');
+    cwSetStatus('on', '连接中...');
+
+    // 1. 获取摄像头
+    cw.localStream = await navigator.mediaDevices.getUserMedia({
+      video: { width: { ideal: 640 }, height: { ideal: 480 } },
+      audio: false
+    });
+
+    // 2. 连接 WebSocket
+    // ★ 信令服务地址：本地开发直连 8080；线上走同源反代（Nginx 将 /offer 与 /ws 转发到 127.0.0.1:8080）
+    var CW_IS_LOCAL = ['localhost', '127.0.0.1', ''].indexOf(location.hostname) !== -1;
+    var CW_HTTP_BASE = CW_IS_LOCAL ? 'http://localhost:8080' : location.origin;
+    var CW_WS_BASE = CW_IS_LOCAL ? 'ws://localhost:8080'
+                                 : ((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host);
+    cw.ws = new WebSocket(CW_WS_BASE + '/ws');
+    cw.ws.onopen = async () => {
+      var uid = cwGetUserId();
+      cw.ws.send(JSON.stringify({ type: 'register', session_id: cw.sessionId, user_id: uid }));
+      cwLog('WebSocket 已连接');
+
+      // 3. 建立 WebRTC
+      cw.pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+      cw.localStream.getTracks().forEach(function(t) { cw.pc.addTrack(t, cw.localStream); });
+
+      cw.pc.onconnectionstatechange = function() {
+        if (cw.pc.connectionState === 'connected') {
+          cwSetStatus('active', '分析中');
+          cwLog('摄像头分析进行中...');
+        } else if (cw.pc.connectionState === 'failed' || cw.pc.connectionState === 'disconnected') {
+          cwSetStatus('err', '连接断开');
+          cwLog('连接断开');
+        }
+      };
+
+      var offer = await cw.pc.createOffer();
+      await cw.pc.setLocalDescription(offer);
+
+      var res = await fetch(CW_HTTP_BASE + '/offer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sdp: offer.sdp, type: offer.type, session_id: cw.sessionId,
+          analysis: {
+            postureAnalysis: true,
+            expressionAnalysis: true,
+            gazeAnalysis: true,
+            sessionId: cw.sessionId
+          }
+        })
+      });
+      var answer = await res.json();
+      await cw.pc.setRemoteDescription(new RTCSessionDescription(answer));
+
+      cw.running = true;
+      btn.textContent = '⏹ 停止摄像头';
+      btn.className = 'cw-btn stop';
+    };
+
+    cw.ws.onmessage = function(evt) {
+      try {
+        var msg = JSON.parse(evt.data);
+        if (msg.type === 'analysis') {
+          cwUpdateMetrics(msg.payload);
+        }
+      } catch(e) {}
+    };
+
+    cw.ws.onerror = function() {
+      cwSetStatus('err', '信令错误');
+      cwLog('WebSocket 连接失败');
+    };
+
+    cw.ws.onclose = function() {
+      if (cw.running) {
+        cwSetStatus('err', '连接断开');
+        cwLog('WebSocket 已断开');
+      }
+    };
+
+  } catch (err) {
+    console.error('[CameraWidget] 启动失败:', err);
+    cwSetStatus('err', '启动失败');
+    cwLog('启动失败: ' + err.message);
+    btn.textContent = '▶ 启动摄像头';
+    btn.className = 'cw-btn start';
+  }
+}
+
+function cwStop() {
+  cw.running = false;
+  if (cw.pc) { try { cw.pc.close(); } catch(e) {} cw.pc = null; }
+  if (cw.ws) { try { cw.ws.close(); } catch(e) {} cw.ws = null; }
+  if (cw.localStream) { cw.localStream.getTracks().forEach(function(t) { t.stop(); }); cw.localStream = null; }
+
+  var btn = document.getElementById('cwBtn');
+  if (btn) { btn.textContent = '▶ 启动摄像头'; btn.className = 'cw-btn start'; }
+  cwSetStatus('off', '已停止');
+  cwLog('摄像头已停止');
+}
+
+function cwUpdateMetrics(payload) {
+  if (!payload) return;
+  var type = payload.type;
+  var data = payload.data;
+  if (!data) return;
+
+  if (type === 'gaze') {
+    var attnEl = document.getElementById('cwAttn');
+    if (attnEl) {
+      var score = data.attention_score;
+      attnEl.textContent = score !== undefined ? score : '--';
+      attnEl.className = 'cw-value' + (
+        score >= 80 ? ' high' : score >= 50 ? ' medium' : ' low'
+      );
+    }
+    var gazeEl = document.getElementById('cwGaze');
+    if (gazeEl) gazeEl.textContent = data.gaze_direction || '--';
+
+    var drowsyEl = document.getElementById('cwDrowsy');
+    if (drowsyEl && data.drowsiness_score !== undefined) {
+      var v = data.drowsiness_score;
+      drowsyEl.textContent = v.toFixed(2);
+      drowsyEl.className = 'cw-value' + (v > 0.45 ? ' low' : v > 0.25 ? ' medium' : ' high');
+    }
+  }
+
+  if (type === 'emotion' && Array.isArray(data) && data.length > 0) {
+    var emoEl = document.getElementById('cwEmotion');
+    if (emoEl) emoEl.textContent = data[0].emotion || data[0] || '--';
+
+    var tagsEl = document.getElementById('cwEmotionTags');
+    if (tagsEl) {
+      tagsEl.innerHTML = data.slice(0, 4).map(function(d) {
+        var emo = d.emotion || d;
+        var conf = d.confidence || '';
+        var colorMap = {
+          'happy': '#22c55e', 'neutral': '#6366f1', 'sad': '#f59e0b',
+          'angry': '#ef4444', 'fear': '#8b5cf6', 'surprised': '#06b6d4'
+        };
+        var c = colorMap[emo] || '#9ca3af';
+        return '<span class="cw-emotion-tag" style="background:' + c + '20;color:' + c + '">' + emo + (conf ? ' ' + conf.toFixed(2) : '') + '</span>';
+      }).join('');
+    }
+  }
+}
+
+// 自动清理
+window.addEventListener('beforeunload', function() {
+  if (cw.running) cwStop();
+});
+</script>

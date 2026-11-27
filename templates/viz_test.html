@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>可视化代理测试页</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', sans-serif; background: #1a1a2e; color: #eee; padding: 20px; }
+h1 { text-align: center; margin-bottom: 20px; color: #00d4ff; }
+.section { background: #16213e; border-radius: 10px; padding: 16px; margin-bottom: 16px; border: 1px solid #0f3460; }
+.section h2 { color: #00d4ff; margin-bottom: 10px; font-size: 16px; }
+.btn { background: #0f3460; color: #00d4ff; border: 1px solid #00d4ff; padding: 8px 16px; border-radius: 6px; cursor: pointer; margin: 4px; font-size: 13px; }
+.btn:hover { background: #00d4ff; color: #1a1a2e; }
+.btn.success { border-color: #00ff88; color: #00ff88; }
+.btn.fail { border-color: #ff4444; color: #ff4444; }
+.status { padding: 6px 12px; border-radius: 6px; font-size: 13px; margin: 4px 0; font-family: monospace; }
+.status.ok { background: #0a3d0a; color: #00ff88; }
+.status.err { background: #3d0a0a; color: #ff6666; }
+.status.info { background: #0a1a3d; color: #88aaff; }
+pre { background: #0d1117; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 12px; max-height: 300px; overflow-y: auto; margin-top: 8px; white-space: pre-wrap; word-break: break-all; }
+textarea { width: 100%; height: 120px; background: #0d1117; color: #c9d1d9; border: 1px solid #30363d; border-radius: 6px; padding: 10px; font-family: monospace; font-size: 13px; resize: vertical; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+canvas { border: 1px solid #0f3460; border-radius: 6px; background: #0d1117; display: block; margin-top: 8px; }
+#log { max-height: 200px; overflow-y: auto; }
+select { background: #0d1117; color: #c9d1d9; border: 1px solid #30363d; border-radius: 6px; padding: 6px; font-size: 13px; }
+</style>
+</head>
+<body>
+
+<h1>🧪 算法可视化代理 - 接口测试</h1>
+
+<!-- 1. 健康检查 -->
+<div class="section">
+  <h2>1️⃣ 健康检查</h2>
+  <button class="btn" onclick="testHealth()">测试 /viz/health</button>
+  <div id="health-result"></div>
+</div>
+
+<!-- 2. 算法列表 -->
+<div class="section">
+  <h2>2️⃣ 算法列表 API</h2>
+  <button class="btn" onclick="testAlgorithms()">测试 /api/algorithms</button>
+  <div id="algo-result"></div>
+</div>
+
+<!-- 3. 算法详情 -->
+<div class="section">
+  <h2>3️⃣ 算法详情 API</h2>
+  <div style="margin-bottom:8px">
+    <select id="cat-select" onchange="loadAlgoDetail()"><option value="">选择分类</option></select>
+    <select id="algo-select"><option value="">选择算法</option></select>
+    <button class="btn" onclick="loadAlgoDetail()">测试 /api/algorithms/{cat}/{algo}</button>
+  </div>
+  <div id="detail-result"></div>
+</div>
+
+<!-- 4. 静态资源 -->
+<div class="section">
+  <h2>4️⃣ 静态资源测试</h2>
+  <button class="btn" onclick="testStaticLib()">测试 /api/tracers/js (UMD库)</button>
+  <button class="btn" onclick="testStaticWorker()">测试 /api/tracers/js/worker</button>
+  <div id="static-result"></div>
+</div>
+
+<!-- 5. LLM 代码转换 -->
+<div class="section">
+  <h2>5️⃣ LLM 代码转换</h2>
+  <textarea id="user-code" placeholder="输入你的纯算法代码（JavaScript）...">function bubbleSort(arr) {
+    const n = arr.length;
+    for (let i = 0; i < n - 1; i++) {
+        for (let j = 0; j < n - i - 1; j++) {
+            if (arr[j] > arr[j + 1]) {
+                let temp = arr[j];
+                arr[j] = arr[j + 1];
+                arr[j + 1] = temp;
+            }
+        }
+    }
+    return arr;
+}
+
+const array = [64, 34, 25, 12, 22, 11, 90];
+bubbleSort(array);</textarea>
+  <div style="margin-top:8px">
+    <button class="btn" onclick="testTransform()" id="transform-btn">🤖 测试 /api/visualize/transform (LLM转换)</button>
+  </div>
+  <div id="transform-result"></div>
+</div>
+
+<!-- 6. Worker 可视化执行 -->
+<div class="section">
+  <h2>6️⃣ 可视化执行（Web Worker + Canvas）</h2>
+  <div style="margin-bottom:8px">
+    <button class="btn" onclick="runVisualization()" id="run-btn">▶️ 执行可视化代码</button>
+    <button class="btn" onclick="stopVisualization()">⏹️ 停止</button>
+  </div>
+  <textarea id="viz-code" style="height:200px" placeholder="输入可视化代码（经过LLM转换后的代码）..."></textarea>
+  <canvas id="viz-canvas" width="700" height="400"></canvas>
+  <div id="viz-log" style="margin-top:8px"></div>
+</div>
+
+<!-- 7. 全流程测试 -->
+<div class="section">
+  <h2>7️⃣ 一键全流程测试</h2>
+  <button class="btn" onclick="runFullTest()" id="full-btn" style="font-size:15px;padding:10px 24px">🚀 全流程：LLM转换 → Worker执行 → Canvas渲染</button>
+  <div id="full-result"></div>
+</div>
+
+<script>
+const BASE = '';
+
+// ★★★ 跨域安全的 Worker 创建工具函数 ★★★
+async function createWorkerFromUrl(url) {
+  // 同时下载 worker.js 和 UMD 库
+  const [workerRes, libRes] = await Promise.all([
+    fetch(url),
+    fetch(url.replace('/worker', ''))
+  ]);
+  let workerText = await workerRes.text();
+  const libText = await libRes.text();
+
+  // 将 Worker 内部的库加载块替换为直接嵌入的库代码
+  // ★★★ 关键修复：保留完整 if 块结构，避免语法错误 ★★★
+  workerText = workerText.replace(
+    /if\s*\(!AlgorithmVisualizer\)\s*\{[\s\S]*?throw new Error\('Failed to load algorithm-visualizer library'\);\s*\}\s*\}/,
+    `if (!AlgorithmVisualizer) {
+    eval(${JSON.stringify(libText)});
+    AlgorithmVisualizer = self.AlgorithmVisualizer || this.AlgorithmVisualizer;
+  }`
+  );
+
+  const blob = new Blob([workerText], { type: 'application/javascript' });
+  const blobUrl = URL.createObjectURL(blob);
+  const worker = new Worker(blobUrl);
+  URL.revokeObjectURL(blobUrl);
+  return worker;
+}
+
+function appendStatus(containerId, text, type) {
+  const el = document.getElementById(containerId);
+  const div = document.createElement('div');
+  div.className = 'status ' + type;
+  div.textContent = text;
+  el.appendChild(div);
+}
+
+function setPre(containerId, data) {
+  const el = document.getElementById(containerId);
+  const pre = document.createElement('pre');
+  pre.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+  el.appendChild(pre);
+}
+
+// 1. 健康检查
+async function testHealth() {
+  const el = document.getElementById('health-result');
+  el.innerHTML = '';
+  try {
+    const res = await fetch(BASE + '/viz/health');
+    const data = await res.json();
+    appendStatus('health-result', `✅ 状态码: ${res.status} - ${data.status}`, 'ok');
+    const checks = [
+      ['algorithms_dir_exists', '算法目录'],
+      ['frontend_exists', '前端HTML'],
+      ['lib_exists', 'UMD库'],
+      ['worker_exists', 'worker.js']
+    ];
+    for (const [key, label] of checks) {
+      appendStatus('health-result', `${data[key] ? '✅' : '❌'} ${label}: ${data[key]}`, data[key] ? 'ok' : 'err');
+    }
+  } catch (e) {
+    appendStatus('health-result', '❌ 请求失败: ' + e.message, 'err');
+  }
+}
+
+// 2. 算法列表
+let hierarchyData = null;
+async function testAlgorithms() {
+  const el = document.getElementById('algo-result');
+  el.innerHTML = '';
+  try {
+    const res = await fetch(BASE + '/api/algorithms');
+    const data = await res.json();
+    hierarchyData = data;
+    const cats = data.categories || [];
+    let totalAlgos = 0;
+    cats.forEach(c => totalAlgos += (c.algorithms || []).length);
+    appendStatus('algo-result', `✅ 分类数: ${cats.length}, 算法总数: ${totalAlgos}`, 'ok');
+
+    // 填充下拉框
+    const catSel = document.getElementById('cat-select');
+    catSel.innerHTML = '<option value="">选择分类</option>';
+    cats.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.key;
+      opt.textContent = `${c.name} (${c.algorithms.length})`;
+      catSel.appendChild(opt);
+    });
+
+    setPre('algo-result', cats.map(c => `${c.key}: ${c.algorithms.map(a => a.key).join(', ')}`).join('\n'));
+  } catch (e) {
+    appendStatus('algo-result', '❌ 请求失败: ' + e.message, 'err');
+  }
+}
+
+// 3. 算法详情
+document.getElementById('cat-select').addEventListener('change', function() {
+  const algoSel = document.getElementById('algo-select');
+  algoSel.innerHTML = '<option value="">选择算法</option>';
+  if (!hierarchyData || !this.value) return;
+  const cat = hierarchyData.categories.find(c => c.key === this.value);
+  if (cat) {
+    cat.algorithms.forEach(a => {
+      const opt = document.createElement('option');
+      opt.value = a.key;
+      opt.textContent = a.name;
+      algoSel.appendChild(opt);
+    });
+  }
+});
+
+async function loadAlgoDetail() {
+  const catKey = document.getElementById('cat-select').value;
+  const algoKey = document.getElementById('algo-select').value;
+  const el = document.getElementById('detail-result');
+  el.innerHTML = '';
+  if (!catKey || !algoKey) { appendStatus('detail-result', '请先选择分类和算法', 'info'); return; }
+  try {
+    const res = await fetch(`${BASE}/api/algorithms/${catKey}/${algoKey}`);
+    const data = await res.json();
+    if (res.ok && data.algorithm) {
+      appendStatus('detail-result', `✅ ${data.algorithm.algorithmName} - ${data.algorithm.files.length}个文件`, 'ok');
+      const codeFile = data.algorithm.files.find(f => f.name === 'code.js');
+      if (codeFile) setPre('detail-result', codeFile.content.substring(0, 500) + '...');
+    } else {
+      appendStatus('detail-result', `❌ ${data.detail || '未找到'}`, 'err');
+    }
+  } catch (e) {
+    appendStatus('detail-result', '❌ 请求失败: ' + e.message, 'err');
+  }
+}
+
+// 4. 静态资源
+async function testStaticLib() {
+  const el = document.getElementById('static-result');
+  el.innerHTML = '';
+  try {
+    const res = await fetch(BASE + '/api/tracers/js');
+    const text = await res.text();
+    appendStatus('static-result', `✅ UMD库: 状态${res.status}, 大小${(text.length/1024).toFixed(1)}KB`, text.length > 1000 ? 'ok' : 'err');
+  } catch (e) {
+    appendStatus('static-result', '❌ UMD库请求失败: ' + e.message, 'err');
+  }
+}
+
+async function testStaticWorker() {
+  const el = document.getElementById('static-result');
+  try {
+    const res = await fetch(BASE + '/api/tracers/js/worker');
+    const text = await res.text();
+    appendStatus('static-result', `✅ worker.js: 状态${res.status}, 大小${(text.length/1024).toFixed(1)}KB`, text.length > 100 ? 'ok' : 'err');
+  } catch (e) {
+    appendStatus('static-result', '❌ worker.js请求失败: ' + e.message, 'err');
+  }
+}
+
+// 5. LLM 代码转换
+async function testTransform() {
+  const el = document.getElementById('transform-result');
+  const btn = document.getElementById('transform-btn');
+  el.innerHTML = '';
+  const code = document.getElementById('user-code').value.trim();
+  if (!code) { appendStatus('transform-result', '请输入代码', 'info'); return; }
+
+  btn.disabled = true; btn.textContent = '⏳ LLM转换中...';
+  appendStatus('transform-result', '⏳ 正在调用 LLM 转换代码（约10-30秒）...', 'info');
+
+  try {
+    const res = await fetch(BASE + '/api/visualize/transform', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code, algorithmType: 'auto' })
+    });
+    const data = await res.json();
+    if (data.success) {
+      appendStatus('transform-result', `✅ 转换成功! 检测类型: ${data.detectedType}`, 'ok');
+      document.getElementById('viz-code').value = data.code;
+      setPre('transform-result', data.code);
+    } else {
+      appendStatus('transform-result', `❌ 转换失败: ${data.error}`, 'err');
+    }
+  } catch (e) {
+    appendStatus('transform-result', '❌ 请求失败: ' + e.message, 'err');
+  } finally {
+    btn.disabled = false; btn.textContent = '🤖 测试 /api/visualize/transform (LLM转换)';
+  }
+}
+
+// 6. Worker 可视化执行
+let currentWorker = null;
+
+function vizLog(msg, type) {
+  const el = document.getElementById('viz-log');
+  const div = document.createElement('div');
+  div.className = 'status ' + (type || 'info');
+  div.textContent = msg;
+  el.appendChild(div);
+  el.scrollTop = el.scrollHeight;
+}
+
+function stopVisualization() {
+  if (currentWorker) { currentWorker.terminate(); currentWorker = null; }
+  vizLog('⏹️ Worker已停止', 'info');
+}
+
+async function runVisualization() {
+  const code = document.getElementById('viz-code').value.trim();
+  if (!code) { vizLog('请输入可视化代码', 'err'); return; }
+
+  stopVisualization();
+  document.getElementById('viz-log').innerHTML = '';
+
+  vizLog('🚀 启动 Worker...', 'info');
+
+  currentWorker = await createWorkerFromUrl(BASE + '/api/tracers/js/worker');
+
+  currentWorker.onmessage = function(e) {
+    const commands = e.data;
+    if (commands && commands.error) {
+      vizLog('❌ Worker错误: ' + commands.error, 'err');
+      return;
+    }
+    vizLog(`✅ 收到 ${commands.length} 个可视化命令`, 'ok');
+    renderCommands(commands);
+  };
+
+  currentWorker.onerror = function(e) {
+    vizLog('❌ Worker异常: ' + e.message, 'err');
+  };
+
+  currentWorker.postMessage(code);
+}
+
+// 简易 Canvas 渲染器
+function renderCommands(commands) {
+  const canvas = document.getElementById('viz-canvas');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  let currentData = null;
+  let highlights = {};
+  let frameIndex = 0;
+  const barPadding = 4;
+
+  function drawFrame() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (!currentData || !currentData.length) {
+      ctx.fillStyle = '#666';
+      ctx.font = '14px monospace';
+      ctx.fillText('等待数据...', 20, 30);
+      return;
+    }
+
+    const n = currentData.length;
+    const maxVal = Math.max(...currentData);
+    const barWidth = (canvas.width - barPadding * 2) / n - 2;
+    const maxBarHeight = canvas.height - 60;
+
+    for (let i = 0; i < n; i++) {
+      const val = currentData[i];
+      const barHeight = (val / maxVal) * maxBarHeight;
+      const x = barPadding + i * (barWidth + 2);
+      const y = canvas.height - 30 - barHeight;
+
+      // 颜色
+      if (highlights[i]) {
+        ctx.fillStyle = highlights[i];
+      } else {
+        ctx.fillStyle = '#00d4ff';
+      }
+      ctx.fillRect(x, y, barWidth, barHeight);
+
+      // 值标签
+      ctx.fillStyle = '#aaa';
+      ctx.font = '11px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(val, x + barWidth / 2, canvas.height - 14);
+    }
+
+    // 帧号
+    ctx.fillStyle = '#666';
+    ctx.textAlign = 'right';
+    ctx.font = '11px monospace';
+    ctx.fillText(`帧: ${frameIndex}/${commands.length}`, canvas.width - 10, 16);
+  }
+
+  // 逐帧回放
+  let frame = 0;
+  const speed = 150; // ms/帧
+
+  function playNext() {
+    if (frame >= commands.length) {
+      vizLog(`✅ 回放完成，共 ${commands.length} 帧`, 'ok');
+      return;
+    }
+
+    const cmd = commands[frame];
+    frameIndex = frame;
+
+    if (cmd.type === 'set') {
+      if (cmd.visualizationType === 'array1d' && Array.isArray(cmd.data)) {
+        currentData = [...cmd.data];
+        highlights = {};
+        vizLog(`帧${frame}: set array [${currentData.join(', ')}]`, 'info');
+      }
+    } else if (cmd.type === 'select') {
+      (cmd.indices || []).forEach(i => { highlights[i] = '#ff6600'; });
+    } else if (cmd.type === 'deselect') {
+      (cmd.indices || []).forEach(i => { delete highlights[i]; });
+    } else if (cmd.type === 'patch') {
+      if (currentData && cmd.index !== undefined && cmd.value !== undefined) {
+        currentData[cmd.index] = cmd.value;
+        highlights[cmd.index] = '#ffff00';
+      }
+    } else if (cmd.type === 'depatch') {
+      delete highlights[cmd.index];
+    } else if (cmd.type === 'log') {
+      vizLog('📝 ' + cmd.message, 'info');
+    }
+
+    drawFrame();
+    frame++;
+    setTimeout(playNext, speed);
+  }
+
+  playNext();
+}
+
+// 7. 全流程测试
+async function runFullTest() {
+  const el = document.getElementById('full-result');
+  const btn = document.getElementById('full-btn');
+  el.innerHTML = '';
+  btn.disabled = true; btn.textContent = '⏳ 全流程测试中...';
+
+  // Step 1: 健康检查
+  appendStatus('full-result', '📋 Step 1: 健康检查...', 'info');
+  try {
+    const r = await fetch(BASE + '/viz/health');
+    const d = await r.json();
+    appendStatus('full-result', d.status === 'ok' ? '✅ 健康检查通过' : '❌ 健康检查失败', d.status === 'ok' ? 'ok' : 'err');
+  } catch(e) { appendStatus('full-result', '❌ ' + e.message, 'err'); btn.disabled = false; btn.textContent = '🚀 全流程测试'; return; }
+
+  // Step 2: 算法列表
+  appendStatus('full-result', '📋 Step 2: 获取算法列表...', 'info');
+  try {
+    const r = await fetch(BASE + '/api/algorithms');
+    const d = await r.json();
+    appendStatus('full-result', `✅ 分类: ${(d.categories||[]).length}`, 'ok');
+  } catch(e) { appendStatus('full-result', '❌ ' + e.message, 'err'); }
+
+  // Step 3: LLM转换
+  appendStatus('full-result', '📋 Step 3: LLM代码转换（等待10-30秒）...', 'info');
+  const testCode = `function selectionSort(arr) {\n    const n = arr.length;\n    for (let i = 0; i < n - 1; i++) {\n        let minIdx = i;\n        for (let j = i + 1; j < n; j++) {\n            if (arr[j] < arr[minIdx]) minIdx = j;\n        }\n        let temp = arr[i]; arr[i] = arr[minIdx]; arr[minIdx] = temp;\n    }\n    return arr;\n}\nconst arr = [29, 10, 14, 37, 13];\nselectionSort(arr);`;
+  try {
+    const r = await fetch(BASE + '/api/visualize/transform', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ code: testCode, algorithmType: 'sorting' })
+    });
+    const d = await r.json();
+    if (d.success) {
+      appendStatus('full-result', '✅ LLM转换成功', 'ok');
+      document.getElementById('viz-code').value = d.code;
+
+      // Step 4: Worker执行
+      appendStatus('full-result', '📋 Step 4: Worker执行可视化...', 'info');
+      stopVisualization();
+      document.getElementById('viz-log').innerHTML = '';
+      currentWorker = await createWorkerFromUrl(BASE + '/api/tracers/js/worker');
+      currentWorker.onmessage = function(e) {
+        const cmds = e.data;
+        if (cmds && cmds.error) {
+          appendStatus('full-result', '❌ Worker错误: ' + cmds.error, 'err');
+          btn.disabled = false; btn.textContent = '🚀 全流程测试';
+          return;
+        }
+        appendStatus('full-result', `✅ Worker返回 ${cmds.length} 个命令`, 'ok');
+        renderCommands(cmds);
+        appendStatus('full-result', '🎉 全流程测试完成!', 'ok');
+        btn.disabled = false; btn.textContent = '🚀 全流程测试';
+      };
+      currentWorker.onerror = function(e) {
+        appendStatus('full-result', '❌ Worker异常: ' + e.message, 'err');
+        btn.disabled = false; btn.textContent = '🚀 全流程测试';
+      };
+      currentWorker.postMessage(d.code);
+    } else {
+      appendStatus('full-result', '❌ 转换失败: ' + d.error, 'err');
+      btn.disabled = false; btn.textContent = '🚀 全流程测试';
+    }
+  } catch(e) {
+    appendStatus('full-result', '❌ ' + e.message, 'err');
+    btn.disabled = false; btn.textContent = '🚀 全流程测试';
+  }
+}
+</script>
+</body>
+</html>
