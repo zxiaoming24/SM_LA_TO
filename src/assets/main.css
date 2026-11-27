@@ -1,0 +1,16 @@
+@import "./base.css";
+
+#app {
+  margin: 0 auto;
+}
+
+a {
+  text-decoration: none;
+  transition: 0.4s;
+  color: var(--primary);
+}
+
+a:hover {
+  color: var(--primary-hv);
+  text-decoration: underline;
+}

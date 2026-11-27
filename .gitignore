@@ -1,3 +1,42 @@
+<<<<<<< HEAD
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# 自签名 HTTPS 证书（本地开发用）
+.dev-certs/
+
+node_modules
+.DS_Store
+dist
+dist-ssr
+coverage
+*.local
+
+/cypress/videos/
+/cypress/screenshots/
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# 环境变量文件（保留你项目里 .env.development / .env.production 不忽略！）
+# digitalMan_api_key
+# .env
+# .env.local
+# .env.*.local
+=======
 # 1. 敏感信息 (必须排除)
 .env
 .env.*
@@ -42,3 +81,4 @@ build/
 # 5. 系统垃圾
 .DS_Store
 Thumbs.db
+>>>>>>> sm/main
