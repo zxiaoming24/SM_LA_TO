@@ -1,0 +1,2822 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>智能教育系统</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+       background: #f5f7fa; color: #1a1a2e; height: 100vh; display: flex; flex-direction: column; }
+
+/* Top Header */
+.top-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              color: #fff; padding: 14px 32px; display: flex; align-items: center;
+              justify-content: space-between; flex-shrink: 0; }
+.top-header .logo { font-size: 20px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+.top-header .user-area { display: flex; align-items: center; gap: 12px; }
+.top-header .user-area input { padding: 7px 14px; border: none; border-radius: 8px;
+                               background: rgba(255,255,255,0.2); color: #fff;
+                               font-size: 13px; width: 160px; outline: none; }
+.top-header .user-area input::placeholder { color: rgba(255,255,255,0.6); }
+.top-header .user-area button { padding: 7px 16px; border: none; border-radius: 8px;
+                                background: rgba(255,255,255,0.25); color: #fff;
+                                cursor: pointer; font-size: 13px; transition: all .2s; }
+.top-header .user-area button:hover { background: rgba(255,255,255,0.35); }
+
+/* Tab Navigation */
+.tab-bar { background: #fff; display: flex; padding: 0 32px; border-bottom: 1px solid #e0e0e0;
+           flex-shrink: 0; }
+.tab-bar .tab { padding: 14px 24px; cursor: pointer; font-size: 14px; font-weight: 500;
+                color: #888; border-bottom: 3px solid transparent; transition: all .2s;
+                display: flex; align-items: center; gap: 6px; }
+.tab-bar .tab:hover { color: #667eea; }
+.tab-bar .tab.active { color: #667eea; border-bottom-color: #667eea; }
+
+/* Content Area */
+.content-area { flex: 1; overflow: hidden; position: relative; }
+.content-area iframe { width: 100%; height: 100%; border: none; display: none; }
+.content-area iframe.active { display: block; }
+
+/* Loading overlay for iframes */
+.iframe-loading { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+                  color: #aaa; font-size: 14px; display: flex; flex-direction: column;
+                  align-items: center; gap: 12px; }
+.iframe-loading .spinner { width: 28px; height: 28px; border: 3px solid #f0f0f0;
+                            border-top-color: #667eea; border-radius: 50%;
+                            animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ★★★ 警告弹窗样式 ★★★ */
+.warning-modal {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.5); z-index: 10000;
+  display: none; align-items: center; justify-content: center;
+  animation: fadeIn 0.3s ease;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.warning-modal.show { display: flex; }
+.warning-modal .modal-content {
+  background: #fff; border-radius: 16px; padding: 24px 28px;
+  max-width: 380px; width: 90%; text-align: center;
+  box-shadow: 0 12px 48px rgba(0,0,0,0.25);
+  animation: slideUp 0.3s ease;
+}
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.warning-modal .modal-icon { font-size: 48px; margin-bottom: 16px; }
+.warning-modal .modal-title { font-size: 20px; font-weight: 700; color: #1f2937; margin-bottom: 8px; }
+.warning-modal .modal-message { font-size: 14px; color: #6b7280; margin-bottom: 20px; line-height: 1.5; }
+.warning-modal .modal-btn {
+  padding: 10px 24px; border: none; border-radius: 10px;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  transition: all 0.2s;
+}
+.warning-modal .modal-btn.primary { background: #6366f1; color: #fff; }
+.warning-modal .modal-btn.primary:hover { background: #4f46e5; }
+.warning-modal .modal-btn.danger { background: #ef4444; color: #fff; }
+.warning-modal .modal-btn.danger:hover { background: #dc2626; }
+.warning-modal .modal-btn.warning { background: #f59e0b; color: #fff; }
+.warning-modal .modal-btn.warning:hover { background: #d97706; }
+
+/* ★★★ 智能球系统 - 单球浮动入口 ★★★ */
+.ball-container { position: fixed; bottom: 28px; right: 28px; z-index: 1000; }
+.ball-wrapper { width: 64px; height: 64px; border-radius: 50%;
+                display: flex; align-items: center; justify-content: center; font-size: 28px;
+                cursor: pointer; transition: all .5s cubic-bezier(0.4, 0, 0.2, 1);
+                box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                user-select: none; }
+.ball-wrapper:hover { transform: scale(1.15); }
+.ball-wrapper:active { transform: scale(0.95); }
+.ball-wrapper .pulse { position: absolute; inset: 0; border-radius: 50%;
+                       animation: ballPulse 2s ease-in-out infinite; }
+@keyframes ballPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(102,126,234,0.4); }
+                      50% { box-shadow: 0 0 0 16px rgba(102,126,234,0); } }
+.ball-wrapper .badge { position: absolute; top: -4px; right: -4px; width: 20px; height: 20px;
+                       border-radius: 50%; background: #ff4757; font-size: 11px; color: #fff;
+                       display: flex; align-items: center; justify-content: center;
+                       box-shadow: 0 2px 6px rgba(255,71,87,0.4); }
+
+/* ★★★ 智能球聊天面板 ★★★ */
+.chat-panel { position: fixed; bottom: 100px; right: 28px; width: 380px; max-height: 560px;
+              background: #fff; border-radius: 18px; box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+              z-index: 999; display: none; flex-direction: column; overflow: hidden;
+              animation: panelSlideUp .3s ease; }
+.chat-panel.open { display: flex; }
+@keyframes panelSlideUp { from { opacity: 0; transform: translateY(20px) scale(0.95); }
+                           to { opacity: 1; transform: translateY(0) scale(1); } }
+
+.chat-panel .panel-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                            color: #fff; padding: 16px 20px; flex-shrink: 0;
+                            display: flex; align-items: center; justify-content: space-between; }
+.chat-panel .panel-header .title { font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.chat-panel .panel-header .title .dot { width: 8px; height: 8px; border-radius: 50%;
+                                        background: #51cf66; display: inline-block;
+                                        animation: dotPulse 1.5s ease-in-out infinite; }
+@keyframes dotPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+.chat-panel .panel-header .close-btn { background: none; border: none; color: rgba(255,255,255,0.8);
+                                        font-size: 22px; cursor: pointer; padding: 0 4px;
+                                        transition: color .2s; }
+.chat-panel .panel-header .close-btn:hover { color: #fff; }
+
+.chat-panel .context-bar { background: #f8f9ff; padding: 8px 16px; font-size: 12px; color: #888;
+                           border-bottom: 1px solid #eee; flex-shrink: 0; white-space: nowrap;
+                           overflow: hidden; text-overflow: ellipsis; }
+.chat-panel .context-bar .ctx-icon { margin-right: 4px; }
+
+.chat-panel .messages { flex: 1; overflow-y: auto; padding: 16px; display: flex;
+                        flex-direction: column; gap: 12px; min-height: 200px; max-height: 340px; }
+.chat-panel .messages .msg { max-width: 85%; padding: 10px 14px; border-radius: 14px;
+                             font-size: 14px; line-height: 1.5; word-wrap: break-word;
+                             animation: msgIn .3s ease; }
+@keyframes msgIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.chat-panel .messages .msg.user { align-self: flex-end; background: #667eea; color: #fff;
+                                  border-bottom-right-radius: 4px; }
+.chat-panel .messages .msg.bot { align-self: flex-start; background: #f0f2f5; color: #333;
+                                 border-bottom-left-radius: 4px; }
+.chat-panel .messages .msg.bot.typing { background: #f0f2f5; color: #999; }
+.chat-panel .messages .msg .time { font-size: 10px; color: rgba(0,0,0,0.35); margin-top: 4px;
+                                    text-align: right; }
+.chat-panel .messages .msg.user .time { color: rgba(255,255,255,0.6); }
+.chat-panel .messages .empty-msg { text-align: center; color: #ccc; font-size: 13px;
+                                    padding: 40px 0; align-self: center; }
+
+/* ★★★ 图片搜索结果样式 ★★★ */
+.image-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
+.image-grid .img-item { position: relative; border-radius: 10px; overflow: hidden; cursor: pointer;
+  aspect-ratio: 1; background: #f0f0f0; transition: transform .2s; }
+.image-grid .img-item:hover { transform: scale(1.03); }
+.image-grid .img-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.image-grid .img-item.broken::before { content: '🖼️'; position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%,-50%); font-size: 28px; opacity: 0.4; }
+.image-grid .img-item .img-overlay { position: absolute; bottom: 0; left: 0; right: 0;
+  background: linear-gradient(transparent, rgba(0,0,0,0.7)); padding: 20px 8px 6px; }
+.image-grid .img-item .img-overlay .img-title { font-size: 11px; color: #fff;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* 图片预览弹窗 */
+.image-preview-modal { position: fixed; inset: 0; z-index: 99999;
+  display: none; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.85); animation: fadeIn .3s ease; }
+.image-preview-modal.show { display: flex; }
+.image-preview-modal .preview-container { position: relative; max-width: 90vw; max-height: 90vh; }
+.image-preview-modal .preview-container img { max-width: 100%; max-height: 85vh;
+  border-radius: 12px; box-shadow: 0 12px 48px rgba(0,0,0,0.5); }
+.image-preview-modal .preview-close { position: absolute; top: -40px; right: 0;
+  background: none; border: none; color: #fff; font-size: 28px; cursor: pointer;
+  padding: 8px; transition: opacity .2s; }
+.image-preview-modal .preview-close:hover { opacity: 0.7; }
+.image-preview-modal .preview-title { color: #fff; text-align: center; font-size: 13px;
+  margin-top: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ★★★ 工具结果卡片样式 ★★★ */
+.tool-cards { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+.tool-card { background: #f8f9fa; border-radius: 12px; padding: 12px; border: 1px solid #e0e0e0;
+             animation: cardIn .3s ease; }
+@keyframes cardIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.tool-card .card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.tool-card .card-icon { font-size: 20px; }
+.tool-card .card-title { font-size: 13px; font-weight: 600; color: #333; }
+.tool-card .card-content { font-size: 12px; color: #666; line-height: 1.5; }
+
+/* 练习题卡片 */
+.tool-card.practice { border-left: 3px solid #00f2fe; }
+.tool-card.practice .card-title { color: #00f2fe; }
+.tool-card.practice .question-text { font-size: 13px; color: #333; margin-bottom: 6px; }
+.tool-card.practice .question-options { font-size: 12px; color: #666; }
+
+/* 文档卡片 */
+.tool-card.document { border-left: 3px solid #43e97b; }
+.tool-card.document .card-title { color: #43e97b; }
+.tool-card.document .doc-preview { font-size: 12px; color: #666; line-height: 1.5; }
+
+.tool-card.video { border-left: 3px solid #ff6b6b; }
+.tool-card.video .card-title { color: #ff6b6b; }
+.tool-card.video .video-player { width: 100%; border-radius: 8px; margin-top: 6px; background: #000; }
+.tool-card.video .video-title { font-size: 13px; font-weight: 500; color: #333; margin-bottom: 4px; }
+.tool-card.document .doc-link { display: inline-block; margin-top: 8px; padding: 6px 12px;
+                                background: #43e97b; color: #fff; border-radius: 6px; font-size: 12px;
+                                text-decoration: none; transition: background .2s; }
+.tool-card.document .doc-link:hover { background: #38f9d7; }
+
+/* 卡片放大按钮 */
+.tool-card .card-header .zoom-btn { margin-left: auto; background: rgba(0,0,0,0.1); border: none;
+                                    color: #666; font-size: 14px; cursor: pointer; padding: 4px 8px;
+                                    border-radius: 6px; transition: all .2s; }
+.tool-card .card-header .zoom-btn:hover { background: rgba(0,0,0,0.2); color: #333; }
+
+/* 资源放大预览弹窗 */
+.resource-modal { position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; }
+.resource-modal .modal-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.7); }
+.resource-modal .modal-container { position: relative; width: 90%; max-width: 800px; max-height: 85vh;
+                                  background: #fff; border-radius: 16px; overflow: hidden;
+                                  box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+.resource-modal .modal-header { display: flex; align-items: center; justify-content: space-between;
+                                padding: 16px 20px; background: linear-gradient(135deg, #667eea, #764ba2);
+                                color: #fff; }
+.resource-modal .modal-header .modal-title { font-size: 16px; font-weight: 600; }
+.resource-modal .modal-header .modal-close { background: rgba(255,255,255,0.2); border: none;
+                                            color: #fff; font-size: 20px; cursor: pointer;
+                                            padding: 4px 10px; border-radius: 8px; transition: all .2s; }
+.resource-modal .modal-header .modal-close:hover { background: rgba(255,255,255,0.3); }
+.resource-modal .modal-body { padding: 20px; overflow-y: auto; max-height: calc(85vh - 60px); }
+
+.chat-panel .input-area { display: flex; padding: 12px 16px; border-top: 1px solid #eee;
+                          gap: 8px; flex-shrink: 0; background: #fff; }
+.chat-panel .input-area input { flex: 1; padding: 10px 14px; border: 2px solid #e0e0e0;
+                                border-radius: 24px; font-size: 14px; outline: none;
+                                transition: border-color .2s; }
+.chat-panel .input-area input:focus { border-color: #667eea; }
+.chat-panel .input-area .send-btn { width: 40px; height: 40px; border-radius: 50%;
+                                     background: linear-gradient(135deg, #667eea, #764ba2);
+                                     color: #fff; border: none; cursor: pointer; font-size: 18px;
+                                     display: flex; align-items: center; justify-content: center;
+                                     transition: transform .2s; flex-shrink: 0; }
+.chat-panel .input-area .send-btn:hover { transform: scale(1.1); }
+.chat-panel .input-area .send-btn:active { transform: scale(0.95); }
+.chat-panel .input-area .send-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+/* 面板头部 TTS 语音播报开关 */
+.chat-panel .panel-header .tts-toggle-btn { background: rgba(255,255,255,0.2); border: none;
+  color: rgba(255,255,255,0.7); font-size: 16px; cursor: pointer; padding: 4px 8px;
+  border-radius: 16px; transition: all .2s; margin-left: auto; margin-right: 8px; }
+.chat-panel .panel-header .tts-toggle-btn:hover { background: rgba(255,255,255,0.3); color: #fff; }
+.chat-panel .panel-header .tts-toggle-btn.active { background: rgba(255,255,255,0.9); color: #764ba2; }
+
+/* 输入区麦克风按钮 */
+.chat-panel .input-area .mic-btn { width: 40px; height: 40px; border-radius: 50%;
+  background: #f0f0f0; color: #666; border: none; cursor: pointer; font-size: 18px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .2s; flex-shrink: 0; }
+.chat-panel .input-area .mic-btn:hover { transform: scale(1.1); }
+.chat-panel .input-area .mic-btn:active { transform: scale(0.95); }
+.chat-panel .input-area .mic-btn.recording { background: #ff4757; color: #fff;
+  animation: micPulse 0.8s ease-in-out infinite; }
+@keyframes micPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(255,71,87,0.4); }
+                       50% { box-shadow: 0 0 0 10px rgba(255,71,87,0); } }
+
+</style>
+</head>
+<body>
+
+<div class="top-header">
+  <div class="logo">🤖 智能教育系统</div>
+  <div class="user-area">
+    <input id="globalUserId" type="text" placeholder="用户ID" value="user_001"
+           onchange="syncUserId()">
+    <button onclick="syncUserId()">应用</button>
+  </div>
+</div>
+
+<div class="tab-bar">
+  <div class="tab active" data-tab="agent" onclick="switchTab('agent')">💬 智能助手</div>
+  <div class="tab" data-tab="community" onclick="switchTab('community')">👥 学习社区</div>
+  <div class="tab" data-tab="wrong" onclick="switchTab('wrong')">📕 错题本</div>
+  <div class="tab" data-tab="knowledge-quiz" onclick="switchTab('knowledge-quiz')">🎯 知识点盘问</div>
+  <div class="tab" data-tab="plan" onclick="switchTab('plan')">📋 学习计划</div>
+  <div class="tab" data-tab="assessment" onclick="switchTab('assessment')">📊 学习评估</div>
+  <div class="tab" data-tab="ranking" onclick="switchTab('ranking')">🏆 排行榜</div>
+  <div class="tab" data-tab="companion" onclick="switchTab('companion')">👫 学伴</div>
+  <div class="tab" data-tab="notebook" onclick="switchTab('notebook')">📝 笔记</div>
+  <div class="tab" data-tab="market" onclick="switchTab('market')">🛒 路线市场</div>
+  <div class="tab" data-tab="weights" onclick="switchTab('weights')">⚙ 权重管理</div>
+  <div class="tab" data-tab="knowledge-graph" onclick="switchTab('knowledge-graph')">🧠 知识图谱</div>
+  <div class="tab" data-tab="knowledge-comparison" onclick="switchTab('knowledge-comparison')">⚖ 知识点对比</div>
+  <div class="tab" data-tab="algorithm-lab" onclick="switchTab('algorithm-lab')">🔬 算法实验室</div>
+  <div class="tab" data-tab="digital-twin" onclick="switchTab('digital-twin')">🤖 数字孪生</div>
+  <div class="tab" data-tab="teacher" onclick="switchTab('teacher')">👨‍🏫 教师工作台</div>
+</div>
+
+<div class="content-area">
+  <div class="iframe-loading" id="loadingIndicator">
+    <div class="spinner"></div>
+    <span>加载中...</span>
+  </div>
+  <iframe id="frame-agent" data-src="/test-page" src="/test-page"></iframe>
+  <iframe id="frame-community" data-src="/community-page"></iframe>
+  <iframe id="frame-wrong" data-src="/wrong-answers-page"></iframe>
+  <iframe id="frame-knowledge-quiz" data-src="/knowledge-quiz-page"></iframe>
+  <iframe id="frame-error-review" data-src="/error-review-page"></iframe>
+  <iframe id="frame-plan" data-src="/study-plan-page"></iframe>
+  <iframe id="frame-assessment" data-src="/assessment-page"></iframe>
+  <iframe id="frame-ranking" data-src="/global-ranking-page"></iframe>
+  <iframe id="frame-companion" data-src="/companion-page"></iframe>
+  <iframe id="frame-notebook" data-src="/notebook-page"></iframe>
+  <iframe id="frame-market" data-src="/route-market-page"></iframe>
+  <iframe id="frame-weights" data-src="/weights-page"></iframe>
+  <iframe id="frame-knowledge-graph" data-src="/knowledge-graph-page"></iframe>
+  <iframe id="frame-knowledge-comparison" data-src="/knowledge-comparison-page"></iframe>
+  <iframe id="frame-algorithm-lab" data-src="/algorithm-lab-page"></iframe>
+  <iframe id="frame-digital-twin" data-src="/digital-twin-page"></iframe>
+  <iframe id="frame-teacher" data-src="/teacher-page"></iframe>
+
+<script>
+let currentTab = 'agent';
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  document.querySelectorAll('.content-area iframe').forEach(f => f.classList.toggle('active', f.id === `frame-${tab}`));
+
+  const frame = document.getElementById(`frame-${tab}`);
+  if (!frame.src || frame.src === 'about:blank') {
+    frame.src = frame.dataset.src;
+  }
+  syncUserId();
+}
+
+function onFrameLoad(tab) {
+  document.getElementById('loadingIndicator').style.display = 'none';
+  if (tab === currentTab) {
+    syncUserId();
+  }
+}
+
+// 绑定各 iframe 的 load 事件（避免 inline onload 在函数定义前触发导致 ReferenceError）
+document.querySelectorAll('.content-area iframe').forEach(f => {
+  const tab = f.id.replace(/^frame-/, '');
+  f.addEventListener('load', () => onFrameLoad(tab));
+  // 若 iframe 在绑定前已加载完成（如 src 已写死的 frame-agent），手动触发一次
+  try {
+    if (f.contentDocument && f.contentDocument.readyState === 'complete') {
+      onFrameLoad(tab);
+    }
+  } catch (e) { /* 跨域无法访问 contentDocument，忽略 */ }
+});
+
+function syncUserId() {
+  const uid = document.getElementById('globalUserId').value.trim() || 'user_001';
+  // 重新注册语音 WebSocket，让改 ID 后能收到该用户的来电
+  if (typeof _voiceWs !== 'undefined' && _voiceWs && _voiceWs.readyState === WebSocket.OPEN) {
+    _voiceWs.send(JSON.stringify({ type: 'register', user_id: uid }));
+  }
+  document.querySelectorAll('.content-area iframe').forEach(f => {
+    if (f.contentWindow && f.contentWindow.postMessage) {
+      f.contentWindow.postMessage({ type: 'setUserId', userId: uid }, '*');
+    }
+  });
+}
+
+document.getElementById('globalUserId').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') syncUserId();
+});
+
+window.addEventListener('message', function(e) {
+  if (e.data && e.data.type === 'getUserId') {
+    const uid = document.getElementById('globalUserId').value.trim() || 'user_001';
+    e.source.postMessage({ type: 'setUserId', userId: uid }, '*');
+  }
+  if (e.data && e.data.type === 'switchTab') {
+    switchTab(e.data.tab);
+  }
+  // ★★★ 复习跳转：学习计划页点击复习项 → 切换到智能助手 ★★★
+  if (e.data && e.data.type === 'startReview') {
+    switchTab('agent');
+    setTimeout(() => {
+      const frame = document.getElementById('frame-agent');
+      if (frame && frame.contentWindow) {
+        frame.contentWindow.postMessage({
+          type: 'startReview',
+          knowledgePoint: e.data.knowledgePoint,
+          resourceType: e.data.resourceType,
+          sessionId: e.data.sessionId,
+        }, '*');
+      }
+    }, 500);
+  }
+  // ★★★ 同练跳转：学伴共享/社区点击同练 → 切换到智能助手并加载指定题目 ★★★
+  if (e.data && e.data.type === 'startPractice') {
+    switchTab('agent');
+    setTimeout(() => {
+      const frame = document.getElementById('frame-agent');
+      if (frame && frame.contentWindow) {
+        frame.contentWindow.postMessage({
+          type: 'startPractice',
+          problemId: e.data.problemId,
+          sharerId: e.data.sharerId || '',
+        }, '*');
+      }
+    }, 500);
+  }
+  // ★★★ 结对编程跳转：从学伴页面打开结对编程 ★★★
+  if (e.data && e.data.type === 'openPairProgramming') {
+    switchTab('agent');
+    setTimeout(() => {
+      const frame = document.getElementById('frame-agent');
+      if (frame && frame.contentWindow) {
+        frame.contentWindow.postMessage({
+          type: 'openPairProgramming',
+          invitationId: e.data.invitationId,
+        }, '*');
+      }
+    }, 500);
+  }
+});
+</script>
+
+<!-- ★★★ 智能球系统 - 单球浮动入口 ★★★ -->
+<div class="ball-container" id="ballContainer">
+  <div class="ball-wrapper" id="ballChat" onclick="toggleChat()" title="智能陪聊">
+    <div class="pulse"></div>
+    🤖
+  </div>
+</div>
+
+<!-- ★★★ 警告弹窗 ★★★ -->
+<div class="warning-modal" id="warningModal">
+  <div class="modal-content">
+    <div class="modal-icon" id="warningIcon">⚠️</div>
+    <div class="modal-title" id="warningTitle">警告</div>
+    <div class="modal-message" id="warningMessage">检测到异常行为</div>
+    <button class="modal-btn primary" onclick="closeWarningModal()">我知道了</button>
+  </div>
+</div>
+
+<!-- ★★★ 资源放大预览弹窗 ★★★ -->
+<div class="resource-modal" id="resourceModal" style="display: none;">
+  <div class="modal-overlay" onclick="closeResourceModal()"></div>
+  <div class="modal-container">
+    <div class="modal-header">
+      <span class="modal-title" id="resourceModalTitle">资源预览</span>
+      <button class="modal-close" onclick="closeResourceModal()">&times;</button>
+    </div>
+    <div class="modal-body" id="resourceModalBody"></div>
+  </div>
+</div>
+
+<!-- ★★★ 图片预览弹窗 ★★★ -->
+<div class="image-preview-modal" id="imagePreviewModal" onclick="closeImagePreview()">
+  <div class="preview-container" onclick="event.stopPropagation()">
+    <button class="preview-close" onclick="closeImagePreview()">&times;</button>
+    <img src="" alt="图片预览">
+    <div id="imgPreviewError" style="display:none;color:#999;text-align:center;padding:60px 20px;font-size:14px;">
+      ⚠️ 图片加载失败<br><span style="font-size:12px;color:#777;">可能已被源站屏蔽或删除</span>
+    </div>
+    <div class="preview-title"></div>
+  </div>
+</div>
+
+<!-- ★★★ 智能球聊天面板 ★★★ -->
+<div class="chat-panel" id="chatPanel">
+  <div class="panel-header">
+    <div class="title">
+      <span class="dot"></span> 智能陪聊
+    </div>
+    <button class="tts-toggle-btn" id="ttsToggleBtn" onclick="toggleTts()" title="语音播报">🔇</button>
+    <button class="close-btn" onclick="toggleChat()">&times;</button>
+  </div>
+  <div class="context-bar" id="contextBar">
+    <span class="ctx-icon">📍</span> <span id="contextText">感知中...</span>
+  </div>
+  <div class="messages" id="chatMessages">
+    <div class="empty-msg">👋 点击智能球，随时随地找我聊天<br>我能感知你当前在做什么哦～</div>
+  </div>
+  <div class="input-area">
+    <input id="chatInput" type="text" placeholder="输入消息..." onkeydown="if(event.key==='Enter') sendChat()">
+    <button class="mic-btn" id="micBtn" onclick="toggleMic()" title="语音输入">🎤</button>
+    <button class="send-btn" id="sendBtn" onclick="sendChat()">➤</button>
+  </div>
+</div>
+
+<script>
+// ★★★ 智能球系统逻辑 ★★★
+
+let chatOpen = false;
+
+// ===== 页面上下文收集 =====
+let currentPageContext = {};
+let lastReportedContext = '';
+
+// 监听 iframe 上报的页面上下文
+window.addEventListener('message', function(e) {
+  // ... existing message handlers ...
+  if (e.data && e.data.type === 'pageContext') {
+    currentPageContext = {
+      page: e.data.page || 'unknown',
+      title: e.data.title || '',
+      action: e.data.action || '',
+      detail: e.data.detail || '',
+    };
+    console.log('📡 收到页面上下文:', currentPageContext);
+    updateContextBar();
+
+    // 自动上报到后端
+    reportPageContext();
+  }
+});
+
+// 切换 tab 时自动上报上下文
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  document.querySelectorAll('.content-area iframe').forEach(f => f.classList.toggle('active', f.id === `frame-${tab}`));
+
+  const frame = document.getElementById(`frame-${tab}`);
+  if (!frame.src || frame.src === 'about:blank') {
+    frame.src = frame.dataset.src;
+  }
+  syncUserId();
+
+  // 自动上报 tab 切换
+  const tabNames = { agent: '智能助手', community: '学习社区', wrong: '错题本', 'knowledge-quiz': '知识点盘问', 'error-review': '错题复盘', plan: '学习计划', assessment: '学习评估', companion: '学伴', notebook: '笔记', market: '路线市场', weights: '权重管理' };
+  currentPageContext = { page: tab, title: tabNames[tab] || tab, action: 'viewing', detail: '' };
+  updateContextBar();
+  reportPageContext();
+}
+
+function updateContextBar() {
+  const el = document.getElementById('contextText');
+  if (!el) return;
+  const p = currentPageContext;
+  const pageNames = { agent_test: '智能助手', study_plan: '学习计划', wrong_answers: '错题本', knowledge_quiz: '知识点盘问', community: '学习社区', assessment: '学习评估', companion: '学伴', agent: '智能助手', wrong: '错题本', 'knowledge-quiz': '知识点盘问', 'error-review': '错题复盘', plan: '学习计划', notebook: '笔记', route_market: '路线市场', market: '路线市场', weights: '权重管理' };
+  const name = pageNames[p.page] || p.page || '未知';
+  if (p.title && p.title !== name) {
+    el.textContent = `${name} · ${p.title}`;
+  } else {
+    el.textContent = `${name}`;
+  }
+}
+
+function reportPageContext() {
+  const uid = document.getElementById('globalUserId').value.trim() || 'user_001';
+  if (!uid || !currentPageContext.page) return;
+
+  const ctxStr = JSON.stringify(currentPageContext);
+  if (ctxStr === lastReportedContext) return;
+  lastReportedContext = ctxStr;
+
+  fetch('/api/user/context/update', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      user_id: uid,
+      page: currentPageContext.page,
+      title: currentPageContext.title || '',
+      action: currentPageContext.action || '',
+      detail: currentPageContext.detail || '',
+    }),
+  }).catch(() => {});
+}
+
+// ===== 智能球聊天 =====
+let enableTts = false;  // 语音播报开关
+
+function toggleChat() {
+  chatOpen = !chatOpen;
+  document.getElementById('chatPanel').classList.toggle('open', chatOpen);
+  if (chatOpen) {
+    document.getElementById('chatInput').focus();
+  }
+}
+
+function toggleTts() {
+  enableTts = !enableTts;
+  const btn = document.getElementById('ttsToggleBtn');
+  if (enableTts) {
+    btn.classList.add('active');
+    btn.textContent = '🔊';
+    btn.title = '语音播报已开启';
+  } else {
+    btn.classList.remove('active');
+    btn.textContent = '🔇';
+    btn.title = '语音播报已关闭';
+    // ★★★ 关闭TTS时停止当前播放的语音 ★★★
+    if (_chatAudioPlayer) {
+      _chatAudioPlayer.pause();
+      _chatAudioPlayer.currentTime = 0;
+    }
+  }
+}
+
+// ===== 语音输入（ASR 麦克风） =====
+let micRecording = false;
+let mediaRecorder = null;
+let audioChunks = [];
+
+async function toggleMic() {
+  if (micRecording) {
+    stopMicRecord();
+  } else {
+    await startMicRecord();
+  }
+}
+
+async function startMicRecord() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+    audioChunks = [];
+
+    mediaRecorder.ondataavailable = function(e) {
+      if (e.data.size > 0) audioChunks.push(e.data);
+    };
+
+    mediaRecorder.onstop = async function() {
+      stream.getTracks().forEach(t => t.stop());
+      if (audioChunks.length === 0) return;
+      const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+      await sendAudioToAsr(audioBlob);
+    };
+
+    mediaRecorder.start();
+    micRecording = true;
+
+    const btn = document.getElementById('micBtn');
+    btn.classList.add('recording');
+    btn.textContent = '⏹';
+    btn.title = '点击停止录音';
+  } catch (e) {
+    console.error('🎤 无法访问麦克风:', e.message);
+    appendMessage('⚠️ 无法访问麦克风，请检查浏览器权限设置', 'bot');
+  }
+}
+
+function stopMicRecord() {
+  if (mediaRecorder && mediaRecorder.state === 'recording') {
+    mediaRecorder.stop();
+  }
+  micRecording = false;
+  const btn = document.getElementById('micBtn');
+  btn.classList.remove('recording');
+  btn.textContent = '🎤';
+  btn.title = '语音输入';
+}
+
+async function sendAudioToAsr(audioBlob) {
+  const typingId = appendMessage('🎤 识别中...', 'bot', true);
+  try {
+    const formData = new FormData();
+    formData.append('audio_file', audioBlob, 'recording.webm');
+    const res = await fetch('/speech/recognize', { method: 'POST', body: formData });
+    const result = await res.json();
+    removeMessage(typingId);
+
+    if (result.success && result.text) {
+      document.getElementById('chatInput').value = result.text;
+      sendChat();
+    } else {
+      appendMessage('😕 没听清，请再说一次', 'bot');
+    }
+  } catch (e) {
+    removeMessage(typingId);
+    appendMessage('语音识别服务暂不可用，请打字吧～', 'bot');
+    console.error('🎤 ASR 请求失败:', e.message);
+  }
+}
+
+async function sendChat() {
+  const input = document.getElementById('chatInput');
+  const msg = input.value.trim();
+  if (!msg) return;
+
+  const uid = document.getElementById('globalUserId').value.trim() || 'user_001';
+
+  // 显示用户消息
+  appendMessage(msg, 'user');
+  input.value = '';
+  document.getElementById('sendBtn').disabled = true;
+
+  // 显示正在输入
+  const typingId = appendMessage('🤔 思考中...', 'bot', true);
+
+  try {
+    const res = await fetch('/chat/context', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id: uid,
+        user_input: msg,
+        page_context: currentPageContext,
+        enable_tts: enableTts,
+      }),
+    });
+
+    const result = await res.json();
+
+    // 移除正在输入提示
+    removeMessage(typingId);
+
+    if (result.success && result.data) {
+      const reply = result.data.reply || result.data.message || '嗯？';
+      appendMessage(reply, 'bot');
+
+      // ★★★ 渲染工具结果卡片 ★★★
+      if (result.data.tool_results && result.data.tool_results.length > 0) {
+        appendToolResults(result.data.tool_results);
+      }
+
+      // ★★★ 渲染图片搜索结果 ★★★
+      if (result.data.images && result.data.images.length > 0) {
+        appendImages(result.data.images);
+      }
+
+      // TTS语音播报
+      if (enableTts && result.data.tts_audio_path) {
+        playTtsAudio(result.data.tts_audio_path);
+      }
+    } else {
+      appendMessage('抱歉，我没能理解你的意思😅', 'bot');
+    }
+  } catch (e) {
+    removeMessage(typingId);
+    appendMessage('网络有点问题，稍后再试吧🙃', 'bot');
+  }
+
+  document.getElementById('sendBtn').disabled = false;
+  document.getElementById('chatInput').focus();
+}
+
+function appendMessage(text, type, isTyping) {
+  const container = document.getElementById('chatMessages');
+  // 移除空状态
+  const empty = container.querySelector('.empty-msg');
+  if (empty) empty.remove();
+
+  const div = document.createElement('div');
+  div.className = `msg ${type}` + (isTyping ? ' typing' : '');
+  const time = new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+  div.innerHTML = text + (isTyping ? '' : `<div class="time">${time}</div>`);
+  div.id = isTyping ? 'typingMsg' : ('msg_' + Date.now());
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+  return div.id;
+}
+
+// ★★★ 渲染工具结果卡片 ★★★
+function appendToolResults(toolResults) {
+  if (!toolResults || toolResults.length === 0) return;
+
+  const container = document.getElementById('chatMessages');
+  const empty = container.querySelector('.empty-msg');
+  if (empty) empty.remove();
+
+  const cardsContainer = document.createElement('div');
+  cardsContainer.className = 'msg bot';
+
+  const toolCards = document.createElement('div');
+  toolCards.className = 'tool-cards';
+
+  for (const result of toolResults) {
+    const toolType = result.tool || '';
+    const toolData = result.result || {};
+
+    if (toolType.includes('practice')) {
+      toolCards.innerHTML += renderPracticeCard(toolData);
+    } else if (toolType.includes('document') || toolType.includes('doc')) {
+      toolCards.innerHTML += renderDocumentCard(toolData);
+    } else if (toolType.includes('local_video')) {
+      toolCards.innerHTML += renderVideoCard(toolData);
+    }
+  }
+
+  cardsContainer.appendChild(toolCards);
+  container.appendChild(cardsContainer);
+  container.scrollTop = container.scrollHeight;
+}
+
+// ★★★ 渲染图片搜索结果 ★★★
+function appendImages(images) {
+  if (!images || images.length === 0) return;
+
+  const container = document.getElementById('chatMessages');
+  const empty = container.querySelector('.empty-msg');
+  if (empty) empty.remove();
+
+  const msgDiv = document.createElement('div');
+  msgDiv.className = 'msg bot';
+
+  const grid = document.createElement('div');
+  grid.className = 'image-grid';
+
+  for (const img of images) {
+    const item = document.createElement('div');
+    item.className = 'img-item';
+    const imgUrl = img.thumbnail_url || img.image_url || '';
+    const fullUrl = img.image_url || img.thumbnail_url || '';
+    if (!fullUrl) continue;
+    item.innerHTML = '<img src="' + imgUrl + '" alt="' + escapeHtml(img.title || '图片') + '" loading="lazy" onerror="this.parentElement.classList.add(\'broken\');this.style.display=\'none\'">'
+      + '<div class="img-overlay"><div class="img-title">' + escapeHtml(img.title || '') + '</div></div>';
+    item.addEventListener('click', function() {
+      openImagePreview(fullUrl, img.title || '图片', imgUrl);
+    });
+    grid.appendChild(item);
+  }
+
+  msgDiv.appendChild(grid);
+  container.appendChild(msgDiv);
+  container.scrollTop = container.scrollHeight;
+}
+
+function escapeHtml(str) {
+  var div = document.createElement('div');
+  div.appendChild(document.createTextNode(str));
+  return div.innerHTML;
+}
+
+function openImagePreview(url, title, thumbUrl) {
+  var modal = document.getElementById('imagePreviewModal');
+  if (!modal) return;
+  var img = modal.querySelector('.preview-container img');
+  // 保存缩略图作为降级备用
+  img.setAttribute('data-thumb', thumbUrl || url);
+  img.onerror = function() {
+    var thumb = this.getAttribute('data-thumb');
+    // 如果当前不是缩略图且缩略图可用，切到缩略图
+    if (thumb && this.src !== thumb) {
+      this.src = thumb;
+      return;
+    }
+    this.style.display = 'none';
+    var errEl = document.getElementById('imgPreviewError');
+    if (errEl) errEl.style.display = 'block';
+  };
+  img.onload = function() {
+    var errEl = document.getElementById('imgPreviewError');
+    if (errEl) errEl.style.display = 'none';
+    this.style.display = '';
+  };
+  img.style.display = '';
+  img.src = url;
+  modal.querySelector('.preview-title').textContent = title || '';
+  modal.classList.add('show');
+}
+
+function closeImagePreview() {
+  var modal = document.getElementById('imagePreviewModal');
+  if (modal) modal.classList.remove('show');
+}
+
+function renderPracticeCard(data) {
+  const questions = data.data || [];
+  if (questions.length === 0) return '';
+
+  let html = '';
+  for (const q of questions.slice(0, 3)) {
+    html += `
+      <div class="tool-card practice">
+        <div class="card-header">
+          <span class="card-icon">📝</span>
+          <span class="card-title">练习题</span>
+          <button class="zoom-btn" onclick="zoomPracticeCard('${encodeURIComponent(JSON.stringify(q))}')">🔍</button>
+        </div>
+        <div class="question-text">${q.question || q.title || '未命名题目'}</div>
+        <div class="question-options">
+          ${q.options ? q.options.map((opt, i) => `<div>${String.fromCharCode(65+i)}. ${opt}</div>`).join('') : ''}
+        </div>
+      </div>`;
+  }
+  return html;
+}
+
+function renderDocumentCard(data) {
+  const docData = data.data || {};
+  if (!docData.title && !docData.content) return '';
+
+  return `
+    <div class="tool-card document">
+      <div class="card-header">
+        <span class="card-icon">📄</span>
+        <span class="card-title">讲解文档</span>
+        <button class="zoom-btn" onclick="zoomDocumentCard('${encodeURIComponent(JSON.stringify(docData))}')">🔍</button>
+      </div>
+      <div class="doc-preview">
+        <strong>${docData.title || '未命名文档'}</strong>
+        ${docData.content ? `<p>${docData.content.substring(0, 100)}...</p>` : ''}
+      </div>
+    </div>`;
+}
+
+// ★★★ 渲染视频搜索结果 ★★★
+function renderVideoCard(data) {
+  const videos = data.data || [];
+  if (!videos || videos.length === 0) return '<div style="font-size:12px;color:#999;padding:8px 0;">未找到相关视频</div>';
+
+  let html = '';
+  for (const v of videos) {
+    const videoUrl = v.url || '';
+    const title = v.title || v.filename || '未命名视频';
+    html += `
+      <div class="tool-card video">
+        <div class="card-header">
+          <span class="card-icon">🎬</span>
+          <span class="card-title">教学视频</span>
+          <button class="zoom-btn" onclick="zoomVideoCard('${escapeHtml(title)}', '${videoUrl}')">🔍</button>
+        </div>
+        <div class="video-title">${escapeHtml(title)}</div>
+        <video class="video-player" controls preload="metadata" playsinline>
+          <source src="${videoUrl}" type="video/mp4">
+          ${escapeHtml('您的浏览器不支持视频播放')}
+        </video>
+      </div>`;
+  }
+  return html;
+}
+
+// ★★★ 视频放大查看 ★★★
+function zoomVideoCard(title, videoUrl) {
+  const content = `
+    <div style="text-align:center;">
+      <h3 style="font-size:16px; margin-bottom:12px; color:#333;">${title}</h3>
+      <video controls autoplay preload="auto" playsinline
+        style="width:100%; max-height:70vh; border-radius:8px; background:#000;">
+        <source src="${videoUrl}" type="video/mp4">
+        您的浏览器不支持视频播放
+      </video>
+    </div>`;
+  openResourceModal('🎬 视频播放', content);
+}
+
+function openResourceModal(title, content) {
+  document.getElementById('resourceModalTitle').textContent = title;
+  document.getElementById('resourceModalBody').innerHTML = content;
+  document.getElementById('resourceModal').style.display = 'flex';
+}
+
+function closeResourceModal() {
+  document.getElementById('resourceModal').style.display = 'none';
+}
+
+function zoomPracticeCard(qStr) {
+  const q = JSON.parse(decodeURIComponent(qStr));
+  window.currentProblem = q;
+  
+  let examplesHtml = '';
+  if (q.examples && q.examples.length > 0) {
+    examplesHtml = `<div style="margin-top:16px;"><strong style="color:#764ba2;">示例：</strong><br>`;
+    for (const ex of q.examples) {
+      examplesHtml += `<div style="margin-top:8px; padding:12px; background:#f8f9fa; border-radius:8px;">`;
+      examplesHtml += `<div style="font-size:13px; margin-bottom:4px;"><span style="color:#666;">输入：</span>${ex.input || ''}</div>`;
+      examplesHtml += `<div style="font-size:13px; margin-bottom:4px;"><span style="color:#666;">输出：</span>${ex.output || ''}</div>`;
+      if (ex.explanation) {
+        examplesHtml += `<div style="font-size:12px; color:#888;">解释：${ex.explanation}</div>`;
+      }
+      examplesHtml += `</div>`;
+    }
+    examplesHtml += `</div>`;
+  }
+  
+  let hintsHtml = '';
+  if (q.hints && q.hints.length > 0) {
+    hintsHtml = `<div style="margin-top:16px;"><strong style="color:#f59e0b;">💡 提示：</strong><ul style="margin:8px 0 0 20px; font-size:13px; color:#666;">`;
+    for (const hint of q.hints) {
+      hintsHtml += `<li>${hint}</li>`;
+    }
+    hintsHtml += `</ul></div>`;
+  }
+  
+  let kpHtml = '';
+  if (q.knowledge_points && q.knowledge_points.length > 0) {
+    kpHtml = `<div style="margin-top:16px;"><strong style="color:#10b981;">📚 知识点：</strong>`;
+    kpHtml += q.knowledge_points.map(kp => `<span style="display:inline-block; margin:4px; padding:4px 10px; background:#ecfdf5; color:#065f46; border-radius:12px; font-size:12px;">${kp}</span>`).join('');
+    kpHtml += `</div>`;
+  }
+  
+  const html = `
+    <div class="tool-card practice" style="border:none; padding:0;">
+      <h2 style="font-size:18px; margin-bottom:8px; color:#764ba2;">${q.title || '未命名题目'}</h2>
+      <div style="font-size:13px; color:#888; margin-bottom:16px;">难度：${q.difficulty || '中等'} | 题目ID：${q.problem_id || '-'}</div>
+      
+      <div style="font-size:14px; line-height:1.8; color:#333;">
+        ${q.description || ''}
+      </div>
+      
+      ${q.input_format ? `<div style="margin-top:16px;"><strong style="color:#3b82f6;">输入格式：</strong><div style="margin-top:4px; font-size:13px; color:#333;">${q.input_format}</div></div>` : ''}
+      ${q.output_format ? `<div style="margin-top:8px;"><strong style="color:#3b82f6;">输出格式：</strong><div style="margin-top:4px; font-size:13px; color:#333;">${q.output_format}</div></div>` : ''}
+      
+      ${examplesHtml}
+      ${hintsHtml}
+      ${kpHtml}
+      
+      <div style="margin-top:20px; padding-top:20px; border-top:1px solid #eee;">
+        <strong style="color:#667eea;">💻 编写代码：</strong>
+        
+        <div style="margin-top:10px; display: flex; gap: 10px; align-items: center;">
+          <select id="practiceLanguage" style="padding: 8px 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; cursor: pointer;">
+            <option value="python">🐍 Python</option>
+            <option value="cpp">⚡ C++</option>
+            <option value="java">☕ Java</option>
+            <option value="javascript">📜 JavaScript</option>
+            <option value="c">🔧 C</option>
+          </select>
+          <span style="color: #666; font-size: 13px;">选择编程语言</span>
+        </div>
+        
+        <textarea id="practiceCodeEditor" style="width:100%; min-height:200px; padding:12px; border:2px solid #e0e0e0; border-radius:8px; font-family:monospace; font-size:13px; line-height:1.5; resize:vertical; margin-top:10px;" placeholder="# 在此编写代码..."></textarea>
+        
+        <div style="display: flex; gap: 10px; margin-top: 15px;">
+          <button onclick="submitPracticeCode()" style="flex:1; padding:12px; background:linear-gradient(135deg, #11998e, #38ef7d); color:white; border:none; border-radius:8px; font-size:14px; cursor:pointer; font-weight:600;">🚀 提交代码并测评</button>
+        </div>
+        
+        <div id="practiceJudgeResult" style="margin-top:16px; padding:16px; border-radius:10px; display:none;"></div>
+      </div>
+    </div>`;
+  openResourceModal('练习题 - ' + (q.title || '预览'), html);
+  
+  // 加载孪生编码提醒
+  setTimeout(() => loadTwinHints(q), 200);
+}
+
+// ==================== 孪生编码提醒（纯浮窗） ====================
+let _twinHintsTimer = null;
+let _twinEnabled = true;
+let _twinToastLines = {};
+
+async function loadTwinHints(q) {
+  const editor = document.getElementById('practiceCodeEditor');
+  if (!editor) return;
+
+  const kps = [];
+  if (q.knowledge_points) kps.push(...q.knowledge_points);
+  if (q.knowledge_point) kps.push(q.knowledge_point);
+  const kpStr = kps.filter(Boolean).join(',');
+
+  const uid = (document.getElementById('globalUserId') && document.getElementById('globalUserId').value.trim()) || 'user_001';
+  try {
+    const resp = await fetch(`/digital-twin/${encodeURIComponent(uid)}/hints?knowledge_points=${encodeURIComponent(kpStr)}`);
+    const data = await resp.json();
+    if (data.twin_enabled === false) { _twinEnabled = false; return; }
+    _twinEnabled = true;
+    if (data.hints && data.hints.length > 0) {
+      data.hints.forEach(h => {
+        if (h.type === 'weakness' || h.type === 'error_pattern') {
+          showToast(h, 'practiceCodeEditor', 1);
+        }
+      });
+    }
+  } catch (e) {}
+
+  editor.removeEventListener('input', _twinHintsOnInput);
+  editor.addEventListener('input', _twinHintsOnInput);
+  window._twinHintsKpStr = kpStr;
+  window._twinHintsUid = uid;
+}
+
+function _twinHintsOnInput() {
+  if (!_twinEnabled) return;
+  if (_twinHintsTimer) clearTimeout(_twinHintsTimer);
+  _twinHintsTimer = setTimeout(async () => {
+    const editor = document.getElementById('practiceCodeEditor');
+    if (!editor) return;
+    const code = editor.value;
+    if (!code.trim()) return;
+    const kpStr = window._twinHintsKpStr || '';
+    const uid = window._twinHintsUid || 'user_001';
+    try {
+      const resp = await fetch(`/digital-twin/${encodeURIComponent(uid)}/hints?knowledge_points=${encodeURIComponent(kpStr)}&code_snippet=${encodeURIComponent(code)}`);
+      const data = await resp.json();
+      if (data.twin_enabled === false) { _twinEnabled = false; return; }
+      if (data.hints && data.hints.length > 0) {
+        data.hints.forEach(h => {
+          if (h.type === 'code_pattern' && h.line && h.line > 0) {
+            showToast(h, 'practiceCodeEditor', h.line);
+          } else if (h.type === 'weakness' || h.type === 'error_pattern') {
+            showToast(h, 'practiceCodeEditor', 1);
+          }
+        });
+      }
+    } catch (e) {}
+  }, 1500);
+}
+
+// ---- 浮窗 ----
+function showToast(hint, editorId, line) {
+  if (!line || line < 1) return;
+  const key = editorId + '_' + line;
+  if (_twinToastLines[key]) return;
+  _twinToastLines[key] = true;
+
+  const editor = document.getElementById(editorId);
+  if (!editor) return;
+
+  const fontSize = parseFloat(getComputedStyle(editor).fontSize) || 13;
+  let lh = parseFloat(getComputedStyle(editor).lineHeight);
+  if (isNaN(lh)) lh = Math.round(fontSize * 1.5);
+  const pt = parseFloat(getComputedStyle(editor).paddingTop) || 12;
+  const editorRect = editor.getBoundingClientRect();
+  const targetY = editorRect.top + pt + (line - 1) * lh - editor.scrollTop;
+
+  const toast = document.createElement('div');
+  const sev = hint.severity || 'info';
+  const bgColor = sev === 'warning' ? '#fff3cd' : '#e8f4fd';
+  const borderColor = sev === 'warning' ? '#f6ad55' : '#63b3ed';
+  const icon = sev === 'warning' ? '⚠️' : '💡';
+
+  toast.style.cssText = 'position:fixed;left:' + (editorRect.right + 10) + 'px;top:' + Math.max(targetY, 10) + 'px;'
+    + 'max-width:380px;padding:10px 14px;border-radius:10px;background:' + bgColor + ';'
+    + 'border:1px solid ' + borderColor + ';border-left:4px solid ' + borderColor + ';'
+    + 'font-size:12px;line-height:1.5;color:#333;z-index:99999;'
+    + 'box-shadow:0 4px 16px rgba(0,0,0,0.15);cursor:pointer;'
+    + 'animation:toastSlideIn2 .3s ease;';
+
+  toast.innerHTML = '<div style="display:flex;align-items:flex-start;gap:6px;">'
+    + '<span style="font-size:14px;flex-shrink:0;">' + icon + '</span>'
+    + '<span style="flex:1;min-width:0;">' + (hint.tip || '') + '</span>'
+    + '<span style="font-size:10px;color:#999;flex-shrink:0;cursor:pointer;" onclick="event.stopPropagation();this.parentElement.parentElement.remove()">✕</span>'
+    + '</div>'
+    + '<div style="font-size:10px;color:#999;margin-top:4px;">孪生提醒</div>';
+
+  if (typeof scrollEditorToLine2 === 'function') {
+    toast.addEventListener('click', function(e) {
+      if (e.target.tagName === 'SPAN' && e.target.textContent === '✕') return;
+      scrollEditorToLine2(editorId, line);
+      toast.remove();
+    });
+  }
+
+  document.body.appendChild(toast);
+  setTimeout(function() {
+    if (toast.parentNode) {
+      toast.style.opacity = '0';
+      toast.style.transition = 'opacity .3s';
+      setTimeout(function() { if (toast.parentNode) toast.remove(); }, 300);
+    }
+  }, 3000);
+}
+
+function scrollEditorToLine2(editorId, line) {
+  const editor = document.getElementById(editorId);
+  if (!editor) return;
+  const fontSize = parseFloat(getComputedStyle(editor).fontSize) || 13;
+  let lh = parseFloat(getComputedStyle(editor).lineHeight);
+  if (isNaN(lh)) lh = Math.round(fontSize * 1.5);
+  const pt = parseFloat(getComputedStyle(editor).paddingTop) || 12;
+  editor.scrollTop = (line - 1) * lh + pt - editor.clientHeight / 2;
+  editor.focus();
+  const origBg = editor.style.background;
+  editor.style.background = '#fffde7';
+  setTimeout(function() { editor.style.background = origBg; }, 1500);
+}
+
+// 注入浮窗动画
+(function() {
+  if (!document.getElementById('toastAnimStyle2')) {
+    const s = document.createElement('style');
+    s.id = 'toastAnimStyle2';
+    s.textContent = '@keyframes toastSlideIn2 { from { opacity:0; transform:translateX(20px); } to { opacity:1; transform:translateX(0); } }';
+    document.head.appendChild(s);
+  }
+})();
+
+async function submitPracticeCode() {
+  const q = window.currentProblem;
+  if (!q) return;
+  
+  const code = document.getElementById('practiceCodeEditor').value.trim();
+  const language = document.getElementById('practiceLanguage').value;
+  const userId = (document.getElementById('globalUserId') && document.getElementById('globalUserId').value.trim()) || 'user_001';
+  
+  if (!code) {
+    alert('请先编写代码！');
+    return;
+  }
+  
+  const resultDiv = document.getElementById('practiceJudgeResult');
+  resultDiv.style.display = 'block';
+  resultDiv.innerHTML = '<div style="text-align:center; color:#666;">⏳ 正在编译运行...</div>';
+  
+  try {
+    const res = await fetch('/practice/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id: userId,
+        problem_id: q.problem_id,
+        problem: q,
+        code: code,
+        language: language,
+        enable_tts: false
+      })
+    });
+    
+    const data = await res.json();
+    
+    if (data.success && data.judge_result) {
+      const result = data.judge_result;
+      const verdict = result.verdict || 'Unknown';
+      const score = result.score || 0;
+      
+      let bgColor = '#f8f9fa';
+      let textColor = '#333';
+      let icon = '❓';
+      
+      if (verdict === 'ACCEPTED') {
+        bgColor = '#d1fae5';
+        textColor = '#065f46';
+        icon = '🎉';
+      } else if (verdict === 'WRONG_ANSWER') {
+        bgColor = '#fee2e2';
+        textColor = '#991b1b';
+        icon = '❌';
+      } else if (verdict === 'TIME_LIMIT_EXCEEDED') {
+        bgColor = '#fef3c7';
+        textColor = '#92400e';
+        icon = '⏱️';
+      } else if (verdict === 'COMPILE_ERROR') {
+        bgColor = '#fce7f3';
+        textColor = '#9d174d';
+        icon = '🔧';
+      }
+      
+      resultDiv.style.background = bgColor;
+      resultDiv.innerHTML = `
+        <div style="font-size:16px; font-weight:600; color:${textColor}; margin-bottom:8px;">${icon} ${verdict} (得分: ${score})</div>
+        ${result.message ? `<div style="font-size:13px; color:${textColor}; margin-bottom:8px;">${result.message}</div>` : ''}
+        ${result.feedback ? `<div style="font-size:13px; color:${textColor}; margin-bottom:8px;">💡 ${result.feedback}</div>` : ''}
+        ${result.test_results ? `<div style="font-size:12px; color:#666; margin-top:8px;">测试用例: ${result.test_results}</div>` : ''}
+      `;
+    } else {
+      resultDiv.style.background = '#fee2e2';
+      resultDiv.innerHTML = `<div style="color:#991b1b;">❌ 提交失败: ${data.message || '未知错误'}</div>`;
+    }
+  } catch (e) {
+    resultDiv.style.background = '#fee2e2';
+    resultDiv.innerHTML = `<div style="color:#991b1b;">❌ 网络错误: ${e.message}</div>`;
+  }
+}
+
+function zoomDocumentCard(docStr) {
+  const docData = JSON.parse(decodeURIComponent(docStr));
+  const userId = (document.getElementById('globalUserId') && document.getElementById('globalUserId').value.trim()) || 'user_001';
+  
+  let downloadHtml = '';
+  if (docData.resource_id || docData.file_path) {
+    const dlUrl = docData.oss_url || '/document/download/' + encodeURIComponent(userId) + '/' + encodeURIComponent(docData.resource_id || docData.file_path || 'doc');
+    downloadHtml = `<div style="margin-top:20px;padding:16px;background:#f0fdf4;border-radius:10px;display:flex;align-items:center;gap:12px">
+        <span style="font-size:20px">📄</span>
+        <span style="flex:1;font-size:14px;color:#333;font-weight:600">${docData.title || '文档'}</span>
+        <a href="${dlUrl}" target="_blank" style="padding:10px 24px;background:linear-gradient(135deg,#11998e,#38ef7d);color:#fff;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600">⬇️ 下载Word</a>
+      </div>`;
+  }
+  
+  const html = `
+    <div class="tool-card document" style="border:none; padding:0;">
+      <h2 style="font-size:18px; margin-bottom:16px; color:#764ba2;">${docData.title || '未命名文档'}</h2>
+      <div style="font-size:14px; line-height:1.8; color:#333; white-space:pre-wrap;">
+        ${docData.content || '暂无内容'}
+      </div>
+      ${downloadHtml}
+    </div>`;
+  openResourceModal('讲解文档 - ' + (docData.title || '预览'), html);
+}
+
+function removeMessage(id) {
+  const el = document.getElementById(id);
+  if (el) el.remove();
+}
+
+// ★★★ 智能球 TTS 音频播放（支持VoxCPM） ★★★
+var _chatAudioPlayer = null;
+
+function playTtsAudio(audioPath) {
+  if (!audioPath) return;
+  if (!_chatAudioPlayer) {
+    _chatAudioPlayer = document.createElement('audio');
+    _chatAudioPlayer.style.display = 'none';
+    document.body.appendChild(_chatAudioPlayer);
+  }
+  _chatAudioPlayer.src = audioPath;
+  _chatAudioPlayer.play().catch(function(e) {
+    console.log('⚠️ 智能球语音播放失败:', e.message);
+  });
+}
+
+// ★★★ 上报摄像头资源上下文 ★★★
+function reportCameraContext(resourceType, resourceId, knowledgePoint, action) {
+  const userId = (document.getElementById('globalUserId') && document.getElementById('globalUserId').value.trim()) || 'user_001';
+  fetch('/api/user/resource-context', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      user_id: userId,
+      resource_type: resourceType,
+      resource_id: resourceId || '',
+      knowledge_point: knowledgePoint || '',
+      action: action || 'open'
+    })
+  }).catch(function(err) {
+    console.warn('[CameraContext] 上报失败:', err);
+  });
+}
+
+// ==================== 主动触发引擎（前端） ====================
+
+// --- 时段问候：页面加载完成后自动检查 ---
+setTimeout(function() {
+  checkProactiveGreeting();
+}, 1500); // 等页面完全加载后再检查
+
+async function checkProactiveGreeting() {
+  const uid = document.getElementById('globalUserId').value.trim() || 'user_001';
+  try {
+    const res = await fetch('/api/proactive/check?user_id=' + encodeURIComponent(uid));
+    const data = await res.json();
+    if (data.success && data.message && data.message.text) {
+      appendMessage(data.message.text, 'bot');
+    }
+  } catch(e) {
+    console.warn('主动问候检查失败:', e);
+  }
+}
+
+// --- 犹豫检测：监听输入框的输入行为 ---
+var _hesitateState = {
+  deleteCount: 0,
+  lastInputLen: 0,
+  lastInputTime: 0,
+  cooldown: false,
+  cooldownTimer: null
+};
+
+document.getElementById('chatInput').addEventListener('input', function() {
+  var now = Date.now();
+  var len = this.value.length;
+
+  // 检测删除操作：字数比上次少了，且在5秒窗口内
+  if (len < _hesitateState.lastInputLen && (now - _hesitateState.lastInputTime < 5000)) {
+    _hesitateState.deleteCount++;
+  } else if (len > _hesitateState.lastInputLen) {
+    // 正常打字，重置删除计数
+    _hesitateState.deleteCount = 0;
+  }
+
+  _hesitateState.lastInputLen = len;
+  _hesitateState.lastInputTime = now;
+
+  // 连续删除3次以上 → 触发犹豫模式
+  if (_hesitateState.deleteCount >= 3 && !_hesitateState.cooldown) {
+    _hesitateState.cooldown = true;
+    _hesitateState.deleteCount = 0;
+
+    var inputPrefix = this.value;
+    triggerHesitate(inputPrefix);
+
+    // 冷却60秒，避免频繁触发
+    if (_hesitateState.cooldownTimer) clearTimeout(_hesitateState.cooldownTimer);
+    _hesitateState.cooldownTimer = setTimeout(function() {
+      _hesitateState.cooldown = false;
+    }, 60000);
+  }
+});
+
+async function triggerHesitate(inputPrefix) {
+  const uid = document.getElementById('globalUserId').value.trim() || 'user_001';
+  try {
+    const res = await fetch('/api/proactive/hesitate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: uid, input_prefix: inputPrefix })
+    });
+    const data = await res.json();
+    if (data.success && data.message && data.message.text) {
+      appendMessage(data.message.text, 'bot');
+    }
+  } catch(e) {
+    console.warn('犹豫检测失败:', e);
+  }
+}
+</script>
+
+<!-- ★★★ 用户特征动态曲线图面板 ★★★ -->
+<style>
+#featureChartWidget {
+  position: fixed; top: 80px; left: 24px; z-index: 9998;
+  font-family: 'Segoe UI', sans-serif;
+}
+#featureChartWidget .fc-toggle {
+  width: 52px; height: 52px; border-radius: 50%;
+  background: #fff; border: 2px solid #667eea;
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 22px; transition: all 0.3s;
+  margin-bottom: 12px;
+}
+#featureChartWidget .fc-toggle:hover { transform: scale(1.1); box-shadow: 0 6px 24px rgba(102, 126, 234, 0.4); }
+#featureChartWidget .fc-toggle .fc-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  position: absolute; top: 2px; right: 2px;
+  background: #9ca3af; border: 2px solid #fff;
+  transition: background 0.3s;
+}
+#featureChartWidget .fc-toggle .fc-dot.online { background: #22c55e; }
+#featureChartWidget .fc-toggle .fc-dot.updating { background: #f59e0b; animation: fcPulse 1.5s infinite; }
+@keyframes fcPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+#featureChartWidget .fc-panel {
+  display: none; width: 420px;
+  background: #fff; border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  margin-bottom: 12px; overflow: hidden;
+  border: 1px solid #e5e7eb;
+}
+#featureChartWidget .fc-panel.open { display: block; }
+#featureChartWidget .fc-header {
+  padding: 14px 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff; display: flex; align-items: center; justify-content: space-between;
+  font-size: 14px; font-weight: 600;
+}
+#featureChartWidget .fc-header .fc-status {
+  font-size: 11px; font-weight: 400;
+  padding: 2px 10px; border-radius: 10px;
+  background: rgba(255,255,255,0.2);
+}
+#featureChartWidget .fc-header .fc-status.offline { background: rgba(255,255,255,0.2); }
+#featureChartWidget .fc-header .fc-status.online { background: rgba(34,197,94,0.3); }
+#featureChartWidget .fc-header .fc-status.updating { background: rgba(245,158,11,0.3); }
+
+#featureChartWidget .fc-body { padding: 16px; }
+#featureChartWidget .fc-overall {
+  text-align: center; margin-bottom: 16px;
+  padding: 12px; background: linear-gradient(135deg, #f0f4ff 0%, #e8ecff 100%);
+  border-radius: 12px;
+}
+#featureChartWidget .fc-overall .fc-label { font-size: 12px; color: #667eea; margin-bottom: 4px; }
+#featureChartWidget .fc-overall .fc-score {
+  font-size: 42px; font-weight: 700; color: #667eea;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+#featureChartWidget .fc-overall .fc-trend { font-size: 12px; margin-top: 4px; }
+#featureChartWidget .fc-overall .fc-trend.up { color: #22c55e; }
+#featureChartWidget .fc-overall .fc-trend.down { color: #ef4444; }
+#featureChartWidget .fc-overall .fc-trend.stable { color: #6b7280; }
+
+#featureChartWidget .fc-chart-container {
+  position: relative; height: 160px; margin-bottom: 12px;
+}
+#featureChartWidget .fc-canvas {
+  width: 100%; height: 100%;
+}
+#featureChartWidget .fc-tooltip {
+  position: absolute; background: rgba(0,0,0,0.85);
+  color: #fff; padding: 10px 14px; border-radius: 10px;
+  font-size: 12px; pointer-events: none;
+  display: none; z-index: 10;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+}
+#featureChartWidget .fc-tooltip .fc-t-title { font-weight: 600; margin-bottom: 6px; }
+#featureChartWidget .fc-tooltip .fc-t-item { display: flex; justify-content: space-between; gap: 20px; margin: 4px 0; }
+#featureChartWidget .fc-tooltip .fc-t-label { color: #aaa; }
+#featureChartWidget .fc-tooltip .fc-t-value { color: #fff; font-weight: 500; }
+
+#featureChartWidget .fc-footer {
+  padding: 8px 16px; background: #f8f9fa;
+  border-top: 1px solid #e5e7eb;
+  font-size: 11px; color: #9ca3af;
+  text-align: center;
+}
+</style>
+
+<div id="featureChartWidget">
+  <div class="fc-panel" id="fcPanel">
+    <div class="fc-header">
+      <span>📈 特征实时曲线</span>
+      <span class="fc-status offline" id="fcStatusLabel">未连接</span>
+    </div>
+    <div class="fc-body">
+      <div class="fc-overall">
+        <div class="fc-label">综合评分</div>
+        <div class="fc-score" id="fcOverallScore">--</div>
+        <div class="fc-trend" id="fcTrend">等待数据...</div>
+      </div>
+      <div class="fc-chart-container">
+        <canvas id="fcCanvas"></canvas>
+        <div class="fc-tooltip" id="fcTooltip"></div>
+      </div>
+    </div>
+    <div class="fc-footer" id="fcFooter">实时更新中...</div>
+  </div>
+  <div class="fc-toggle" onclick="fcTogglePanel()" title="特征曲线图">
+    📈 <span class="fc-dot" id="fcDot"></span>
+  </div>
+</div>
+
+<script>
+var fc = { 
+  ws: null, 
+  running: false, 
+  lastFeatures: null,
+  dataHistory: [],
+  maxHistory: 20,
+  canvas: null,
+  ctx: null,
+  animationId: null,
+  hoverIndex: -1
+};
+
+var fcDimLabels = ["学术背景", "学习行为", "目标动机", "认知能力", "情绪状态", "社交互动", "时间管理", "创新创造"];
+var fcDimColors = ["#667eea", "#f59e0b", "#10b981", "#ef4444", "#8b5cf6", "#06b6d4", "#f97316", "#ec4899"];
+
+function fcGetUserId() {
+  var el = document.getElementById('globalUserId') || document.getElementById('userId');
+  return (el && el.value && el.value.trim()) || 'user_001';
+}
+
+function fcTogglePanel() {
+  var panel = document.getElementById('fcPanel');
+  panel.classList.toggle('open');
+  
+  if (panel.classList.contains('open')) {
+    // 展开时启动
+    if (!fc.running) {
+      fcStart();
+    }
+  } else {
+    // 关闭时停止
+    fcStop();
+  }
+}
+
+function fcSetStatus(state, label) {
+  var el = document.getElementById('fcStatusLabel');
+  if (!el) return;
+  el.className = 'fc-status ' + state;
+  el.textContent = label;
+  var dot = document.getElementById('fcDot');
+  if (!dot) return;
+  var dotMap = { offline: '', online: 'online', updating: 'updating' };
+  dot.className = 'fc-dot' + (dotMap[state] ? ' ' + dotMap[state] : '');
+}
+
+function fcStart() {
+  if (fc.running) return;
+  
+  fcSetStatus('updating', '等待数据...');
+  fc.running = true;
+  
+  fcInitCanvas();
+  fcConnectSSE();
+}
+
+function fcStop() {
+  fc.running = false;
+  fcStopFlow();
+  fcStopMockFlow();
+  clearTimeout(fc.sseTimeout);
+  if (fc.ws) {
+    fc.ws.close();
+    fc.ws = null;
+  }
+  if (fc.animationId) {
+    cancelAnimationFrame(fc.animationId);
+    fc.animationId = null;
+  }
+  fcSetStatus('offline', '已停止');
+}
+
+function fcConnectSSE() {
+  var uid = fcGetUserId();
+  var url = '/features/' + uid + '/stream';
+  
+  fc.ws = new EventSource(url);
+  fc.hasRealData = false;
+  
+  // 如果3秒内没收到真实数据，使用模拟数据
+  fc.sseTimeout = setTimeout(function() {
+    if (!fc.hasRealData && fc.running) {
+      console.log('📈 SSE超时，切换到模拟数据');
+      fcSetStatus('online', '模拟数据');
+      fcStartMockFlow();
+    }
+  }, 3000);
+  
+  fc.ws.onopen = function() {
+    fcSetStatus('updating', '等待数据...');
+    console.log('📈 SSE特征推送已连接');
+  };
+  
+  fc.ws.onmessage = function(event) {
+    try {
+      console.log('📈 SSE收到消息:', event.data);
+      var data = JSON.parse(event.data);
+      console.log('📈 解析后数据:', data);
+      if (data.type === 'feature_update') {
+        fc.hasRealData = true;
+        clearTimeout(fc.sseTimeout);
+        fcStopMockFlow();
+        fcHandleFeatureUpdate(data.features);
+        fcSetStatus('online', '实时更新');
+      } else if (data.type === 'keepalive') {
+        console.log('📈 SSE心跳');
+      }
+    } catch (e) {
+      console.error('📈 SSE解析失败:', e, '原始数据:', event.data);
+    }
+  };
+  
+  fc.ws.onerror = function() {
+    // SSE错误，直接使用模拟数据
+    clearTimeout(fc.sseTimeout);
+    if (!fc.hasRealData) {
+      fcSetStatus('online', '模拟数据');
+      fcStartMockFlow();
+    }
+    fc.ws.close();
+    fc.ws = null;
+  };
+  
+  fc.ws.onclose = function() {
+    if (fc.running) {
+      fcSetStatus('offline', '连接断开');
+      setTimeout(function() { fcConnectSSE(); }, 5000);
+    }
+  };
+}
+
+function fcInitCanvas() {
+  fc.canvas = document.getElementById('fcCanvas');
+  if (!fc.canvas) return;
+  fc.ctx = fc.canvas.getContext('2d');
+  
+  fc.canvas.width = fc.canvas.offsetWidth * window.devicePixelRatio;
+  fc.canvas.height = fc.canvas.offsetHeight * window.devicePixelRatio;
+  fc.ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+  
+  fc.canvas.addEventListener('mousemove', fcHandleMouseMove);
+  fc.canvas.addEventListener('mouseleave', fcHandleMouseLeave);
+  
+  fcDrawChart();
+}
+
+function fcHandleFeatureUpdate(features) {
+  if (!features) return;
+  
+  var scores = features.summary_scores ? features.summary_scores.dimension_scores : [];
+  var overall = features.summary_scores ? features.summary_scores.overall_score : 50;
+  
+  if (scores.length === 8) {
+    fc.lastFeatures = features;
+    fc.lastScores = scores;
+    fc.lastOverall = overall;
+    fcUpdateOverall(overall);
+    
+    // 添加真实数据点
+    fcAddDataPoint(scores, overall);
+    
+    // 启动持续流动
+    fcStartFlow();
+  }
+}
+
+// 添加数据点并持续流动
+function fcAddDataPoint(scores, overall) {
+  if (!scores) scores = fc.lastScores || [50,50,50,50,50,50,50,50];
+  if (!overall) overall = fc.lastOverall || 50;
+  
+  fc.dataHistory.push({
+    time: Date.now(),
+    scores: scores,
+    overall: overall
+  });
+  
+  if (fc.dataHistory.length > fc.maxHistory) {
+    fc.dataHistory.shift();
+  }
+  
+  fcDrawChart();
+}
+
+// 模拟数据流动 - 波浪曲线效果，类似百度热榜
+function fcStartMockFlow() {
+  if (fc.mockInterval) return;
+  
+  // 初始化模拟数据 - 创建有明显高低起伏的波浪曲线
+  if (fc.dataHistory.length === 0) {
+    var baseScores = [65, 72, 68, 75, 70, 62, 78, 71];
+    for (var i = 0; i < 20; i++) {
+      // 使用正弦波模拟波浪起伏
+      var wave = Math.sin(i * 0.5) * 20 + Math.sin(i * 0.3) * 15;
+      var overall = 65 + wave + (Math.random() - 0.5) * 10;
+      var scores = baseScores.map(function(s) { 
+        return s + wave * 0.8 + (Math.random() - 0.5) * 8; 
+      });
+      fc.dataHistory.push({
+        time: Date.now() - (20 - i) * 1000,
+        scores: scores,
+        overall: overall
+      });
+    }
+  }
+  
+  var waveOffset = fc.dataHistory.length * 0.5;
+  
+  fc.mockInterval = setInterval(function() {
+    if (!fc.running) return;
+    
+    waveOffset += 0.3;
+    // 正弦波叠加随机噪声，产生自然波浪效果
+    var wave = Math.sin(waveOffset) * 20 + Math.sin(waveOffset * 0.6) * 12 + Math.sin(waveOffset * 0.2) * 8;
+    var overall = 65 + wave + (Math.random() - 0.5) * 8;
+    
+    // 确保分数在0-100范围内
+    overall = Math.max(20, Math.min(95, overall));
+    
+    // 生成各维度分数
+    var last = fc.dataHistory[fc.dataHistory.length - 1];
+    var newScores = last.scores.map(function(s) {
+      var delta = (Math.random() - 0.5) * 15 + wave * 0.3;
+      return Math.max(20, Math.min(95, s + delta));
+    });
+    
+    fc.dataHistory.push({
+      time: Date.now(),
+      scores: newScores,
+      overall: overall
+    });
+    
+    if (fc.dataHistory.length > 20) {
+      fc.dataHistory.shift();
+    }
+  }, 800);
+  
+  fc.animateFlow();
+}
+
+function fcStopMockFlow() {
+  if (fc.mockInterval) {
+    clearInterval(fc.mockInterval);
+    fc.mockInterval = null;
+  }
+}
+
+// 收到真实数据时的处理 - 波浪曲线效果
+function fcStartFlow() {
+  if (fc.flowInterval) return;
+  
+  // 初始化历史数据 - 有明显波浪起伏（确保至少20个点）
+  if (fc.dataHistory.length < 20 && fc.lastScores) {
+    var baseOverall = fc.lastOverall;
+    var existingLen = fc.dataHistory.length;
+    for (var i = existingLen; i < 20; i++) {
+      var wave = Math.sin(i * 0.5) * 15 + Math.sin(i * 0.3) * 10;
+      var overall = baseOverall + wave + (Math.random() - 0.5) * 5;
+      var scores = fc.lastScores.map(function(s) { 
+        return s + wave * 0.6 + (Math.random() - 0.5) * 5; 
+      });
+      fc.dataHistory.push({
+        time: Date.now() - (20 - i) * 1000,
+        scores: scores,
+        overall: overall
+      });
+    }
+  }
+  
+  var waveOffset = fc.dataHistory.length * 0.5;
+  
+  fc.flowInterval = setInterval(function() {
+    if (!fc.running || !fc.lastScores) return;
+    
+    waveOffset += 0.3;
+    // 正弦波叠加产生自然波浪效果
+    var wave = Math.sin(waveOffset) * 15 + Math.sin(waveOffset * 0.6) * 10 + Math.sin(waveOffset * 0.2) * 6;
+    var newOverall = fc.lastOverall + wave + (Math.random() - 0.5) * 5;
+    
+    newOverall = Math.max(20, Math.min(95, newOverall));
+    
+    var newScores = fc.lastScores.map(function(s) {
+      var delta = (Math.random() - 0.5) * 12 + wave * 0.25;
+      return Math.max(20, Math.min(95, s + delta));
+    });
+    
+    fc.dataHistory.push({
+      time: Date.now(),
+      scores: newScores,
+      overall: newOverall
+    });
+    
+    // 保持最多20个历史点
+    if (fc.dataHistory.length > 20) {
+      fc.dataHistory.shift();
+    }
+  }, 800);
+  
+  fc.animateFlow();
+}
+
+// 动画循环 - 持续重绘图表
+fc.animateFlow = function() {
+  if (!fc.running) return;
+  
+  if (fc.dataHistory.length > 0) {
+    var last = fc.dataHistory[fc.dataHistory.length - 1];
+    fcAnimateNumber(document.getElementById('fcOverallScore'), 
+      parseInt(document.getElementById('fcOverallScore').textContent) || 50, 
+      Math.round(last.overall), 50);
+  }
+  
+  fcDrawChart();
+  requestAnimationFrame(fc.animateFlow);
+}
+
+function fcStopFlow() {
+  if (fc.flowInterval) {
+    clearInterval(fc.flowInterval);
+    fc.flowInterval = null;
+  }
+}
+
+function fcUpdateOverall(score) {
+  var el = document.getElementById('fcOverallScore');
+  var trendEl = document.getElementById('fcTrend');
+  
+  if (!el) return;
+  
+  var current = parseInt(el.textContent) || 50;
+  var diff = score - current;
+  
+  var trendText = '';
+  var trendClass = 'stable';
+  if (diff > 0) {
+    trendText = '↑ +' + diff;
+    trendClass = 'up';
+  } else if (diff < 0) {
+    trendText = '↓ ' + diff;
+    trendClass = 'down';
+  } else {
+    trendText = '→ 稳定';
+    trendClass = 'stable';
+  }
+  
+  fcAnimateNumber(el, current, score, 500);
+  
+  trendEl.textContent = trendText;
+  trendEl.className = 'fc-trend ' + trendClass;
+}
+
+function fcAnimateNumber(el, from, to, duration) {
+  var start = performance.now();
+  function update(currentTime) {
+    var elapsed = currentTime - start;
+    var progress = Math.min(elapsed / duration, 1);
+    var easeProgress = 1 - Math.pow(1 - progress, 3);
+    var current = Math.round(from + (to - from) * easeProgress);
+    el.textContent = current;
+    if (progress < 1) {
+      requestAnimationFrame(update);
+    }
+  }
+  requestAnimationFrame(update);
+}
+
+function fcDrawChart() {
+  if (!fc.ctx || fc.dataHistory.length === 0) return;
+  
+  var width = fc.canvas.offsetWidth;
+  var height = fc.canvas.offsetHeight;
+  
+  fc.ctx.clearRect(0, 0, width, height);
+  
+  var padding = { top: 10, right: 10, bottom: 25, left: 35 };
+  var chartWidth = width - padding.left - padding.right;
+  var chartHeight = height - padding.top - padding.bottom;
+  
+  // 按实际数据点数量计算间距，确保曲线铺满整个图表
+  var displayCount = 20;
+  var dataLen = fc.dataHistory.length;
+  var stepX = chartWidth / Math.max(displayCount - 1, dataLen - 1);
+  
+  // 绘制网格线
+  fc.ctx.strokeStyle = '#e5e7eb';
+  fc.ctx.lineWidth = 1;
+  for (var i = 0; i <= 4; i++) {
+    var y = padding.top + (chartHeight / 4) * i;
+    fc.ctx.beginPath();
+    fc.ctx.moveTo(padding.left, y);
+    fc.ctx.lineTo(width - padding.right, y);
+    fc.ctx.stroke();
+    
+    fc.ctx.fillStyle = '#9ca3af';
+    fc.ctx.font = '10px sans-serif';
+    fc.ctx.textAlign = 'right';
+    fc.ctx.fillText((100 - i * 25).toString(), padding.left - 5, y + 4);
+  }
+  
+  // 计算曲线位置：只显示实际数据点，从左到右流动
+  var points = [];
+  
+  // 数据点均匀分布在整个图表宽度
+  for (var k = 0; k < dataLen; k++) {
+    var data = fc.dataHistory[k];
+    var x = padding.left + (k / Math.max(dataLen - 1, 1)) * chartWidth;
+    var score = data ? Math.round(data.overall) : 50;
+    var y = padding.top + chartHeight * (1 - score / 100);
+    points.push({ x: x, y: y, score: score, data: data });
+  }
+  
+  if (points.length > 1) {
+    var lineColor = '#667eea';
+    var gradient = fc.ctx.createLinearGradient(0, padding.top, 0, height - padding.bottom);
+    gradient.addColorStop(0, lineColor + '50');
+    gradient.addColorStop(0.5, lineColor + '20');
+    gradient.addColorStop(1, lineColor + '05');
+    
+    // 使用 Catmull-Rom 样条生成平滑曲线点
+    var smoothPoints = fcCatmullRom(points, 0.5, 10);
+    
+    // 绘制填充区域 - 只填充曲线下方到X轴的区域
+    fc.ctx.beginPath();
+    fc.ctx.moveTo(smoothPoints[0].x, smoothPoints[0].y);
+    for (var m = 1; m < smoothPoints.length; m++) {
+      fc.ctx.lineTo(smoothPoints[m].x, smoothPoints[m].y);
+    }
+    // 连接到最后一个点下方的X轴位置
+    fc.ctx.lineTo(smoothPoints[smoothPoints.length-1].x, height - padding.bottom);
+    // 水平回到第一个点下方的X轴位置
+    fc.ctx.lineTo(smoothPoints[0].x, height - padding.bottom);
+    fc.ctx.closePath();
+    fc.ctx.fillStyle = gradient;
+    fc.ctx.fill();
+    
+    // 绘制曲线
+    fc.ctx.beginPath();
+    fc.ctx.moveTo(smoothPoints[0].x, smoothPoints[0].y);
+    for (var n = 1; n < smoothPoints.length; n++) {
+      fc.ctx.lineTo(smoothPoints[n].x, smoothPoints[n].y);
+    }
+    fc.ctx.strokeStyle = lineColor;
+    fc.ctx.lineWidth = 3;
+    fc.ctx.lineCap = 'round';
+    fc.ctx.lineJoin = 'round';
+    fc.ctx.stroke();
+    
+    // 绘制最后一个数据点
+    var lastSmoothPoint = smoothPoints[smoothPoints.length - 1];
+    if (lastSmoothPoint) {
+      fc.ctx.beginPath();
+      fc.ctx.arc(lastSmoothPoint.x, lastSmoothPoint.y, 6, 0, Math.PI * 2);
+      fc.ctx.fillStyle = lineColor;
+      fc.ctx.fill();
+      fc.ctx.beginPath();
+      fc.ctx.arc(lastSmoothPoint.x, lastSmoothPoint.y, 8, 0, Math.PI * 2);
+      fc.ctx.strokeStyle = lineColor + '60';
+      fc.ctx.lineWidth = 3;
+      fc.ctx.stroke();
+    }
+  }
+  
+  fc.ctx.fillStyle = '#667eea';
+  fc.ctx.font = '12px sans-serif';
+  fc.ctx.textAlign = 'center';
+  fc.ctx.fillText('综合评分', width / 2, height - 5);
+}
+
+function fcHandleMouseMove(e) {
+  var rect = fc.canvas.getBoundingClientRect();
+  var x = e.clientX - rect.left;
+  var y = e.clientY - rect.top;
+  
+  var width = fc.canvas.offsetWidth;
+  var padding = { top: 10, right: 10, bottom: 25, left: 35 };
+  var chartWidth = width - padding.left - padding.right;
+  
+  var displayCount = 20;
+  var stepX = chartWidth / (displayCount - 1);
+  var dataLen = fc.dataHistory.length;
+  
+  // 找到悬停的数据点索引
+  for (var i = 0; i < displayCount; i++) {
+    var pointX = padding.left + i * stepX;
+    if (Math.abs(x - pointX) < 15) {
+      // 计算对应的历史数据索引
+      var dataIndex = i - (displayCount - dataLen);
+      if (dataIndex >= 0 && dataIndex < dataLen) {
+        fc.hoverIndex = dataIndex;
+        fcShowTooltip(dataIndex, x, y);
+        return;
+      }
+    }
+  }
+  
+  fc.hoverIndex = -1;
+  fcHideTooltip();
+}
+
+function fcHandleMouseLeave() {
+  fc.hoverIndex = -1;
+  fcHideTooltip();
+}
+
+function fcShowTooltip(index, x, y) {
+  if (index < 0 || index >= fc.dataHistory.length) return;
+  
+  var data = fc.dataHistory[index];
+  var tooltip = document.getElementById('fcTooltip');
+  
+  var timeStr = new Date(data.time).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  
+  var html = '<div class="fc-t-title">📊 ' + timeStr + '</div>';
+  html += '<div class="fc-t-item"><span class="fc-t-label">综合评分</span><span class="fc-t-value">' + Math.round(data.overall) + '</span></div>';
+  html += '<div style="height:6px;border-top:1px dashed rgba(255,255,255,0.2);margin:6px 0;"></div>';
+  
+  data.scores.forEach(function(score, i) {
+    var color = fcDimColors[i];
+    html += '<div class="fc-t-item"><span class="fc-t-label" style="color:' + color + '">' + fcDimLabels[i] + '</span><span class="fc-t-value">' + Math.round(score) + '</span></div>';
+  });
+  
+  tooltip.innerHTML = html;
+  tooltip.style.display = 'block';
+  
+  var rect = fc.canvas.getBoundingClientRect();
+  var tooltipWidth = tooltip.offsetWidth;
+  var tooltipHeight = tooltip.offsetHeight;
+  
+  var tooltipX = x + 10;
+  var tooltipY = y - tooltipHeight / 2;
+  
+  if (tooltipX + tooltipWidth > rect.width) {
+    tooltipX = x - tooltipWidth - 10;
+  }
+  if (tooltipY < 0) tooltipY = 10;
+  if (tooltipY + tooltipHeight > rect.height) tooltipY = rect.height - tooltipHeight - 10;
+  
+  tooltip.style.left = tooltipX + 'px';
+  tooltip.style.top = tooltipY + 'px';
+  
+  fcDrawChart();
+}
+
+function fcHideTooltip() {
+  var tooltip = document.getElementById('fcTooltip');
+  if (tooltip) tooltip.style.display = 'none';
+  fcDrawChart();
+}
+
+document.getElementById('globalUserId').addEventListener('change', function() {
+  if (fc.running) {
+    fcStop();
+    setTimeout(function() {
+      if (document.getElementById('fcPanel').classList.contains('open')) {
+        fcStart();
+      }
+    }, 500);
+  }
+});
+
+function fcCatmullRom(points, tension, numPoints) {
+  if (points.length < 2) return points;
+  
+  var result = [];
+  tension = tension || 0.5;
+  numPoints = numPoints || 10;
+  
+  for (var i = 0; i < points.length - 1; i++) {
+    var p0 = i === 0 ? points[0] : points[i - 1];
+    var p1 = points[i];
+    var p2 = points[i + 1];
+    var p3 = i === points.length - 2 ? points[points.length - 1] : points[i + 2];
+    
+    for (var t = 0; t < numPoints; t++) {
+      var u = t / numPoints;
+      var u2 = u * u;
+      var u3 = u2 * u;
+      
+      var x = 0.5 * (
+        (-tension * u3 + 2 * tension * u2 - tension * u) * p0.x +
+        ((2 - tension) * u3 + (tension - 3) * u2 + 1) * p1.x +
+        ((tension - 2) * u3 + (3 - 2 * tension) * u2 + tension * u) * p2.x +
+        (tension * u3 - tension * u2) * p3.x
+      );
+      
+      var y = 0.5 * (
+        (-tension * u3 + 2 * tension * u2 - tension * u) * p0.y +
+        ((2 - tension) * u3 + (tension - 3) * u2 + 1) * p1.y +
+        ((tension - 2) * u3 + (3 - 2 * tension) * u2 + tension * u) * p2.y +
+        (tension * u3 - tension * u2) * p3.y
+      );
+      
+      result.push({ x: x, y: y });
+    }
+  }
+  
+  result.push(points[points.length - 1]);
+  return result;
+}
+
+window.addEventListener('resize', function() {
+  fcInitCanvas();
+  fcDrawChart();
+});
+</script>
+<!-- ★★★ 用户特征动态曲线图面板（结束）★★★ -->
+
+<!-- ★★★ 全局浮动摄像头状态面板 ★★★ -->
+<style>
+#cameraWidget {
+  position: fixed; top: 80px; right: 24px; z-index: 9999;
+  font-family: 'Segoe UI', sans-serif;
+}
+#cameraWidget .cw-toggle {
+  width: 52px; height: 52px; border-radius: 50%;
+  background: #fff; border: 2px solid #e0e0e0;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 22px; transition: all 0.3s;
+  margin-left: auto;
+}
+#cameraWidget .cw-toggle:hover { transform: scale(1.1); box-shadow: 0 6px 20px rgba(0,0,0,0.2); }
+#cameraWidget .cw-toggle .cw-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  position: absolute; top: 2px; right: 2px;
+  background: #9ca3af; border: 2px solid #fff;
+  transition: background 0.3s;
+}
+#cameraWidget .cw-toggle .cw-dot.online { background: #22c55e; }
+#cameraWidget .cw-toggle .cw-dot.active { background: #06b6d4; }
+#cameraWidget .cw-toggle .cw-dot.error { background: #ef4444; }
+#cameraWidget .cw-panel {
+  display: none; width: 320px;
+  background: #fff; border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  margin-bottom: 12px; overflow: hidden;
+  border: 1px solid #e5e7eb;
+}
+#cameraWidget .cw-panel.open { display: block; }
+#cameraWidget .cw-header {
+  padding: 14px 16px; background: #f8f9fa;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 14px; font-weight: 600; color: #374151;
+}
+#cameraWidget .cw-header .cw-status {
+  font-size: 12px; font-weight: 400;
+  padding: 2px 10px; border-radius: 10px;
+}
+#cameraWidget .cw-header .cw-status.off { background: #f3f4f6; color: #9ca3af; }
+#cameraWidget .cw-header .cw-status.on { background: #dcfce7; color: #16a34a; }
+#cameraWidget .cw-header .cw-status.err { background: #fef2f2; color: #ef4444; }
+#cameraWidget .cw-body { padding: 12px 16px; }
+#cameraWidget .cw-metrics {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+  margin-bottom: 12px;
+}
+#cameraWidget .cw-metric {
+  background: #f9fafb; border-radius: 10px; padding: 10px 12px;
+  text-align: center;
+}
+#cameraWidget .cw-metric .cw-label { font-size: 11px; color: #9ca3af; margin-bottom: 4px; }
+#cameraWidget .cw-metric .cw-value { font-size: 18px; font-weight: 700; color: #1f2937; }
+#cameraWidget .cw-metric .cw-value.high { color: #22c55e; }
+#cameraWidget .cw-metric .cw-value.medium { color: #f59e0b; }
+#cameraWidget .cw-metric .cw-value.low { color: #ef4444; }
+#cameraWidget .cw-emotion-row {
+  display: flex; gap: 6px; flex-wrap: wrap;
+  justify-content: center; margin-bottom: 12px;
+}
+#cameraWidget .cw-emotion-tag {
+  padding: 3px 10px; border-radius: 12px;
+  font-size: 12px; font-weight: 500;
+}
+#cameraWidget .cw-btn {
+  width: 100%; padding: 8px; border: none; border-radius: 10px;
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  transition: background 0.2s;
+}
+#cameraWidget .cw-btn.start { background: #6366f1; color: #fff; }
+#cameraWidget .cw-btn.start:hover { background: #4f46e5; }
+#cameraWidget .cw-btn.stop { background: #ef4444; color: #fff; }
+#cameraWidget .cw-btn.stop:hover { background: #dc2626; }
+#cameraWidget .cw-log { margin-top: 8px; font-size: 11px; color: #9ca3af; text-align: center; }
+</style>
+
+<div id="cameraWidget">
+  <div class="cw-panel" id="cwPanel">
+    <div class="cw-header">
+      <span>📷 摄像头分析</span>
+      <span class="cw-status off" id="cwStatusLabel">未连接</span>
+    </div>
+    <div class="cw-body">
+      <div class="cw-metrics">
+        <div class="cw-metric"><div class="cw-label">🎯 专注度</div><div class="cw-value" id="cwAttn">--</div></div>
+        <div class="cw-metric"><div class="cw-label">👁 视线</div><div class="cw-value" id="cwGaze">--</div></div>
+        <div class="cw-metric"><div class="cw-label">😊 情绪</div><div class="cw-value" id="cwEmotion">--</div></div>
+        <div class="cw-metric"><div class="cw-label">😴 困倦度</div><div class="cw-value" id="cwDrowsy">--</div></div>
+      </div>
+      <div class="cw-emotion-row" id="cwEmotionTags"></div>
+      <button class="cw-btn start" id="cwBtn" onclick="cwToggle()">▶ 启动摄像头</button>
+      <div class="cw-log" id="cwLog"></div>
+    </div>
+  </div>
+  <div class="cw-toggle" onclick="cwTogglePanel()" title="摄像头状态">
+    📷 <span class="cw-dot" id="cwDot"></span>
+  </div>
+</div>
+
+<script>
+// ★★★ 全局浮动摄像头控制器（适配 unified.html）★★★
+var cw = { ws: null, pc: null, localStream: null, running: false, sessionId: 'cam_widget_' + Date.now() };
+
+function cwGetUserId() {
+  var el = document.getElementById('globalUserId') || document.getElementById('userId');
+  return (el && el.value && el.value.trim()) || window.camUserId || 'user_001';
+}
+function cwLog(msg) { var el = document.getElementById('cwLog'); if (el) el.textContent = msg; }
+
+function cwSetStatus(state, label) {
+  var el = document.getElementById('cwStatusLabel');
+  if (!el) return;
+  el.className = 'cw-status ' + state;
+  el.textContent = label;
+  var dot = document.getElementById('cwDot');
+  if (!dot) return;
+  var dotMap = { off: '', on: 'online', active: 'active', err: 'error' };
+  dot.className = 'cw-dot' + (dotMap[state] ? ' ' + dotMap[state] : '');
+}
+function cwTogglePanel() { document.getElementById('cwPanel').classList.toggle('open'); }
+function cwToggle() { if (cw.running) cwStop(); else cwStart(); }
+
+async function cwStart() {
+  var btn = document.getElementById('cwBtn');
+  if (!btn || cw.running) return;
+  try {
+    cwLog('正在请求摄像头...');
+    cwSetStatus('on', '连接中...');
+    cw.localStream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 640 }, height: { ideal: 480 } }, audio: false });
+    // ★ 信令服务地址：本地开发直连 8081；线上走同源反代（Nginx 将 /offer 与 /ws 转发到 127.0.0.1:8081）
+    var CW_IS_LOCAL = ['localhost', '127.0.0.1', ''].indexOf(location.hostname) !== -1;
+    var CW_HTTP_BASE = CW_IS_LOCAL ? 'http://localhost:8081' : location.origin;
+    var CW_WS_BASE = CW_IS_LOCAL ? 'ws://localhost:8081'
+                                 : ((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host);
+    cw.ws = new WebSocket(CW_WS_BASE + '/ws');
+    cw.ws.onopen = async () => {
+      cwLog('WebSocket 已连接');
+      cw.pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+      cw.localStream.getTracks().forEach(function(t) { cw.pc.addTrack(t, cw.localStream); });
+      cw.pc.onconnectionstatechange = function() {
+        if (cw.pc.connectionState === 'connected') { cwSetStatus('active', '分析中'); cwLog('摄像头分析进行中...'); }
+        else if (['failed','disconnected'].includes(cw.pc.connectionState)) { cwSetStatus('err', '连接断开'); cwLog('连接断开'); }
+      };
+      var offer = await cw.pc.createOffer();
+      await cw.pc.setLocalDescription(offer);
+      var res = await fetch(CW_HTTP_BASE + '/offer', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sdp: offer.sdp, type: offer.type, session_id: cw.sessionId,
+          analysis: { postureAnalysis: true, expressionAnalysis: true, gazeAnalysis: true, sessionId: cw.sessionId }
+        })
+      });
+      var answer = await res.json();
+      await cw.pc.setRemoteDescription(new RTCSessionDescription(answer));
+      // ★★★ POST /offer 完成后再 register，确保 session 已存在 ★★★
+      var uid = cwGetUserId();
+      cw.ws.send(JSON.stringify({ type: 'register', session_id: cw.sessionId, user_id: uid }));
+      cw.running = true; btn.textContent = '⏹ 停止摄像头'; btn.className = 'cw-btn stop';
+    };
+    cw.ws.onmessage = function(evt) {
+      try { var msg = JSON.parse(evt.data); if (msg.type === 'analysis') cwUpdateMetrics(msg.payload); } catch(e) {}
+    };
+    cw.ws.onerror = function() { cwSetStatus('err', '信令错误'); cwLog('WebSocket 连接失败'); };
+    cw.ws.onclose = function() { if (cw.running) { cwSetStatus('err', '连接断开'); cwLog('WebSocket 已断开'); } };
+  } catch (err) {
+    console.error('[CameraWidget] 启动失败:', err);
+    cwSetStatus('err', '启动失败'); cwLog('启动失败: ' + err.message);
+    btn.textContent = '▶ 启动摄像头'; btn.className = 'cw-btn start';
+  }
+}
+
+function cwStop() {
+  cw.running = false;
+  if (cw.pc) { try { cw.pc.close(); } catch(e) {} cw.pc = null; }
+  if (cw.ws) { try { cw.ws.close(); } catch(e) {} cw.ws = null; }
+  if (cw.localStream) { cw.localStream.getTracks().forEach(function(t) { t.stop(); }); cw.localStream = null; }
+  var btn = document.getElementById('cwBtn');
+  if (btn) { btn.textContent = '▶ 启动摄像头'; btn.className = 'cw-btn start'; }
+  cwSetStatus('off', '已停止'); cwLog('摄像头已停止');
+}
+
+function cwUpdateMetrics(payload) {
+  if (!payload) return;
+  var type = payload.type, data = payload.data;
+  if (!data) return;
+  if (type === 'gaze') {
+    var attnEl = document.getElementById('cwAttn');
+    if (attnEl) { var s = data.attention_score; attnEl.textContent = s !== undefined ? s : '--'; attnEl.className = 'cw-value' + (s >= 80 ? ' high' : s >= 50 ? ' medium' : ' low'); }
+    var gazeEl = document.getElementById('cwGaze'); if (gazeEl) { var dir = data.gaze_direction || '--'; gazeEl.textContent = data.is_distracted ? '分心(' + dir + ')' : '专注'; gazeEl.className = 'cw-value' + (data.is_distracted ? ' low' : ' high'); }
+    var drowsyEl = document.getElementById('cwDrowsy');
+    if (drowsyEl) {
+      if (data.is_drowsy) { drowsyEl.textContent = '😴 瞌睡'; drowsyEl.className = 'cw-value low'; }
+      else if (data.is_yawning) { drowsyEl.textContent = '🥱 打哈欠'; drowsyEl.className = 'cw-value medium'; }
+      else if (data.drowsiness_score !== undefined) { var v = data.drowsiness_score; drowsyEl.textContent = v < 0.15 ? '清醒' : v.toFixed(2); drowsyEl.className = 'cw-value' + (v > 0.45 ? ' low' : v > 0.15 ? ' medium' : ' high'); }
+    }
+    // ★★★ 检测瞌睡和分心，显示警告弹窗 ★★★
+    checkAndShowWarning(data);
+  }
+  if (type === 'emotion' && Array.isArray(data) && data.length > 0) {
+    var emoEl = document.getElementById('cwEmotion'); if (emoEl) emoEl.textContent = data[0].emotion || data[0] || '--';
+    var tagsEl = document.getElementById('cwEmotionTags');
+    if (tagsEl) {
+      var cmap = { 'happy':'#22c55e','neutral':'#6366f1','sad':'#f59e0b','angry':'#ef4444','fear':'#8b5cf6','surprised':'#06b6d4' };
+      tagsEl.innerHTML = data.slice(0, 4).map(function(d) { var emo = d.emotion || d, c = cmap[emo] || '#9ca3af'; return '<span class="cw-emotion-tag" style="background:'+c+'20;color:'+c+'">'+emo+(d.confidence?' '+d.confidence.toFixed(2):'')+'</span>'; }).join('');
+    }
+  }
+}
+
+// ★★★ 警告弹窗逻辑 ★★★
+var warningCooldown = {
+  drowsy: 0,
+  distracted: 0,
+  yawning: 0,
+  low_attention: 0
+};
+
+function checkAndShowWarning(data) {
+  if (!data) return;
+  var now = Date.now();
+
+  // 瞌睡检测
+  if (data.is_drowsy && now - warningCooldown.drowsy > 60000) {
+    showWarningModal('😴', '瞌睡提醒', '检测到您似乎在打瞌睡，请注意休息或调整状态', 'danger');
+    warningCooldown.drowsy = now;
+  }
+
+  // 分心检测
+  if (data.is_distracted && now - warningCooldown.distracted > 30000) {
+    var dir = data.gaze_direction || '未知';
+    showWarningModal('👀', '分心提醒', '检测到您的视线离开了屏幕（' + dir + '），请保持专注', 'warning');
+    warningCooldown.distracted = now;
+  }
+
+  // 打哈欠检测
+  if (data.is_yawning && now - warningCooldown.yawning > 60000) {
+    showWarningModal('🥱', '疲劳提醒', '检测到您在打哈欠，可能需要休息一下', 'primary');
+    warningCooldown.yawning = now;
+  }
+
+  // 注意力过低检测
+  if (data.attention_score !== undefined && data.attention_score < 40 && now - warningCooldown.low_attention > 45000) {
+    showWarningModal('📉', '注意力提醒', '您的注意力分数较低，建议调整学习状态', 'warning');
+    warningCooldown.low_attention = now;
+  }
+}
+
+function showWarningModal(icon, title, message, btnType) {
+  var modal = document.getElementById('warningModal');
+  var iconEl = document.getElementById('warningIcon');
+  var titleEl = document.getElementById('warningTitle');
+  var msgEl = document.getElementById('warningMessage');
+  var btnEl = modal.querySelector('.modal-btn');
+
+  if (!modal) return;
+
+  iconEl.textContent = icon;
+  titleEl.textContent = title;
+  msgEl.textContent = message;
+  btnEl.className = 'modal-btn ' + btnType;
+
+  modal.classList.add('show');
+  
+  // ★★★ TTS语音播报：用当前用户的音色朗读警告内容 ★★★
+  speakWarning(title, message);
+  
+  // ★★★ 暂停iframe中所有正在播放的视频 ★★★
+  pauseIframeVideos();
+}
+
+// ★★★ TTS语音播报（支持VoxCPM音色克隆）★★★
+var _warningAudioPlayer = null;
+var _warningAudioPlaying = false;
+
+function speakWarning(title, message) {
+  // 构建播报文本
+  var speakText = title + '：' + message;
+  var uid = document.getElementById('globalUserId').value.trim() || 'user_001';
+
+  // 调用后端TTS API
+  fetch('/speech/tts', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text: speakText, user_id: uid }),
+  })
+  .then(function(res) { return res.json(); })
+  .then(function(result) {
+    if (result.success && result.audio_url) {
+      var audioUrl = result.audio_url;
+      // 使用隐藏的audio元素播放
+      if (!_warningAudioPlayer) {
+        _warningAudioPlayer = document.createElement('audio');
+        _warningAudioPlayer.style.display = 'none';
+        document.body.appendChild(_warningAudioPlayer);
+        _warningAudioPlayer.addEventListener('ended', function() {
+          _warningAudioPlaying = false;
+        });
+      }
+      _warningAudioPlayer.src = audioUrl;
+      _warningAudioPlayer.play().catch(function(e) {
+        console.log('⚠️ 警告语音播放失败:', e.message);
+      });
+      _warningAudioPlaying = true;
+    }
+  })
+  .catch(function(e) {
+    console.log('⚠️ TTS请求失败（不影响主功能）:', e.message);
+  });
+}
+
+// ★★★ 暂停所有iframe中的视频播放 ★★★
+function pauseIframeVideos() {
+  var frame = document.getElementById('frame-agent');
+  if (frame && frame.contentWindow) {
+    frame.contentWindow.postMessage({ type: 'pauseAllVideos' }, '*');
+  }
+}
+
+function closeWarningModal() {
+  var modal = document.getElementById('warningModal');
+  if (modal) modal.classList.remove('show');
+}
+window.addEventListener('beforeunload', function() { if (cw.running) cwStop(); });
+</script>
+<!-- ★★★ 全局浮动摄像头状态面板（结束） ★★★ -->
+
+<!-- ★★★ 全局语音通话系统 ★★★ -->
+<style>
+.voice-incoming-panel {
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 320px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 16px; padding: 20px; color: #fff;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25); z-index: 9999;
+  animation: voiceSlideIn 0.3s ease-out;
+}
+@keyframes voiceSlideIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+.voice-incoming-panel .vi-info { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.voice-incoming-panel .vi-avatar { width: 48px; height: 48px; border-radius: 24px;
+  background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center;
+  font-size: 20px; font-weight: 700; }
+.voice-incoming-panel .vi-name { font-size: 16px; font-weight: 600; }
+.voice-incoming-panel .vi-status { font-size: 13px; opacity: 0.8; }
+.voice-incoming-panel .vi-actions { display: flex; gap: 12px; }
+.voice-incoming-panel .vi-accept { flex: 1; padding: 10px; border: none; border-radius: 10px;
+  background: #22c55e; color: #fff; cursor: pointer; font-size: 14px; font-weight: 600; }
+.voice-incoming-panel .vi-reject { flex: 1; padding: 10px; border: none; border-radius: 10px;
+  background: rgba(255,255,255,0.2); color: #fff; cursor: pointer; font-size: 14px; font-weight: 600; }
+
+.voice-active-panel {
+  position: fixed; bottom: 20px; left: 20px; width: 300px;
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  border-radius: 16px; padding: 20px; color: #fff;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3); z-index: 9999;
+}
+.voice-active-panel .va-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.voice-active-panel .va-avatar { width: 40px; height: 40px; border-radius: 20px;
+  background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 700; }
+.voice-active-panel .va-name { font-size: 14px; font-weight: 600; }
+.voice-active-panel .va-duration { font-size: 13px; color: #22c55e; font-weight: 600; }
+.voice-active-panel .va-controls { display: flex; gap: 12px; justify-content: center; }
+.voice-active-panel .va-btn { width: 48px; height: 48px; border-radius: 24px; border: none;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 20px; transition: all .2s; }
+.voice-active-panel .va-mute { background: rgba(255,255,255,0.1); color: #fff; }
+.voice-active-panel .va-mute.muted { background: #ef4444; }
+.voice-active-panel .va-hangup { background: #ef4444; color: #fff; }
+</style>
+
+<div id="voiceIncomingPanel" style="display:none"></div>
+<div id="voiceActivePanel" style="display:none"></div>
+<audio id="voiceRemoteAudio" autoplay style="display:none"></audio>
+
+<script>
+// ==================== 全局语音通话系统 ====================
+var _voiceWs = null;
+var _voicePc = null;
+var _voiceLocalStream = null;
+var _voiceRoomId = null;
+var _voicePeer = null;
+var _voiceCallStart = null;
+var _voiceTimer = null;
+var _voiceMuted = false;
+var _voiceRingtoneInterval = null;
+var _voiceAudioCtx = null;
+
+function _voiceGetUserId() {
+  return document.getElementById('globalUserId').value.trim() || 'user_001';
+}
+
+function _voiceInitWs() {
+  if (_voiceWs && _voiceWs.readyState === WebSocket.OPEN) return;
+  var proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  _voiceWs = new WebSocket(proto + '//' + location.host + '/companion/voice/ws');
+
+  _voiceWs.onopen = function() {
+    console.log('[Voice] WebSocket 已连接');
+    _voiceWs.send(JSON.stringify({ type: 'register', user_id: _voiceGetUserId() }));
+  };
+
+  _voiceWs.onmessage = function(ev) {
+    var msg = JSON.parse(ev.data);
+    if (msg.type === 'registered') return;
+    _voiceHandleMsg(msg);
+  };
+
+  _voiceWs.onclose = function() {
+    console.log('[Voice] WebSocket 断开');
+    setTimeout(function() { if (!_voiceRoomId) _voiceInitWs(); }, 3000);
+  };
+
+  _voiceWs.onerror = function(e) { console.error('[Voice] WS error:', e); };
+}
+
+function _voiceHandleMsg(msg) {
+  switch (msg.type) {
+    case 'incoming_call':
+      _voiceShowIncoming(msg.room_id, msg.caller_id);
+      break;
+    case 'call_created':
+      _voiceRoomId = msg.room_id;
+      break;
+    case 'callee_ringing':
+      _voiceUpdateActivePanel('正在响铃...');
+      break;
+    case 'callee_joined':
+      break;
+    case 'call_accepted':
+      _voiceCallStart = Date.now();
+      _voiceStartTimer();
+      _voiceUpdateActivePanel('通话中');
+      if (_voicePc) _voiceCreateOffer();
+      break;
+    case 'call_rejected':
+      _voiceHideAll();
+      _voiceCleanup();
+      alert('对方拒绝了通话');
+      break;
+    case 'call_connected':
+      _voiceRoomId = msg.room_id;
+      _voiceCallStart = Date.now();
+      _voiceStartTimer();
+      _voiceUpdateActivePanel('通话中');
+      break;
+    case 'call_ended':
+      var reason = msg.reason || '';
+      _voiceHideAll();
+      _voiceCleanup();
+      if (reason === 'no_answer') {
+        alert('对方未接听');
+      } else if (reason === 'peer_disconnected') {
+        alert('对方已断开连接');
+      }
+      break;
+    case 'offer':
+      _voiceHandleOffer(msg.sdp);
+      break;
+    case 'answer':
+      _voiceHandleAnswer(msg.sdp);
+      break;
+    case 'ice-candidate':
+      _voiceHandleIce(msg.candidate);
+      break;
+    case 'error':
+      alert('通话错误: ' + msg.message);
+      _voiceHideAll();
+      _voiceCleanup();
+      break;
+  }
+}
+
+// 发起通话（供 companion.html iframe 通过 postMessage 调用）
+async function voiceStartCall(calleeId) {
+  var callerId = _voiceGetUserId();
+  if (_voiceRoomId) { alert('您已在通话中'); return; }
+  try {
+    _voiceLocalStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    _voiceInitWs();
+    
+    // 等待 WebSocket 连接
+    if (_voiceWs.readyState !== WebSocket.OPEN) {
+      await new Promise(function(resolve, reject) {
+        var timeout = setTimeout(function() { 
+          reject(new Error('连接超时')); 
+        }, 5000);
+        
+        var originalOnopen = _voiceWs.onopen;
+        _voiceWs.onopen = function() {
+          clearTimeout(timeout);
+          if (originalOnopen) originalOnopen();
+          resolve();
+        };
+      });
+    }
+    
+    _voicePeer = calleeId;
+    _voiceShowActivePanel(calleeId, '连接中...');
+    _voiceWs.send(JSON.stringify({ type: 'call', caller_id: callerId, callee_id: calleeId }));
+    await _voiceCreatePc();
+  } catch (e) {
+    console.error('[Voice] 发起通话失败:', e);
+    alert('无法访问麦克风或连接失败');
+    _voiceHideAll();
+    _voiceCleanup();
+  }
+}
+
+async function _voiceCreatePc() {
+  var pc = new RTCPeerConnection({
+    iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }]
+  });
+  _voicePc = pc;
+
+  if (_voiceLocalStream) {
+    _voiceLocalStream.getTracks().forEach(function(t) { pc.addTrack(t, _voiceLocalStream); });
+  }
+
+  pc.ontrack = function(ev) {
+    var audio = document.getElementById('voiceRemoteAudio');
+    if (audio && ev.streams && ev.streams[0]) audio.srcObject = ev.streams[0];
+  };
+
+  pc.onicecandidate = function(ev) {
+    if (ev.candidate && _voiceRoomId) {
+      _voiceWs.send(JSON.stringify({ type: 'ice-candidate', room_id: _voiceRoomId, candidate: ev.candidate.toJSON() }));
+    }
+  };
+
+  pc.onconnectionstatechange = function() {
+    if (pc.connectionState === 'failed' || pc.connectionState === 'disconnected') {
+      _voiceHideAll();
+      _voiceCleanup();
+    }
+  };
+}
+
+async function _voiceCreateOffer() {
+  try {
+    var offer = await _voicePc.createOffer();
+    await _voicePc.setLocalDescription(offer);
+    _voiceWs.send(JSON.stringify({ type: 'offer', room_id: _voiceRoomId, sdp: offer }));
+  } catch (e) { console.error('[Voice] createOffer 失败:', e); }
+}
+
+async function _voiceHandleOffer(sdp) {
+  try {
+    if (!_voicePc) await _voiceCreatePc();
+    await _voicePc.setRemoteDescription(new RTCSessionDescription(sdp));
+    var answer = await _voicePc.createAnswer();
+    await _voicePc.setLocalDescription(answer);
+    _voiceWs.send(JSON.stringify({ type: 'answer', room_id: _voiceRoomId, sdp: answer }));
+  } catch (e) { console.error('[Voice] handleOffer 失败:', e); }
+}
+
+async function _voiceHandleAnswer(sdp) {
+  try {
+    if (_voicePc) await _voicePc.setRemoteDescription(new RTCSessionDescription(sdp));
+  } catch (e) { console.error('[Voice] handleAnswer 失败:', e); }
+}
+
+async function _voiceHandleIce(candidate) {
+  try {
+    if (_voicePc) await _voicePc.addIceCandidate(new RTCIceCandidate(candidate));
+  } catch (e) { console.error('[Voice] addIceCandidate 失败:', e); }
+}
+
+// 来电通知
+function _voiceShowIncoming(roomId, callerId) {
+  _voiceRoomId = roomId;
+  _voicePeer = callerId;
+  // 先 join 让服务器知道被叫方在线
+  _voiceInitWs();
+  var waitForOpen = setInterval(function() {
+    if (_voiceWs && _voiceWs.readyState === WebSocket.OPEN) {
+      clearInterval(waitForOpen);
+      _voiceWs.send(JSON.stringify({ type: 'join', room_id: roomId, user_id: _voiceGetUserId() }));
+    }
+  }, 100);
+
+  var panel = document.getElementById('voiceIncomingPanel');
+  panel.style.display = 'block';
+  panel.innerHTML = '<div class="voice-incoming-panel">' +
+    '<div class="vi-info">' +
+      '<div class="vi-avatar">' + callerId.slice(-2).toUpperCase() + '</div>' +
+      '<div><div class="vi-name">' + callerId + '</div><div class="vi-status">来电中...</div></div>' +
+    '</div>' +
+    '<div class="vi-actions">' +
+      '<button class="vi-reject" onclick="voiceReject()">拒绝</button>' +
+      '<button class="vi-accept" onclick="voiceAccept()">接听</button>' +
+    '</div></div>';
+  _voicePlayRing();
+}
+
+async function voiceAccept() {
+  try {
+    _voiceLocalStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    _voiceWs.send(JSON.stringify({ type: 'accept', room_id: _voiceRoomId, user_id: _voiceGetUserId() }));
+    document.getElementById('voiceIncomingPanel').style.display = 'none';
+    _voiceShowActivePanel(_voicePeer, '连接中...');
+    await _voiceCreatePc();
+    _voiceStopRing();
+  } catch (e) {
+    alert('无法访问麦克风');
+    voiceReject();
+  }
+}
+
+function voiceReject() {
+  if (_voiceWs && _voiceRoomId) {
+    _voiceWs.send(JSON.stringify({ type: 'reject', room_id: _voiceRoomId, user_id: _voiceGetUserId() }));
+  }
+  _voiceStopRing();
+  _voiceHideAll();
+  _voiceCleanup();
+}
+
+function voiceHangup() {
+  if (_voiceWs && _voiceRoomId) {
+    _voiceWs.send(JSON.stringify({ type: 'hangup', room_id: _voiceRoomId, user_id: _voiceGetUserId() }));
+  }
+  _voiceHideAll();
+  _voiceCleanup();
+}
+
+function voiceToggleMute() {
+  if (!_voiceLocalStream) return;
+  _voiceMuted = !_voiceMuted;
+  _voiceLocalStream.getAudioTracks().forEach(function(t) { t.enabled = !_voiceMuted; });
+  var btn = document.querySelector('.va-mute');
+  if (btn) { btn.classList.toggle('muted', _voiceMuted); btn.textContent = _voiceMuted ? '🔇' : '🎤'; }
+}
+
+function _voiceShowActivePanel(peerId, statusText) {
+  var panel = document.getElementById('voiceActivePanel');
+  panel.style.display = 'block';
+  panel.innerHTML = '<div class="voice-active-panel">' +
+    '<div class="va-header">' +
+      '<div class="va-avatar">' + peerId.slice(-2).toUpperCase() + '</div>' +
+      '<div><div class="va-name">' + peerId + '</div>' +
+      '<div class="va-duration" id="voiceDuration">' + statusText + '</div></div>' +
+    '</div>' +
+    '<div class="va-controls">' +
+      '<button class="va-btn va-mute" onclick="voiceToggleMute()" title="静音">🎤</button>' +
+      '<button class="va-btn va-hangup" onclick="voiceHangup()" title="挂断">📞</button>' +
+    '</div></div>';
+}
+
+function _voiceUpdateActivePanel(text) {
+  var el = document.getElementById('voiceDuration');
+  if (el) el.textContent = text;
+}
+
+function _voiceHideAll() {
+  document.getElementById('voiceIncomingPanel').style.display = 'none';
+  document.getElementById('voiceActivePanel').style.display = 'none';
+}
+
+function _voiceStartTimer() {
+  if (_voiceTimer) clearInterval(_voiceTimer);
+  _voiceTimer = setInterval(function() {
+    var s = Math.floor((Date.now() - _voiceCallStart) / 1000);
+    var m = String(Math.floor(s / 60)).padStart(2, '0');
+    var sec = String(s % 60).padStart(2, '0');
+    var el = document.getElementById('voiceDuration');
+    if (el) el.textContent = m + ':' + sec;
+  }, 1000);
+}
+
+function _voiceCleanup() {
+  if (_voiceTimer) { clearInterval(_voiceTimer); _voiceTimer = null; }
+  if (_voicePc) { _voicePc.close(); _voicePc = null; }
+  if (_voiceLocalStream) { _voiceLocalStream.getTracks().forEach(function(t) { t.stop(); }); _voiceLocalStream = null; }
+  _voiceRoomId = null;
+  _voicePeer = null;
+  _voiceCallStart = null;
+  _voiceMuted = false;
+}
+
+function _voicePlayRing() {
+  _voiceStopRing();
+  try {
+    _voiceAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    var on = false;
+    _voiceRingtoneInterval = setInterval(function() {
+      if (on) return;
+      on = true;
+      var osc = _voiceAudioCtx.createOscillator();
+      var gain = _voiceAudioCtx.createGain();
+      osc.connect(gain); gain.connect(_voiceAudioCtx.destination);
+      osc.frequency.value = 440; gain.gain.value = 0.3;
+      osc.start();
+      setTimeout(function() { osc.stop(); on = false; }, 400);
+    }, 800);
+  } catch(e) {}
+}
+
+function _voiceStopRing() {
+  if (_voiceRingtoneInterval) { clearInterval(_voiceRingtoneInterval); _voiceRingtoneInterval = null; }
+  if (_voiceAudioCtx) { try { _voiceAudioCtx.close(); } catch(e) {} _voiceAudioCtx = null; }
+}
+
+// 监听 iframe 发来的通话请求
+window.addEventListener('message', function(e) {
+  if (e.data && e.data.type === 'voiceCall') {
+    voiceStartCall(e.data.calleeId);
+  }
+  // userId 变更时重新注册 WebSocket
+  if (e.data && e.data.type === 'setUserId') {
+    if (_voiceWs && _voiceWs.readyState === WebSocket.OPEN) {
+      _voiceWs.send(JSON.stringify({ type: 'register', user_id: e.data.userId }));
+    }
+  }
+});
+
+// 页面加载时初始化
+_voiceInitWs();
+</script>
+
+</body>
+</html>

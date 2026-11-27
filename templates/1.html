@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>喵星叠叠乐 · Cat Stack</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&family=Nunito:wght@700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;user-select:none}
+body{background:linear-gradient(180deg, #FFE5B4 0%, #F4A261 60%, #E76F51 100%)}
+canvas{display:block}
+#hud{position:fixed;top:0;left:0;right:0;padding:20px 40px;display:flex;justify-content:space-between;pointer-events:none;z-index:10}
+.stat{background:rgba(255,255,255,0.3);backdrop-filter:blur(8px);padding:10px 24px;border-radius:30px;border:2px solid rgba(255,255,255,0.5);text-align:center}
+.stat .lab{font-size:11px;letter-spacing:2px;color:#7A4A23}
+.stat .val{font-family:'Fredoka',sans-serif;font-size:32px;color:#E76F51;font-weight:600;line-height:1}
+#menu,#over{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:20;background:rgba(231,111,81,0.85);backdrop-filter:blur(12px);color:#fff}
+h1{font-family:'Fredoka',sans-serif;font-size:clamp(52px,8vw,88px);font-weight:600;color:#FFF1E6;text-shadow:4px 4px 0 #BC6C25, 8px 8px 20px rgba(0,0,0,0.2);margin-bottom:6px}
+.sub{font-size:14px;letter-spacing:6px;color:#FFD166;margin-bottom:40px}
+.btn{font-family:'Fredoka',sans-serif;background:#FFF1E6;color:#E76F51;border:none;padding:14px 50px;font-size:20px;border-radius:30px;cursor:pointer;box-shadow:0 6px 0 #E8C9B0, 0 10px 20px rgba(0,0,0,0.2);transition:all .15s}
+.btn:active{transform:translateY(4px);box-shadow:0 2px 0 #E8C9B0, 0 4px 10px rgba(0,0,0,0.2)}
+.rules{margin-top:30px;font-size:15px;line-height:2;color:rgba(255,255,255,0.9);text-align:center}
+#over{display:none}
+#finalScore{font-family:'Fredoka',sans-serif;font-size:72px;color:#FFD166;margin:10px 0}
+.hidden{display:none!important}
+.floats{position:fixed;inset:0;pointer-events:none;z-index:5}
+.float{position:absolute;font-family:'Fredoka',sans-serif;font-size:28px;animation:up 1s ease-out forwards;text-shadow:0 2px 4px rgba(0,0,0,0.3);transform:translate(-50%,-50%)}
+@keyframes up{0%{transform:translate(-50%,-50%) scale(.5);opacity:0}30%{transform:translate(-50%,-70%) scale(1.2);opacity:1}100%{transform:translate(-50%,-120%) scale(1);opacity:0}}
+.hint{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);color:#7A4A23;font-size:13px;letter-spacing:4px;pointer-events:none;z-index:5;opacity:0.6}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div class="floats" id="floats"></div>
+
+<div id="hud" class="hidden">
+  <div class="stat"><div class="lab">SCORE</div><div class="val" id="score">0</div></div>
+  <div class="stat"><div class="lab">COMBO</div><div class="val" id="combo">0</div></div>
+</div>
+
+<div id="menu">
+  <h1>喵星叠叠乐</h1>
+  <div class="sub">CAT STACK</div>
+  <button class="btn" id="startBtn">开始游戏</button>
+  <div class="rules">
+    使用 <b>← →</b> 或 <b>A D</b> 移动软垫接住猫咪<br>
+    <b>连续 3 只同色猫咪</b>叠在一起即可消除得分<br>
+    猫咪叠得太高（7只）游戏结束
+  </div>
+</div>
+
+<div id="over">
+  <div class="sub">游戏结束</div>
+  <div id="finalScore">0</div>
+  <button class="btn" id="restartBtn">再来一次</button>
+</div>
+<div class="hint">← → MOVE</div>
+
+<script>
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+let W, H;
+function resize(){W=cv.width=innerWidth;H=cv.height=innerHeight}
+resize();addEventListener('resize',resize);
+
+const CAT_COLORS = [
+  {body:'#FFB347', ear:'#E8941E', name:'橘'}, // 橘猫
+  {body:'#F5F5F5', ear:'#D9D9D9', name:'白'}, // 白猫
+  {body:'#5A5A5A', ear:'#333333', name:'灰'}, // 灰猫
+  {body:'#8B4513', ear:'#5C2E0C', name:'黑'}  // 黑猫
+];
+
+let cats = [];      // 正在下落的猫咪
+let stack = [];     // 软垫上的猫咪栈
+let particles = []; // 消除粒子
+let score = 0, combo = 0;
+let gameState = 'menu';
+let spawnT = 0, lastT = 0, elapsed = 0;
+const floatsEl = document.getElementById('floats');
+
+const PAD_W = 120;
+const CAT_SIZE = 60;
+const MAX_STACK = 7;
+
+let pad = { x: 0, y: 0 };
+
+class Cat {
+  constructor(){
+    this.color = Math.floor(Math.random() * CAT_COLORS.length);
+    this.x = 60 + Math.random() * (W - 120);
+    this.y = -CAT_SIZE;
+    this.vy = 2 + Math.random() * 1 + elapsed * 0.0001;
+    this.rot = (Math.random() - 0.5) * 0.4;
+    this.rotV = (Math.random() - 0.5) * 0.05;
+    this.alive = true;
+  }
+  update(dt){
+    this.y += this.vy * (dt/16);
+    this.rot += this.rotV;
+  }
+  draw(){
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.rot);
+    drawCat(0, 0, CAT_COLORS[this.color], CAT_SIZE);
+    ctx.restore();
+  }
+}
+
+function drawCat(x, y, color, size) {
+  ctx.fillStyle = color.body;
+  // 身体
+  ctx.beginPath();
+  ctx.ellipse(x, y, size/2, size/2.2, 0, 0, Math.PI*2);
+  ctx.fill();
+  // 耳朵
+  ctx.fillStyle = color.ear;
+  ctx.beginPath();
+  ctx.moveTo(x - size/3, y - size/3);
+  ctx.lineTo(x - size/6, y - size/1.5);
+  ctx.lineTo(x - size/12, y - size/3);
+  ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(x + size/3, y - size/3);
+  ctx.lineTo(x + size/6, y - size/1.5);
+  ctx.lineTo(x + size/12, y - size/3);
+  ctx.closePath();
+  ctx.fill();
+  // 眼睛
+  ctx.fillStyle = '#333';
+  ctx.beginPath();ctx.arc(x - size/6, y - size/8, 3, 0, Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(x + size/6, y - size/8, 3, 0, Math.PI*2);ctx.fill();
+  // 鼻子嘴巴
+  ctx.fillStyle = '#FF6B6B';
+  ctx.beginPath();ctx.arc(x, y + size/12, 2, 0, Math.PI*2);ctx.fill();
+  ctx.strokeStyle = '#333';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(x, y + size/12 + 2);
+  ctx.lineTo(x - 3, y + size/6);
+  ctx.moveTo(x, y + size/12 + 2);
+  ctx.lineTo(x + 3, y + size/6);
+  ctx.stroke();
+}
+
+class Particle {
+  constructor(x, y, color) {
+    this.x = x; this.y = y;
+    const a = Math.random() * Math.PI * 2;
+    const s = Math.random() * 4 + 2;
+    this.vx = Math.cos(a) * s;
+    this.vy = Math.sin(a) * s - 2;
+    this.life = 500 + Math.random() * 300;
+    this.age = 0;
+    this.color = color;
+    this.size = Math.random() * 4 + 2;
+  }
+  update(dt){
+    this.age += dt;
+    this.x += this.vx;
+    this.y += this.vy;
+    this.vy += 0.2; // 重力
+    this.vx *= 0.98;
+  }
+  draw(){
+    const a = 1 - this.age / this.life;
+    if (a <= 0) return;
+    ctx.globalAlpha = a;
+    ctx.fillStyle = this.color;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size, 0, Math.PI*2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+}
+
+function showFloat(x, y, text, color){
+  const el = document.createElement('div');
+  el.className = 'float';
+  el.textContent = text;
+  el.style.color = color;
+  el.style.left = x + 'px';
+  el.style.top = y + 'px';
+  floatsEl.appendChild(el);
+  setTimeout(() => el.remove(), 1000);
+}
+
+const keys = {};
+addEventListener('keydown', e => {
+  if(gameState !== 'playing') return;
+  keys[e.key.toLowerCase()] = true;
+  if(['arrowleft','arrowright','a','d'].includes(e.key.toLowerCase())) e.preventDefault();
+});
+addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
+
+function loop(t){
+  const dt = lastT ? Math.min(50, t - lastT) : 16;
+  lastT = t;
+  
+  // 背景
+  ctx.fillStyle = '#FFE5B4';
+  ctx.fillRect(0, 0, W, H);
+  // 地板
+  ctx.fillStyle = '#D4A373';
+  ctx.fillRect(0, H - 60, W, 60);
+  ctx.fillStyle = '#BC6C25';
+  for(let i = 0; i < W; i += 40) {
+    ctx.fillRect(i, H - 60, 2, 60);
+  }
+  
+  if(gameState === 'playing'){
+    elapsed += dt;
+    // 移动垫子
+    if(keys['arrowleft'] || keys['a']) pad.x -= 8;
+    if(keys['arrowright'] || keys['d']) pad.x += 8;
+    pad.x = Math.max(PAD_W/2, Math.min(W - PAD_W/2, pad.x));
+    
+    // 生成猫咪
+    spawnT += dt;
+    const gap = Math.max(800, 1500 - elapsed * 0.02);
+    if(spawnT > gap) {
+      spawnT = 0;
+      cats.push(new Cat());
+    }
+    
+    // 更新下落猫咪
+    cats.forEach(c => {
+      c.update(dt);
+      // 碰撞检测
+      const topY = H - 60 - (stack.length * CAT_SIZE * 0.8) - 20;
+      if(c.y >= topY - CAT_SIZE/2 && c.alive) {
+        // 判断是否在垫子范围内
+        if(Math.abs(c.x - pad.x) < PAD_W/2) {
+          c.alive = false;
+          pushToStack(c);
+        } else if (c.y > H) {
+          c.alive = false; // 掉地上消失了
+          combo = 0;
+          updateHUD();
+        }
+      }
+    });
+    cats = cats.filter(c => c.alive);
+    
+    // 更新粒子
+    particles.forEach(p => p.update(dt));
+    particles = particles.filter(p => p.age < p.life);
+  }
+  
+  // 绘制软垫上的栈
+  drawPadAndStack();
+  
+  // 绘制粒子
+  particles.forEach(p => p.draw());
+  
+  // 绘制下落猫咪
+  cats.forEach(c => c.draw());
+  
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+function drawPadAndStack() {
+  const baseY = H - 60;
+  // 软垫
+  ctx.fillStyle = '#E63946';
+  ctx.beginPath();
+  ctx.ellipse(pad.x, baseY, PAD_W/2, 15, 0, 0, Math.PI*2);
+  ctx.fill();
+  ctx.fillStyle = '#D62828';
+  ctx.beginPath();
+  ctx.ellipse(pad.x, baseY + 5, PAD_W/2, 10, 0, 0, Math.PI*2);
+  ctx.fill();
+  
+  // 绘制栈内猫咪
+  for(let i = 0; i < stack.length; i++) {
+    const c = stack[i];
+    const y = baseY - 25 - (i * CAT_SIZE * 0.8);
+    drawCat(pad.x, y, CAT_COLORS[c.color], CAT_SIZE);
+  }
+}
+
+function pushToStack(cat) {
+  stack.push({color: cat.color, x: cat.x, y: cat.y});
+  // 检查栈顶 3 个是否相同
+  if(stack.length >= 3) {
+    const n = stack.length;
+    if(stack[n-1].color === stack[n-2].color && stack[n-2].color === stack[n-3].color) {
+      // 消除
+      const popped = stack.splice(n-3, 3);
+      const gain = 100 + combo * 20;
+      score += gain;
+      combo++;
+      
+      // 粒子效果
+      for(let i = 0; i < 3; i++) {
+        const y = H - 60 - 25 - ((n - 3 + i) * CAT_SIZE * 0.8);
+        for(let j = 0; j < 10; j++) {
+          particles.push(new Particle(pad.x, y, CAT_COLORS[popped[i].color].body));
+        }
+      }
+      showFloat(pad.x, H - 300, '喵! +' + gain, '#E63946');
+      updateHUD();
+    }
+  }
+  // 检查游戏结束
+  if(stack.length >= MAX_STACK) {
+    endGame();
+  }
+}
+
+function updateHUD() {
+  document.getElementById('score').textContent = score;
+  document.getElementById('combo').textContent = combo;
+}
+
+function startGame() {
+  score = 0; combo = 0; elapsed = 0; spawnT = 0;
+  cats = []; stack = []; particles = [];
+  pad.x = W / 2; pad.y = H - 60;
+  gameState = 'playing';
+  document.getElementById('menu').classList.add('hidden');
+  document.getElementById('over').style.display = 'none';
+  document.getElementById('hud').classList.remove('hidden');
+  updateHUD();
+}
+
+function endGame() {
+  gameState = 'gameover';
+  document.getElementById('hud').classList.add('hidden');
+  document.getElementById('finalScore').textContent = score;
+  document.getElementById('over').style.display = 'flex';
+}
+
+document.getElementById('startBtn').onclick = startGame;
+document.getElementById('restartBtn').onclick = () => {
+  document.getElementById('over').style.display = 'none';
+  startGame();
+};
+</script>
+</body>
+</html>

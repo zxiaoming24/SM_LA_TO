@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能教学视频搜索</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .search-box {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+
+        .search-input-group {
+            display: flex;
+            gap: 15px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 15px 20px;
+            font-size: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            transition: border-color 0.3s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .search-btn {
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .search-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .search-btn:active {
+            transform: translateY(0);
+        }
+
+        .search-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .results-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: none;
+        }
+
+        .results-section.active {
+            display: block;
+        }
+
+        .results-header {
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .results-header h2 {
+            color: #333;
+            font-size: 1.8em;
+            margin-bottom: 10px;
+        }
+
+        .results-info {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
+            gap: 25px;
+        }
+
+        .video-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .video-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            border-color: #667eea;
+        }
+
+        .video-player-container {
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%;
+            background: #000;
+        }
+
+        .video-player {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .video-info {
+            padding: 20px;
+        }
+
+        .video-rank {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .video-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 12px;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .video-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 12px;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .video-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .quality-score {
+            display: inline-block;
+            background: #ff6b6b;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .video-description {
+            font-size: 13px;
+            color: #888;
+            line-height: 1.6;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: white;
+            font-size: 18px;
+            display: none;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: #ff6b6b;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .error-message.active {
+            display: block;
+        }
+
+        .summary-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 768px) {
+            .video-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .search-input-group {
+                flex-direction: column;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <div class="header">
+            <h1>🎬 智能教学视频搜索</h1>
+            <p>输入你的学习问题，AI为你推荐优质B站教学视频</p>
+        </div>
+
+        <!-- 搜索框 -->
+        <div class="search-box">
+            <div class="search-input-group">
+                <input 
+                    type="text" 
+                    class="search-input" 
+                    id="questionInput"
+                    placeholder="例如：指针怎么用？递归算法是什么？Python装饰器如何使用？"
+                >
+                <button class="search-btn" id="searchBtn" onclick="searchVideos()">
+                    🔍 搜索视频
+                </button>
+            </div>
+        </div>
+
+        <!-- 错误提示 -->
+        <div class="error-message" id="errorMessage"></div>
+
+        <!-- 加载动画 -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>正在搜索相关教学视频...</p>
+        </div>
+
+        <!-- 搜索结果 -->
+        <div class="results-section" id="resultsSection">
+            <div class="results-header">
+                <h2>📺 搜索结果</h2>
+                <div class="results-info" id="resultsInfo"></div>
+            </div>
+
+            <div class="summary-box" id="summaryBox"></div>
+
+            <div class="video-grid" id="videoGrid"></div>
+        </div>
+    </div>
+
+    <script>
+        // API基础URL
+        const API_BASE = window.location.origin;
+
+        // 搜索视频
+        async function searchVideos() {
+            const questionInput = document.getElementById('questionInput');
+            const searchBtn = document.getElementById('searchBtn');
+            const loading = document.getElementById('loading');
+            const resultsSection = document.getElementById('resultsSection');
+            const errorMessage = document.getElementById('errorMessage');
+            
+            const question = questionInput.value.trim();
+            
+            if (!question) {
+                showError('请输入学习问题');
+                return;
+            }
+
+            // 隐藏之前的结果和错误
+            resultsSection.classList.remove('active');
+            errorMessage.classList.remove('active');
+            
+            // 显示加载动画
+            loading.classList.add('active');
+            searchBtn.disabled = true;
+
+            try {
+                console.log('发送请求到:', `${API_BASE}/api/search`);
+                console.log('请求数据:', { question: question }); /* 问题直接就是由前端进行输入得到*/
+                
+                const response = await fetch(`${API_BASE}/api/search`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ question: question })
+                });
+
+                console.log('响应状态:', response.status);
+                console.log('响应头:', response.headers.get('content-type'));
+                
+                // 检查响应类型
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    const text = await response.text();
+                    console.error('收到非JSON响应:', text.substring(0, 200));
+                    throw new Error('服务器返回了非JSON格式的数据');
+                }
+
+                const result = await response.json();
+                console.log('解析结果:', result);
+
+                if (result.success) {
+                    displayResults(result.data);
+                } else {
+                    showError(result.error || '搜索失败，请重试');
+                }
+            } catch (error) {
+                console.error('请求错误:', error);
+                showError('网络错误：' + error.message);
+            } finally {
+                loading.classList.remove('active');
+                searchBtn.disabled = false;
+            }
+        }
+
+        // 显示搜索结果
+        function displayResults(data) {
+            console.log('displayResults 收到的数据:', data);
+            
+            const resultsSection = document.getElementById('resultsSection');
+            const resultsInfo = document.getElementById('resultsInfo');
+            const summaryBox = document.getElementById('summaryBox');
+            const videoGrid = document.getElementById('videoGrid');
+
+            // 检查数据结构
+            if (!data) {
+                console.error('数据为空');
+                showError('返回数据为空');
+                return;
+            }
+
+            if (!data.videos || !Array.isArray(data.videos)) {
+                console.error('videos字段不存在或不是数组', data);
+                showError('视频数据格式错误');
+                return;
+            }
+
+            // 更新结果信息
+            resultsInfo.textContent = `查询：${data.query || '未知'} | 提炼标题：${data.refined_title || '未知'} | 共找到 ${data.total_results || 0} 个视频`;
+            
+            // 显示总结
+            summaryBox.textContent = data.summary || '暂无总结';
+
+            // 清空之前的视频
+            videoGrid.innerHTML = '';
+
+            // 检查是否有视频
+            if (data.videos.length === 0) {
+                console.warn('没有找到视频');
+                videoGrid.innerHTML = '<p style="text-align: center; color: #666; padding: 40px;">😕 未找到相关视频，请尝试其他关键词</p>';
+            } else {
+                // 添加视频卡片
+                console.log(`准备渲染 ${data.videos.length} 个视频`);
+                data.videos.forEach((video, index) => {
+                    console.log(`视频 ${index + 1}:`, video);
+                    try {
+                        const videoCard = createVideoCard(video, index + 1);
+                        videoGrid.appendChild(videoCard);
+                    } catch (e) {
+                        console.error(`创建视频卡片 ${index + 1} 失败:`, e, video);
+                    }
+                });
+            }
+
+            // 显示结果区域
+            resultsSection.classList.add('active');
+            console.log('结果区域已显示');
+        }
+
+        // 创建视频卡片
+        function createVideoCard(video, rank) {
+            console.log(`创建视频卡片 #${rank}:`, video);
+            
+            const card = document.createElement('div');
+            card.className = 'video-card';
+
+            // 检查必要字段
+            if (!video.url) {
+                console.error('视频URL为空', video);
+                throw new Error('视频URL为空');
+            }
+
+            // 提取B站视频ID
+            const bvid = extractBVID(video.url);
+            console.log(`提取的BVID: ${bvid} from URL: ${video.url}`);
+            
+            if (!bvid) {
+                console.error('无法从URL中提取BVID', video.url);
+                throw new Error('无效的视频URL');
+            }
+            
+            // B站嵌入播放器URL
+            const embedUrl = `https://player.bilibili.com/player.html?bvid=${bvid}&page=1&autoplay=0`;
+            console.log(`嵌入URL: ${embedUrl}`);
+
+            card.innerHTML = `
+                <div class="video-player-container">
+                    <iframe 
+                        class="video-player" 
+                        src="${embedUrl}" 
+                        allowfullscreen="true"
+                        scrolling="no"
+                        frameborder="0"
+                    ></iframe>
+                </div>
+                <div class="video-info">
+                    <span class="video-rank">#${rank}</span>
+                    <div class="video-title">${escapeHtml(video.title || '无标题')}</div>
+                    <div class="video-meta">
+                        <div class="video-meta-item">
+                            👤 ${escapeHtml(video.author || '未知')}
+                        </div>
+                        <div class="video-meta-item">
+                            ⏱️ ${video.duration || '未知'}
+                        </div>
+                        <div class="video-meta-item">
+                            ▶️ ${video.play_count || '0'}
+                        </div>
+                        <div class="quality-score">
+                            ⭐ ${video.quality_score || '0'}
+                        </div>
+                    </div>
+                    <div class="video-description">${escapeHtml(video.description || '无描述')}</div>
+                </div>
+            `;
+
+            return card;
+        }
+
+        // 从URL中提取BVID
+        function extractBVID(url) {
+            const match = url.match(/BV\w+/);
+            return match ? match[0] : '';
+        }
+
+        // HTML转义
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 显示错误信息
+        function showError(message) {
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.textContent = '❌ ' + message;
+            errorMessage.classList.add('active');
+            
+            setTimeout(() => {
+                errorMessage.classList.remove('active');
+            }, 5000);
+        }
+
+        // 回车键搜索
+        document.getElementById('questionInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchVideos();
+            }
+        });
+    </script>
+</body>
+</html>

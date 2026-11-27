@@ -1,0 +1,44 @@
+# 1. 敏感信息 (必须排除)
+.env
+.env.*
+!.env.example
+key/
+
+# 2. 虚拟环境与缓存 (体积大户)
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.cache_models/
+.proxyai/
+.uploads/
+.idea/
+.vscode/
+
+# 3. 各种数据、模型与输出结果 (全部排除)
+data/
+models/
+memory/
+rag_knowledge/
+output/
+generated_documents/
+ppt_images/
+video_ww/
+*_data/
+user_features/
+user_voices/
+templates/*.docx
+templates/*.pptx
+*.db
+*.sqlite3
+
+# 4. 前端/Node.js 构建产物 (如果你有前端项目)
+node_modules/
+dist/
+build/
+*.zip
+*.tar.gz
+
+# 5. 系统垃圾
+.DS_Store
+Thumbs.db

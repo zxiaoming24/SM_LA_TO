@@ -1,0 +1,20 @@
+[
+  {
+    "user_id": "50",
+    "assessment_id": "assess_20260718_130624",
+    "type": "new_assessment",
+    "title": "新的学习评估报告",
+    "content": "您的学习评估已完成！\n\n薄弱点：\n- 基础知识极度匮乏，无法支撑后续学习 (高)\n- 时间管理能力几乎为零，学习无节奏 (高)",
+    "timestamp": "2026-07-18T13:06:45.208005",
+    "read": false
+  },
+  {
+    "user_id": "50",
+    "assessment_id": "assess_20260718_104751",
+    "type": "new_assessment",
+    "title": "新的学习评估报告",
+    "content": "您的学习评估已完成！\n\n薄弱点：\n- 数组操作与排序算法基础缺失 (高)\n- 编程实践严重不足 (高)",
+    "timestamp": "2026-07-18T10:47:55.477321",
+    "read": false
+  }
+]

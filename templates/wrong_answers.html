@@ -1,0 +1,2614 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>错题本</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+       background: #f5f7fa; color: #1a1a2e; min-height: 100vh; }
+
+.header { background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+           color: #fff; padding: 20px 40px; display: flex; align-items: center;
+           justify-content: space-between; }
+.header h1 { font-size: 24px; font-weight: 600; }
+.header .user-info { display: flex; align-items: center; gap: 12px; }
+.header .user-info input { padding: 8px 14px; border: none; border-radius: 8px;
+                           background: rgba(255,255,255,0.2); color: #fff;
+                           font-size: 14px; width: 180px; outline: none; }
+.header .user-info input::placeholder { color: rgba(255,255,255,0.6); }
+.header .user-info button { padding: 8px 18px; border: none; border-radius: 8px;
+                            background: rgba(255,255,255,0.25); color: #fff;
+                            cursor: pointer; font-size: 14px; transition: all .2s; }
+.header .user-info button:hover { background: rgba(255,255,255,0.35); }
+
+.container { max-width: 960px; margin: 0 auto; padding: 24px 16px; }
+
+.stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+             gap: 16px; margin-bottom: 24px; }
+.stat-card { background: #fff; border-radius: 12px; padding: 20px;
+             box-shadow: 0 2px 8px rgba(0,0,0,0.06); text-align: center; }
+.stat-card .num { font-size: 32px; font-weight: 700; color: #e74c3c; }
+.stat-card .label { font-size: 13px; color: #888; margin-top: 4px; }
+
+.filters { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+.filters select, .filters input { padding: 8px 14px; border: 1px solid #ddd;
+                                   border-radius: 8px; font-size: 14px;
+                                   background: #fff; outline: none; }
+.filters select:focus, .filters input:focus { border-color: #e74c3c; }
+.filters .btn-refresh { padding: 8px 20px; border: none; border-radius: 8px;
+                        background: #e74c3c; color: #fff; cursor: pointer;
+                        font-size: 14px; transition: all .2s; }
+.filters .btn-refresh:hover { background: #c0392b; }
+
+.wa-card { background: #fff; border-radius: 12px; padding: 20px 24px;
+           margin-bottom: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+           transition: all .2s; }
+.wa-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+.wa-card .header-row { display: flex; justify-content: space-between;
+                        align-items: flex-start; margin-bottom: 10px; }
+.wa-card .type-badge { padding: 3px 12px; border-radius: 12px; font-size: 12px;
+                        font-weight: 500; }
+.type-badge.programming { background: #ffeaa7; color: #d68910; }
+.type-badge.single_choice { background: #d5f5e3; color: #1e8449; }
+.type-badge.multiple_choice { background: #d6eaf8; color: #2e86c1; }
+.type-badge.judge { background: #f5eef8; color: #8e44ad; }
+.type-badge.fill_blank { background: #fdebd0; color: #ca6f1e; }
+.type-badge.short_answer { background: #f2d7d5; color: #c0392b; }
+
+.wa-card .question-text { font-size: 15px; line-height: 1.7; color: #333;
+                          margin-bottom: 12px; display: -webkit-box;
+                          -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+                          overflow: hidden; cursor: pointer; }
+.wa-card .question-text.expanded { -webkit-line-clamp: unset; }
+
+.wa-card .answer-row { display: flex; gap: 24px; font-size: 13px;
+                        padding-top: 10px; border-top: 1px solid #f0f0f0; }
+.wa-card .answer-row .wrong { color: #e74c3c; }
+.wa-card .answer-row .correct { color: #27ae60; }
+.wa-card .answer-row .score { color: #888; }
+.wa-card .answer-row .score.pass { color: #27ae60; }
+.wa-card .answer-row .score.fail { color: #e74c3c; }
+.wa-card .meta-row { display: flex; gap: 16px; font-size: 12px; color: #aaa;
+                     margin-top: 8px; align-items: center; }
+.wa-card .btn-retry { padding: 4px 14px; border: none; border-radius: 8px;
+                       background: #667eea; color: #fff; cursor: pointer;
+                       font-size: 12px; transition: all .2s; }
+.wa-card .btn-retry:hover { background: #5a6fd6; }
+
+.pagination { display: flex; justify-content: center; align-items: center;
+              gap: 12px; margin-top: 24px; }
+.pagination button { padding: 8px 16px; border: 1px solid #ddd; border-radius: 8px;
+                     background: #fff; cursor: pointer; font-size: 14px;
+                     transition: all .2s; }
+.pagination button:hover { border-color: #e74c3c; color: #e74c3c; }
+.pagination button:disabled { opacity: 0.4; cursor: not-allowed; }
+.pagination .page-info { font-size: 14px; color: #666; }
+
+.empty-state { text-align: center; padding: 60px 20px; color: #aaa; }
+.empty-state .icon { font-size: 48px; margin-bottom: 16px; }
+.empty-state p { font-size: 16px; }
+
+.loading { text-align: center; padding: 40px; color: #888; }
+.loading .spinner { width: 32px; height: 32px; border: 3px solid #f0f0f0;
+                    border-top-color: #e74c3c; border-radius: 50%;
+                    animation: spin .8s linear infinite; margin: 0 auto 12px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Practice Modal */
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0;
+                 bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000;
+                 overflow-y: auto; }
+.modal-overlay.active { display: block; }
+.modal-box { background: #fff; max-width: 800px; margin: 40px auto;
+             border-radius: 16px; padding: 32px; position: relative; }
+.modal-box .close { position: absolute; top: 16px; right: 20px;
+                    background: none; border: none; font-size: 28px;
+                    cursor: pointer; color: #888; }
+.modal-box .close:hover { color: #333; }
+.modal-title { font-size: 20px; font-weight: 700; margin-bottom: 16px;
+               color: #1a1a2e; }
+.modal-desc { font-size: 15px; line-height: 1.8; color: #333;
+              margin-bottom: 20px; white-space: pre-wrap;
+              background: #f8f9fa; padding: 16px; border-radius: 8px;
+              max-height: 200px; overflow-y: auto; }
+
+.modal-box textarea { width: 100%; min-height: 160px; padding: 14px;
+                      border: 1px solid #ddd; border-radius: 8px;
+                      font-family: "Consolas", "Courier New", monospace;
+                      font-size: 14px; line-height: 1.6; resize: vertical;
+                      outline: none; }
+.modal-box textarea:focus { border-color: #667eea; }
+
+.modal-options { display: flex; flex-direction: column; gap: 10px;
+                 margin-bottom: 20px; }
+.modal-options label { display: flex; align-items: center; gap: 10px;
+                       padding: 12px 16px; border: 1px solid #ddd;
+                       border-radius: 8px; cursor: pointer;
+                       transition: all .2s; font-size: 14px; }
+.modal-options label:hover { border-color: #667eea; background: #f8f9ff; }
+.modal-options label.selected { border-color: #667eea; background: #eef0ff; }
+.modal-options input[type="radio"] { accent-color: #667eea; }
+
+.modal-actions { display: flex; gap: 12px; justify-content: flex-end;
+                 margin-top: 20px; }
+.modal-actions button { padding: 10px 28px; border: none; border-radius: 10px;
+                         font-size: 15px; cursor: pointer; font-weight: 500;
+                         transition: all .2s; }
+.modal-actions .btn-submit { background: #667eea; color: #fff; }
+.modal-actions .btn-submit:hover { background: #5a6fd6; }
+.modal-actions .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+.modal-actions .btn-cancel { background: #f0f0f0; color: #666; }
+.modal-actions .btn-cancel:hover { background: #e0e0e0; }
+
+/* Result in Modal */
+.modal-result { margin-top: 16px; padding: 16px; border-radius: 8px;
+                display: none; }
+.modal-result.show { display: block; }
+.modal-result.success { background: #d5f5e3; color: #1e8449; }
+.modal-result.fail { background: #fadbd8; color: #c0392b; }
+.modal-result .result-title { font-size: 18px; font-weight: 600;
+                               margin-bottom: 8px; }
+.modal-result .result-detail { font-size: 14px; line-height: 1.6; }
+
+/* Recommendation Cards */
+.recommend-section { margin-top: 20px; padding: 20px; background: #fff3e0;
+                     border-radius: 12px; border: 1px solid #ffe0b2; display: none; }
+.recommend-section.show { display: block; }
+.recommend-section .rec-title { font-size: 16px; font-weight: 700; color: #e65100;
+                                margin-bottom: 4px; }
+.recommend-section .rec-sub { font-size: 13px; color: #bf8c4a; margin-bottom: 14px; }
+.rec-grid { display: flex; flex-direction: column; gap: 10px; }
+.rec-card { display: flex; align-items: flex-start; gap: 12px;
+             background: #fff; border-radius: 8px; padding: 12px 16px;
+             box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+.rec-card.clickable { cursor: pointer; transition: all .2s; }
+.rec-card.clickable:hover { box-shadow: 0 3px 12px rgba(102,126,234,0.2); transform: translateY(-1px); }
+.rec-card.llm { border-left: 3px solid #8e44ad; background: #faf5ff; }
+.rec-card .rec-icon { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
+.rec-card .rec-body { flex: 1; min-width: 0; }
+.rec-card .rec-name { font-size: 14px; font-weight: 600; color: #333;
+                       display: -webkit-box; -webkit-line-clamp: 1;
+                       -webkit-box-orient: vertical; overflow: hidden; }
+.rec-card .rec-desc { font-size: 12px; color: #888; margin-top: 2px;
+                       display: -webkit-box; -webkit-line-clamp: 2;
+                       -webkit-box-orient: vertical; overflow: hidden; }
+.rec-card .rec-tag { display: inline-block; padding: 2px 8px; border-radius: 4px;
+                      font-size: 11px; font-weight: 500; margin-top: 4px; }
+.rec-tag.document { background: #e3f2fd; color: #1565c0; }
+.rec-tag.question { background: #e8f5e9; color: #2e7d32; }
+.rec-tag.video { background: #fce4ec; color: #c62828; }
+.rec-tag.mindmap { background: #f3e5f5; color: #6a1b9a; }
+.rec-tag.practice { background: #fff3e0; color: #e65100; }
+
+/* ★★★ 自我表述 UI（独立模块）★★★ */
+.self-explain-section { margin-top: 20px; padding: 20px; background: #e8f4fd;
+                        border-radius: 12px; border: 1px solid #b3d9f2; display: none; }
+.self-explain-section.show { display: block; }
+.self-explain-section .se-title { font-size: 16px; font-weight: 700; color: #1565c0;
+                                  margin-bottom: 4px; }
+.self-explain-section .se-sub { font-size: 13px; color: #5a8db5; margin-bottom: 12px;
+                                line-height: 1.6; }
+.self-explain-section .se-hint { font-size: 13px; color: #5a8db5;
+                                 background: rgba(255,255,255,0.7); padding: 10px;
+                                 border-radius: 8px; margin-bottom: 12px;
+                                 border-left: 3px solid #1565c0; line-height: 1.6; }
+.self-explain-section textarea { width: 100%; min-height: 100px; padding: 12px;
+                                 border: 1px solid #b3d9f2; border-radius: 8px;
+                                 font-size: 14px; line-height: 1.6; resize: vertical;
+                                 outline: none; font-family: inherit; }
+.self-explain-section textarea:focus { border-color: #1565c0; }
+.self-explain-section .se-actions { display: flex; gap: 10px; margin-top: 12px; }
+.self-explain-section .se-btn { padding: 8px 20px; border: none; border-radius: 8px;
+                                font-size: 14px; font-weight: 500; cursor: pointer;
+                                transition: all .2s; }
+.self-explain-section .se-btn-submit { background: #1565c0; color: #fff; }
+.self-explain-section .se-btn-submit:hover { background: #0d47a1; }
+.self-explain-section .se-btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+.self-explain-section .se-btn-skip { background: transparent; color: #5a8db5;
+                                     border: 1px solid #b3d9f2; }
+.self-explain-section .se-btn-skip:hover { background: #f0f7fd; }
+
+/* ★★★ 语音输入 ★★★ */
+.se-voice-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.se-voice-btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 16px;
+                border: 1px solid #b3d9f2; border-radius: 20px; background: #fff;
+                cursor: pointer; font-size: 13px; transition: all .2s; white-space: nowrap; }
+.se-voice-btn:hover { background: #e3f2fd; border-color: #1565c0; }
+.se-voice-btn.recording { background: #ffebee; border-color: #e53935; animation: se-pulse 1.2s infinite; }
+.se-voice-btn.recording #seVoiceIcon { animation: se-blink 0.8s infinite; }
+.se-voice-btn.processing { background: #fff3e0; border-color: #ff9800; cursor: wait; }
+@keyframes se-pulse { 0% { box-shadow: 0 0 0 0 rgba(229,57,53,0.3); } 70% { box-shadow: 0 0 0 8px rgba(229,57,53,0); } 100% { box-shadow: 0 0 0 0 rgba(229,57,53,0); } }
+@keyframes se-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+.se-voice-hint { font-size: 11px; color: #aaa; }
+.se-voice-timer { font-size: 13px; font-weight: 600; color: #e53935; font-variant-numeric: tabular-nums; }
+
+/* ★★★ 自我表述分析结果 ★★★ */
+.se-result { margin-top: 12px; padding: 14px; border-radius: 8px; font-size: 14px;
+             line-height: 1.7; display: none; }
+.se-result.show { display: block; }
+.se-result.level-deep { background: #d5f5e3; color: #1e8449;
+                        border-left: 4px solid #27ae60; }
+.se-result.level-surface { background: #fef9e7; color: #7d6608;
+                           border-left: 4px solid #f1c40f; }
+.se-result.level-misunderstanding { background: #fadbd8; color: #c0392b;
+                                    border-left: 4px solid #e74c3c; }
+.se-result.level-none { background: #f5f5f5; color: #666;
+                        border-left: 4px solid #999; }
+.se-result .se-level-label { font-weight: 700; font-size: 15px; margin-bottom: 6px; }
+.se-result .se-gap-item { padding: 3px 0; font-size: 13px; }
+.se-result .se-gap-item::before { content: "⚠️ "; }
+.se-result .se-suggest-item { padding: 3px 0; font-size: 13px; }
+.se-result .se-suggest-item::before { content: "💡 "; }
+.se-result .se-summary { margin-top: 8px; padding-top: 8px; border-top: 1px solid
+                         rgba(0,0,0,0.08); font-size: 13px; }
+
+/* Tabs */
+.tabs { display: flex; gap: 0; margin-bottom: 20px; border-bottom: 2px solid #e0e0e0; }
+.tab { padding: 10px 24px; border: none; background: none; font-size: 14px; font-weight: 500;
+        color: #888; cursor: pointer; border-bottom: 2px solid transparent;
+        margin-bottom: -2px; transition: all .2s; }
+.tab:hover { color: #e74c3c; }
+.tab.active { color: #e74c3c; border-bottom-color: #e74c3c; }
+
+/* Frequently Wrong (易错题) styles */
+.fw-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px;
+             border-radius: 12px; font-size: 11px; font-weight: 600;
+             background: linear-gradient(135deg, #ff6b6b, #ee5a24); color: #fff; }
+.fw-card { border-left: none !important; display: flex; gap: 16px; align-items: flex-start; }
+.fw-card .fw-ring-wrap { flex-shrink: 0; position: relative; width: 80px; height: 80px; }
+.fw-card .fw-ring-wrap canvas { display: block; }
+.fw-card .fw-ring-center { position: absolute; top: 0; left: 0; width: 80px; height: 80px;
+                            display: flex; flex-direction: column; align-items: center;
+                            justify-content: center; pointer-events: none; }
+.fw-card .fw-ring-center .ring-num { font-size: 22px; font-weight: 800; color: #c0392b; line-height: 1; }
+.fw-card .fw-ring-center .ring-label { font-size: 9px; color: #999; margin-top: 1px; }
+.fw-card .fw-body { flex: 1; min-width: 0; }
+.fw-card .attempt-bar { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.fw-card .attempt-bar .bar-bg { flex: 1; height: 6px; background: #f0f0f0; border-radius: 3px; overflow: hidden; }
+.fw-card .attempt-bar .bar-fill { height: 100%; border-radius: 3px;
+                                    background: linear-gradient(90deg, #ff6b6b, #ee5a24); }
+.fw-stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+                gap: 12px; margin-bottom: 20px; }
+.fw-stat-card { background: linear-gradient(135deg, #fff5f5, #ffe0e0); border-radius: 12px;
+                padding: 16px; text-align: center; border: 1px solid #ffd0d0; }
+.fw-stat-card .num { font-size: 28px; font-weight: 700; color: #c0392b; }
+.fw-stat-card .label { font-size: 12px; color: #888; margin-top: 2px; }
+.fw-kp-tag { display: inline-block; padding: 4px 12px; border-radius: 16px; font-size: 12px;
+             margin: 4px 4px 4px 0; background: #ffeaa7; color: #d68910; font-weight: 500; }
+
+/* Attempt detail card in mastered view */
+.attempt-detail { margin-top: 10px; }
+.attempt-detail-card { background: #f8f9fa; border-radius: 8px; padding: 12px 16px;
+                        border-left: 3px solid #e74c3c; animation: fadeIn .2s ease; }
+.attempt-detail-card.last { border-left-color: #27ae60; }
+.attempt-score { font-size: 14px; font-weight: 600; }
+.attempt-score.pass { color: #27ae60; }
+.attempt-score.fail { color: #e74c3c; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📕 错题本</h1>
+  <div class="user-info">
+    <input id="userId" type="text" placeholder="输入用户ID" value="user_001"
+           onkeydown="if(event.key==='Enter')loadData()">
+    <button onclick="loadData()">查询</button>
+  </div>
+</div>
+
+<div class="container">
+  <div class="stats-row" id="statsRow"></div>
+
+  <div class="filters">
+    <select id="filterType" onchange="onFilterChange()">
+      <option value="">全部类型</option>
+      <option value="programming">编程题</option>
+      <option value="single_choice">单选题</option>
+      <option value="multiple_choice">多选题</option>
+      <option value="judge">判断题</option>
+      <option value="fill_blank">填空题</option>
+      <option value="short_answer">简答题</option>
+    </select>
+    <select id="filterSource" onchange="onFilterChange()">
+      <option value="">全部来源</option>
+      <option value="programming">编程练习</option>
+      <option value="theory">理论题</option>
+    </select>
+    <select id="filterDifficulty" onchange="onFilterChange()">
+      <option value="">全部难度</option>
+      <option value="简单">简单</option>
+      <option value="中等偏易">中等偏易</option>
+      <option value="中等">中等</option>
+      <option value="中等偏难">中等偏难</option>
+      <option value="困难">困难</option>
+      <option value="挑战">挑战</option>
+    </select>
+    <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#666;cursor:pointer">
+      <input type="checkbox" id="showResolved" onchange="loadData()">
+      显示已掌握
+    </label>
+    <button class="btn-refresh" onclick="loadData()">🔄 刷新</button>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" id="tabPending" onclick="switchTab('pending')">📌 待巩固</button>
+    <button class="tab" id="tabMastered" onclick="switchTab('mastered')">✅ 已掌握</button>
+    <button class="tab" id="tabFrequentlyWrong" onclick="switchTab('frequently-wrong')">🔥 易错题</button>
+  </div>
+
+  <div id="pendingArea">
+    <div id="listArea"></div>
+    <div class="pagination" id="pagination"></div>
+  </div>
+  <div id="masteredArea" style="display:none">
+    <div id="masteredListArea"></div>
+    <div class="pagination" id="masteredPagination"></div>
+  </div>
+  <div id="frequentlyWrongArea" style="display:none">
+    <div class="fw-stats-row" id="fwStatsRow"></div>
+    <div id="fwKpArea" style="margin-bottom:16px"></div>
+    <div id="frequentlyWrongListArea"></div>
+    <div class="pagination" id="frequentlyWrongPagination"></div>
+  </div>
+</div>
+
+<!-- Practice Modal -->
+<div class="modal-overlay" id="practiceModal">
+  <div class="modal-box">
+    <button class="close" onclick="closeModal()">&times;</button>
+    <div class="modal-title" id="modalTitle">重新练习</div>
+    <div class="modal-desc" id="modalDesc"></div>
+    <div id="modalBody"></div>
+    <div class="modal-result" id="modalResult"></div>
+
+    <!-- ★★★ 自我表述（独立模块：让用户用自己的话解释错题原因，LLM分析理解深度）★★★ -->
+    <div class="self-explain-section" id="selfExplainSection" data-session-id="" data-record-id="">
+      <div class="se-title">💬 说说你的思路（已错3次+）</div>
+      <div class="se-sub" id="seSubText">做错了3次以上，说明这个知识点可能还没有真正掌握。试试用自己的话把这道题讲清楚，这比单纯做题更能帮你巩固知识。</div>
+      <div class="se-hint" id="seHintText"></div>
+
+      <!-- ★★★ 语音输入区域 ★★★ -->
+      <div class="se-voice-row">
+        <button class="se-voice-btn" id="seVoiceBtn" onclick="toggleVoiceRecording()" title="点击开始录音">
+          <span id="seVoiceIcon">🎤</span>
+          <span id="seVoiceLabel">点击说话</span>
+        </button>
+        <span class="se-voice-hint" id="seVoiceHint">• 点击按钮开始录音 • 自动识别为文字 • 超30秒自动停止</span>
+        <span class="se-voice-timer" id="seVoiceTimer" style="display:none">0s</span>
+      </div>
+
+      <textarea id="seTextarea" placeholder="在这里写下你的解释...也可以点击上方🎤按钮用语音输入..." maxlength="2000"></textarea>
+      <div style="text-align:right;font-size:12px;color:#999;margin-top:4px"><span id="seCharCount">0</span>/2000</div>
+      <div class="se-actions">
+        <button class="se-btn se-btn-submit" id="seSubmitBtn" onclick="submitSelfExplanation()">提交并分析</button>
+        <button class="se-btn se-btn-skip" onclick="closeSelfExplanation()">稍后再说</button>
+      </div>
+      <div class="se-result" id="seResult"></div>
+      <!-- ★★★ 分析完成后，推荐内容出现在此处下方（复用错题本原有推荐机制）★★★ -->
+    </div>
+
+    <div class="recommend-section" id="recommendSection">
+      <div class="rec-title">📚 推荐学习资料</div>
+      <div class="rec-sub" id="recSub"></div>
+      <div class="rec-grid" id="recGrid"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">关闭</button>
+      <button class="btn-submit" id="btnSubmit" onclick="submitPractice()" disabled>提交答案</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 推荐题练习弹窗（与当前错题完全隔离） ============ -->
+<div class="modal-overlay" id="recPracticeModal">
+  <div class="modal-box" style="max-width:800px">
+    <button class="close" onclick="closeRecPracticeModal()">&times;</button>
+    <div class="modal-title" id="recPTitle">练习</div>
+    <div class="modal-desc" id="recPDesc" style="max-height:200px"></div>
+    <div id="recPBody"></div>
+    <div class="modal-result" id="recPResult"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeRecPracticeModal()">关闭</button>
+      <button class="btn-submit" id="recPBtn" onclick="submitRecPractice()">提交答案</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentPage = 1;
+const pageSize = 10;
+let currentPracticeRecord = null;
+let theorySelectedAnswer = '';
+let _recCache = {};  // ★★★ per-recordId 推荐缓存，避免跨题污染 ★★★
+let currentRecItem = null;
+let currentRecType = '';
+
+function getUserId() {
+  return document.getElementById('userId').value.trim() || 'user_001';
+}
+
+async function loadData() {
+  if (activeTab !== 'pending') switchTab('pending');
+  currentPage = 1;
+  await loadList();
+  await loadStats();
+}
+
+function onFilterChange() {
+  if (activeTab === 'mastered') {
+    currentMasteredPage = 1;
+    loadMasteredList();
+  } else if (activeTab === 'frequently-wrong') {
+    currentFwPage = 1;
+    loadFrequentlyWrongList();
+  } else {
+    currentPage = 1;
+    loadList();
+  }
+}
+
+async function loadStats() {
+  const userId = getUserId();
+  const statsRow = document.getElementById('statsRow');
+
+  try {
+    const resp = await fetch(`/wrong-answers/${userId}/stats`);
+    const data = await resp.json();
+
+    if (!data.success) {
+      statsRow.innerHTML = '<div class="stat-card"><div class="label">获取统计失败</div></div>';
+      return;
+    }
+
+    const byType = data.by_type || {};
+    const bySource = data.by_source || {};
+    const total = data.total || 0;
+    const pending = data.pending || 0;
+    const resolved = data.resolved || 0;
+    const progCount = bySource['programming'] || 0;
+    const theoryCount = bySource['theory'] || 0;
+    const typeCount = Object.keys(byType).length;
+
+    const fwCount = data.frequently_wrong || 0;
+
+    statsRow.innerHTML = `
+      <div class="stat-card"><div class="num">${total}</div><div class="label">📕 累计错题</div></div>
+      <div class="stat-card"><div class="num" style="color:#e74c3c">${pending}</div><div class="label">📌 待巩固</div></div>
+      <div class="stat-card"><div class="num" style="color:#27ae60">${resolved}</div><div class="label">✅ 已掌握</div></div>
+      <div class="stat-card"><div class="num">${progCount}</div><div class="label">💻 编程题</div></div>
+      ${fwCount > 0 ? `<div class="stat-card" style="cursor:pointer;border:2px solid #e74c3c" onclick="switchTab('frequently-wrong')"><div class="num" style="color:#c0392b">${fwCount}</div><div class="label">🔥 易错题</div></div>` : ''}
+    `;
+  } catch (e) {
+    statsRow.innerHTML = '<div class="stat-card"><div class="label">⚠️ 加载统计失败</div></div>';
+  }
+}
+
+async function loadList() {
+  const userId = getUserId();
+  const type = document.getElementById('filterType').value;
+  const source = document.getElementById('filterSource').value;
+  const listArea = document.getElementById('listArea');
+  const pagination = document.getElementById('pagination');
+
+  listArea.innerHTML = '<div class="loading"><div class="spinner"></div><p>加载中...</p></div>';
+
+  try {
+    let url = `/wrong-answers/${userId}?page=${currentPage}&page_size=${pageSize}`;
+    if (type) url += `&question_type=${type}`;
+    if (source) url += `&source=${source}`;
+    if (document.getElementById('showResolved').checked) url += `&show_resolved=true`;
+
+    const resp = await fetch(url);
+    const data = await resp.json();
+
+    if (!data.success) {
+      listArea.innerHTML = `<div class="empty-state"><p>⚠️ ${data.detail || '加载失败'}</p></div>`;
+      return;
+    }
+
+    const records = data.records || [];
+    const total = data.total || 0;
+    const totalPages = data.total_pages || 0;
+
+    if (records.length === 0) {
+      listArea.innerHTML = '<div class="empty-state"><div class="icon">🎉</div><p>暂无错题，继续保持！</p></div>';
+      pagination.innerHTML = '';
+      return;
+    }
+
+    listArea.innerHTML = records.map(r => renderCard(r)).join('');
+
+    pagination.innerHTML = `
+      <button onclick="goPage(${currentPage - 1})" ${currentPage <= 1 ? 'disabled' : ''}>上一页</button>
+      <span class="page-info">第 ${currentPage} / ${totalPages} 页（共 ${total} 题）</span>
+      <button onclick="goPage(${currentPage + 1})" ${currentPage >= totalPages ? 'disabled' : ''}>下一页</button>
+    `;
+  } catch (e) {
+    listArea.innerHTML = '<div class="empty-state"><p>⚠️ 网络错误</p></div>';
+  }
+}
+
+function renderCard(r) {
+  const qd = r.question_data || {};
+  const qText = qd.question || qd.title || qd.description || '';
+  const kps = r.knowledge_points || [];
+  let question = qText || '';
+  if (!question && r.question_type === 'programming') {
+    question = kps.length > 0 ? `【知识点】${kps.join('、')}` : '编程题';
+  }
+  if (!question) question = '(无题目内容)';
+
+  const typeName = {
+    programming: '💻 编程题', single_choice: '🔘 单选题',
+    multiple_choice: '☑️ 多选题', judge: '⚖️ 判断题',
+    fill_blank: '✏️ 填空题', short_answer: '📝 简答题'
+  }[r.question_type] || r.question_type;
+
+  const scoreClass = r.score < 60 ? 'fail' : 'pass';
+  const scoreText = r.score !== undefined ? `${r.score}分` : '-';
+  const canRetry = !r.resolved && (r.question_type === 'programming' || r.question_type === 'single_choice'
+                || r.question_type === 'multiple_choice' || r.question_type === 'judge'
+                || r.question_type === 'fill_blank' || r.question_type === 'short_answer');
+
+  return `
+    <div class="wa-card" style="${r.resolved ? 'opacity:0.6' : ''}">
+      <div class="header-row">
+        <span class="type-badge ${r.question_type}">${typeName}</span>
+        <span>${r.resolved ? '✅ 已掌握' : `<span class="score ${scoreClass}">${scoreText}</span>`}</span>
+      </div>
+      <div class="question-text" onclick="this.classList.toggle('expanded')">${escapeHtml(question)}</div>
+      <div class="answer-row">
+        <span class="wrong">❌ 你的答案: ${escapeHtml(r.user_answer || '(未作答)')}</span>
+      </div>
+      <div class="meta-row">
+        <span>📅 ${r.created_at ? r.created_at.slice(0, 10) : '-'}</span>
+        <span>❌ 错 ${r.attempt_count || 1} 次</span>
+        <span>📊 难度 ${r.difficulty ? '⭐'.repeat({'简单':1,'中等偏易':2,'中等':3,'中等偏难':4,'困难':5,'挑战':6}[r.difficulty] || 1) : '⭐'}</span>
+        ${r.knowledge_points && r.knowledge_points.length ? `<span>🏷️ ${r.knowledge_points.slice(0, 3).join(', ')}</span>` : ''}
+        ${canRetry ? `<button class="btn-retry" onclick="openPractice('${r.record_id}')">✏️ 重新练习</button>` : ''}
+        <span style="cursor:pointer;color:#e74c3c" onclick="deleteRecord('${r.record_id}')">🗑️ 删除</span>
+      </div>
+    </div>
+  `;
+}
+
+function escapeHtml(s) {
+  if (!s) return '';
+  const div = document.createElement('div');
+  div.textContent = s;
+  return div.innerHTML;
+}
+
+function truncTitle(text, maxLen) {
+  if (!text || !text.trim()) return '';
+  const t = text.replace(/\n/g, ' ').trim();
+  if (t.length <= maxLen) return t;
+  return t.substring(0, maxLen - 3) + '...';
+}
+
+function extractOptionsFromContent(content, solution) {
+  // 从题干提取 "A.xxx  B.xxx  C.xxx" 格式的选项
+  const results = [];
+  // 匹配 A.xxx  或  A)xxx  或  A、xxx  格式（多行或空格分隔）
+  const re = /([A-E])[.、)]\s*([^\n]{0,120}?)(?=\s*[A-E][.、)]|\s*$)/gs;
+  let match;
+  while ((match = re.exec(content)) !== null) {
+    const text = match[2].trim();
+    if (text && text.length > 1) {
+      results.push(match[1] + '. ' + text);
+    }
+  }
+  if (results.length >= 2) return results;
+
+  // 回退：从答案字母反推（如 solution="A,B,D,E"）— 仅显示字母，不编造内容
+  const ansLetters = solution.replace(/[^A-E,]/gi, '').split(',').filter(Boolean);
+  if (ansLetters.length >= 2) {
+    const used = new Set(ansLetters.map(c => c.toUpperCase()));
+    const max = Math.max(...[...used].map(c => c.charCodeAt(0) - 64));
+    for (let i = 0; i < max; i++) {
+      results.push(String.fromCharCode(65 + i));
+    }
+  }
+  return results;
+}
+
+function goPage(page) {
+  currentPage = page;
+  loadList();
+}
+
+function goMasteredPage(page) {
+  currentMasteredPage = page;
+  loadMasteredList();
+}
+
+let activeTab = 'pending';
+let currentMasteredPage = 1;
+let currentFwPage = 1;
+
+function switchTab(tab) {
+  activeTab = tab;
+  document.getElementById('tabPending').className = tab === 'pending' ? 'tab active' : 'tab';
+  document.getElementById('tabMastered').className = tab === 'mastered' ? 'tab active' : 'tab';
+  document.getElementById('tabFrequentlyWrong').className = tab === 'frequently-wrong' ? 'tab active' : 'tab';
+  document.getElementById('pendingArea').style.display = tab === 'pending' ? 'block' : 'none';
+  document.getElementById('masteredArea').style.display = tab === 'mastered' ? 'block' : 'none';
+  document.getElementById('frequentlyWrongArea').style.display = tab === 'frequently-wrong' ? 'block' : 'none';
+  document.getElementById('showResolved').style.display = tab === 'pending' ? 'inline' : 'none';
+  if (tab === 'mastered') {
+    loadMasteredList();
+  } else if (tab === 'frequently-wrong') {
+    currentFwPage = 1;
+    loadFrequentlyWrongStats();
+    loadFrequentlyWrongList();
+  }
+}
+
+async function loadMasteredList() {
+  const userId = getUserId();
+  const type = document.getElementById('filterType').value;
+  const listArea = document.getElementById('masteredListArea');
+  const pagination = document.getElementById('masteredPagination');
+
+  listArea.innerHTML = '<div class="loading"><div class="spinner"></div><p>加载中...</p></div>';
+
+  try {
+    let url = `/wrong-answers/${userId}/mastered?page=${currentMasteredPage}&page_size=${pageSize}`;
+    if (type) url += `&question_type=${type}`;
+
+    const resp = await fetch(url);
+    const data = await resp.json();
+
+    if (!data.success) {
+      listArea.innerHTML = `<div class="empty-state"><p>⚠️ ${data.detail || '加载失败'}</p></div>`;
+      return;
+    }
+
+    const records = data.records || [];
+    const total = data.total || 0;
+    const totalPages = data.total_pages || 0;
+
+    if (records.length === 0) {
+      listArea.innerHTML = '<div class="empty-state"><div class="icon">🏆</div><p>暂无已掌握的错题，继续加油！</p></div>';
+      pagination.innerHTML = '';
+      return;
+    }
+
+    listArea.innerHTML = records.map((r, idx) => renderMasteredCard(r, idx)).join('');
+    window._masteredRecords = records;
+
+    pagination.innerHTML = `
+      <button onclick="goMasteredPage(${currentMasteredPage - 1})" ${currentMasteredPage <= 1 ? 'disabled' : ''}>上一页</button>
+      <span class="page-info">第 ${currentMasteredPage} / ${totalPages} 页（共 ${total} 题）</span>
+      <button onclick="goMasteredPage(${currentMasteredPage + 1})" ${currentMasteredPage >= totalPages ? 'disabled' : ''}>下一页</button>
+    `;
+  } catch (e) {
+    listArea.innerHTML = '<div class="empty-state"><p>⚠️ 网络错误</p></div>';
+  }
+}
+
+function renderMasteredCard(r, idx) {
+  const qd = r.question_data || {};
+  const kps = r.knowledge_points || [];
+  let question = qd.question || qd.title || '';
+  if (!question && r.question_type === 'programming') {
+    question = kps.length > 0 ? `【知识点】${kps.join('、')}` : '编程题';
+  }
+  if (!question) question = '(无题目内容)';
+
+  const typeName = {
+    programming: '💻 编程题', single_choice: '🔘 单选题',
+    multiple_choice: '☑️ 多选题', judge: '⚖️ 判断题',
+    fill_blank: '✏️ 填空题', short_answer: '📝 简答题'
+  }[r.question_type] || r.question_type;
+
+  const masteredAt = r.mastered_at ? r.mastered_at.slice(0, 10) : '-';
+  const masteredScore = r.mastered_score || 0;
+  const attemptCount = r.attempt_count || 1;
+
+  return `
+    <div class="wa-card mastered-card">
+      <div class="header-row">
+        <span class="type-badge ${r.question_type}">${typeName}</span>
+        <span style="color:#27ae60;font-weight:600">✅ 已掌握</span>
+      </div>
+      <div class="question-text" onclick="this.classList.toggle('expanded')">${escapeHtml(question)}</div>
+      <div class="meta-row" style="border-top:1px solid #f0f0f0;padding-top:10px;margin-top:10px">
+        <span>🏆 ${masteredAt}</span>
+        <span>📊 最终得分: ${masteredScore}分</span>
+        <span>❌ 曾错 ${attemptCount} 次</span>
+        <span>📊 难度 ${r.difficulty ? '⭐'.repeat({'简单':1,'中等偏易':2,'中等':3,'中等偏难':4,'困难':5,'挑战':6}[r.difficulty] || 1) : '⭐'}</span>
+        ${kps.length ? `<span>🏷️ ${kps.slice(0, 3).join(', ')}</span>` : ''}
+      </div>
+      ${attemptCount > 1 ? `
+      <div style="margin-top:14px;padding-top:14px;border-top:1px solid #f0f0f0;text-align:center">
+        <button class="btn-retry" onclick="showMasteredByIndex(${idx})" style="padding:6px 20px;font-size:13px">📈 查看得分趋势</button>
+      </div>
+      ` : ''}
+    </div>
+  `;
+}
+
+function showMasteredByIndex(idx) {
+  const stored = window._masteredRecords || [];
+  const record = stored[idx];
+  if (!record) return;
+  showMasteredChartForRecord(record);
+}
+
+function showMasteredChart(recordId) {
+  const stored = window._masteredRecords || [];
+  let record = stored.find(r => String(r.record_id) === String(recordId) || String(r.id) === String(recordId));
+  if (!record) return;
+  showMasteredChartForRecord(record);
+}
+
+function showMasteredChartForRecord(record) {
+  let attempts = record.attempts;
+  if (!attempts || attempts.length < 1) {
+    const ac = record.attempt_count || 1;
+    const ms = record.mastered_score || record.score || 0;
+    const ma = record.mastered_at || record.created_at || '';
+    const c = record.created_at || '';
+    attempts = [];
+    for (let i = 0; i < ac; i++) {
+      const isLast = i === ac - 1;
+      attempts.push({
+        attempt_number: i + 1,
+        user_answer: isLast ? (record.user_answer || '') : '',
+        score: isLast ? ms : 0,
+        verdict: isLast ? 'Accepted' : 'Wrong Answer',
+        created_at: isLast ? ma : c,
+      });
+    }
+    record.attempts = attempts;
+  }
+  const qd = record.question_data || {};
+  const title = qd.title || qd.question || '错题记录';
+  const questionContent = qd.description || qd.content || qd.question || title;
+  const rid = record.record_id || record.id || '0';
+  const modalId = 'mc_' + rid;
+  const canvasId = 'c_' + rid;
+
+  const existing = document.getElementById(modalId);
+  if (existing) existing.remove();
+
+  const verdictMap = {
+    'Accepted': '✅ 通过', 'Wrong Answer': '❌ 答案错误',
+    'Compilation Error': '🔧 编译错误', 'Time Limit Exceeded': '⏰ 超时',
+    'Correct': '✅ 正确', 'Wrong': '❌ 错误'
+  };
+
+  let tableRows = '';
+  attempts.forEach((a, i) => {
+    const isLast = i === attempts.length - 1;
+    const dateStr = a.created_at ? a.created_at.replace('T', ' ').slice(0, 16) : '-';
+    const answerPreview = (a.user_answer || '').slice(0, 60);
+    tableRows += `
+      <tr style="${isLast ? 'background:#e8f5e9;font-weight:600;cursor:pointer' : 'cursor:pointer'}" onclick="showAttemptDetail('${canvasId}', ${i})">
+        <td style="padding:6px 10px;text-align:center">${a.attempt_number}</td>
+        <td style="padding:6px 10px;text-align:center">${dateStr}</td>
+        <td style="padding:6px 10px;text-align:center"><span style="color:${a.score >= 60 ? '#27ae60' : '#e74c3c'};font-weight:600">${a.score}分</span></td>
+        <td style="padding:6px 10px;text-align:center">${verdictMap[a.verdict] || a.verdict || ''}</td>
+        <td style="padding:6px 10px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:monospace;font-size:11px">${escapeHtml(answerPreview || '-')}</td>
+        <td style="padding:6px 10px;text-align:center">${isLast ? '🏆' : ''}</td>
+      </tr>
+    `;
+  });
+
+  const div = document.createElement('div');
+  div.id = modalId;
+  div.className = 'modal-overlay active';
+  div.innerHTML = `
+    <div class="modal-box" style="max-width:880px">
+      <button class="close" onclick="this.closest('.modal-overlay').remove()">&times;</button>
+      <div class="modal-title">📈 ${escapeHtml(title)}</div>
+      <div style="text-align:center;margin-bottom:10px;font-size:13px;color:#888">共 ${attempts.length} 次尝试 · 最终得分 ${record.mastered_score || 0} 分</div>
+      <details style="margin-bottom:12px">
+        <summary style="cursor:pointer;font-weight:600;color:#667eea;font-size:14px">📋 查看题目详情</summary>
+        <div style="background:#f8f9fa;padding:14px;border-radius:8px;margin-top:8px;font-size:13px;line-height:1.7;white-space:pre-wrap;max-height:200px;overflow-y:auto">${escapeHtml(questionContent)}</div>
+      </details>
+      <canvas id="${canvasId}" width="800" height="240" style="width:100%;height:220px;cursor:pointer" onclick="handleChartClick(event, '${canvasId}')"></canvas>
+      <div id="detail_${canvasId}" class="attempt-detail" style="margin-top:10px"></div>
+      <div style="margin-top:14px;overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <thead>
+            <tr style="background:#f5f7fa">
+              <th style="padding:8px 10px;text-align:center">次数</th>
+              <th style="padding:8px 10px;text-align:center">时间</th>
+              <th style="padding:8px 10px;text-align:center">得分</th>
+              <th style="padding:8px 10px;text-align:center">评判</th>
+              <th style="padding:8px 10px;text-align:center">答案摘要</th>
+              <th style="padding:8px 10px;text-align:center">状态</th>
+            </tr>
+          </thead>
+          <tbody>${tableRows}</tbody>
+        </table>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="this.closest('.modal-overlay').remove()">关闭</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(div);
+
+  setTimeout(() => {
+    drawScoreChart(canvasId, attempts, record.mastered_score);
+  }, 100);
+}
+
+function drawScoreChart(canvasId, attempts, masteredScore) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas || !attempts || attempts.length < 1) return;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = (rect.width || 700) * dpr;
+  canvas.height = 200 * dpr;
+  ctx.scale(dpr, dpr);
+  const W = rect.width || 700;
+  const H = 200;
+  const pad = { top: 25, bottom: 30, left: 45, right: 30 };
+  const chartW = W - pad.left - pad.right;
+  const chartH = H - pad.top - pad.bottom;
+
+  const allScores = attempts.map(a => a.score);
+  const maxScore = Math.max(100, ...allScores);
+  const minScore = Math.min(0, ...allScores);
+  const range = maxScore - minScore || 1;
+
+  let xs, ys;
+  if (attempts.length === 1) {
+    xs = [pad.left + chartW / 2];
+    ys = [pad.top + chartH - ((attempts[0].score - minScore) / range) * chartH];
+  } else {
+    xs = attempts.map((_, i) => pad.left + (i / (attempts.length - 1)) * chartW);
+    ys = attempts.map(a => pad.top + chartH - ((a.score - minScore) / range) * chartH);
+  }
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Grid lines
+  ctx.strokeStyle = '#f0f0f0';
+  ctx.lineWidth = 1;
+  for (let g = 0; g <= 4; g++) {
+    const gy = pad.top + (g / 4) * chartH;
+    ctx.beginPath();
+    ctx.moveTo(pad.left, gy);
+    ctx.lineTo(W - pad.right, gy);
+    ctx.stroke();
+    const label = Math.round(maxScore - (g / 4) * range);
+    ctx.fillStyle = '#aaa';
+    ctx.font = '11px sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(label, pad.left - 8, gy + 4);
+  }
+
+  // Area fill
+  ctx.beginPath();
+  ctx.moveTo(xs[0], pad.top + chartH);
+  xs.forEach((x, i) => ctx.lineTo(x, ys[i]));
+  ctx.lineTo(xs[xs.length - 1], pad.top + chartH);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(231, 76, 60, 0.08)';
+  ctx.fill();
+
+  // Line
+  ctx.beginPath();
+  xs.forEach((x, i) => i === 0 ? ctx.moveTo(x, ys[i]) : ctx.lineTo(x, ys[i]));
+  ctx.strokeStyle = '#e74c3c';
+  ctx.lineWidth = 2.5;
+  ctx.lineJoin = 'round';
+  ctx.stroke();
+
+  // Dots + labels
+  xs.forEach((x, i) => {
+    ctx.beginPath();
+    ctx.arc(x, ys[i], 6, 0, Math.PI * 2);
+    ctx.fillStyle = '#fff';
+    ctx.fill();
+    ctx.strokeStyle = i === attempts.length - 1 ? '#27ae60' : '#e74c3c';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+
+    ctx.fillStyle = '#333';
+    ctx.font = 'bold 11px sans-serif';
+    ctx.textAlign = 'center';
+    const labelY = i === 0 ? ys[i] - 14 : ys[i] - 14;
+    ctx.fillText(attempts[i].score + '分', x, labelY);
+  });
+
+  // X labels
+  attempts.forEach((a, i) => {
+    const dateStr = (a.created_at || '').slice(5, 10) || '#' + (i + 1);
+    ctx.fillStyle = '#999';
+    ctx.font = '10px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('第' + (i + 1) + '次', xs[i], H - 5);
+  });
+
+  canvas._chartData = { attempts, xs, ys };
+}
+
+function handleChartClick(event, canvasId) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas || !canvas._chartData) return;
+  const rect = canvas.getBoundingClientRect();
+  const mx = event.clientX - rect.left;
+  const my = event.clientY - rect.top;
+  const { attempts, xs, ys } = canvas._chartData;
+  const detailDiv = document.getElementById('detail_' + canvasId);
+
+  let closest = null;
+  let minDist = 30;
+  xs.forEach((x, i) => {
+    const d = Math.abs(mx - x);
+    if (d < minDist) { minDist = d; closest = i; }
+  });
+
+  if (closest === null) { detailDiv.innerHTML = ''; return; }
+
+  showAttemptDetail(canvasId, closest);
+}
+
+function showAttemptDetail(canvasId, idx) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas || !canvas._chartData) return;
+  const { attempts } = canvas._chartData;
+  const detailDiv = document.getElementById('detail_' + canvasId);
+  const a = attempts[idx];
+  if (!a) return;
+  const isLast = idx === attempts.length - 1;
+  const verdictMap = {
+    'Accepted': '✅ 通过', 'Wrong Answer': '❌ 答案错误',
+    'Compilation Error': '🔧 编译错误', 'Time Limit Exceeded': '⏰ 超时',
+    'Correct': '✅ 正确', 'Wrong': '❌ 错误'
+  };
+  const dateStr = a.created_at ? a.created_at.replace('T', ' ').slice(0, 16) : '-';
+  const fullAnswer = a.user_answer || '';
+  detailDiv.innerHTML = `
+    <div class="attempt-detail-card ${isLast ? 'last' : ''}">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-weight:700">第 ${a.attempt_number} 次尝试</span>
+        <span style="font-size:13px;color:#888">${dateStr}</span>
+      </div>
+      <div style="display:flex;gap:16px;margin-top:8px">
+        <span class="attempt-score ${a.score >= 60 ? 'pass' : 'fail'}">📊 得分: ${a.score}分</span>
+        <span style="font-size:14px">${verdictMap[a.verdict] || a.verdict || ''}</span>
+      </div>
+      ${fullAnswer ? `<div style="margin-top:8px;font-size:13px;color:#555;background:#f8f9fa;padding:8px 12px;border-radius:6px;font-family:monospace;max-height:100px;overflow-y:auto;white-space:pre-wrap">${escapeHtml(fullAnswer)}</div>` : ''}
+    </div>
+  `;
+}
+
+async function deleteRecord(recordId) {
+  if (!confirm('确定删除这条错题记录？')) return;
+  const userId = getUserId();
+  try {
+    const resp = await fetch(`/wrong-answers/${recordId}/${userId}`, { method: 'DELETE' });
+    const data = await resp.json();
+    if (data.success) {
+      loadList();
+      loadStats();
+    } else {
+      alert('删除失败');
+    }
+  } catch (e) {
+    alert('删除失败');
+  }
+}
+
+async function unmasterRecord(recordId) {
+  if (!confirm('确定取消该题的"已掌握"状态，将其移回待巩固列表？')) return;
+  const userId = getUserId();
+  try {
+    const resp = await fetch(`/wrong-answers/${recordId}/unmaster/${userId}`, { method: 'POST' });
+    const data = await resp.json();
+    if (data.success) {
+      loadMasteredList();
+      loadList();
+      loadStats();
+      loadFrequentlyWrongList();
+      loadFrequentlyWrongStats();
+    } else {
+      alert('取消掌握失败');
+    }
+  } catch (e) {
+    alert('取消掌握失败: ' + e.message);
+  }
+}
+
+// ==================== Practice Modal ====================
+
+async function openPractice(recordId) {
+  const userId = getUserId();
+  // ★★★ 先清理上一个错题的自我表述状态 ★★★
+  _resetSelfExplanationState();
+
+  const resp = await fetch(`/wrong-answers/${userId}?page=1&page_size=999`);
+  const data = await resp.json();
+  const records = data.records || [];
+  const record = records.find(r => r.record_id === recordId);
+  if (!record) { alert('记录不存在'); return; }
+
+  currentPracticeRecord = record;
+  window._currentRecRecordId = recordId;
+  const qd = record.question_data || {};
+  const modal = document.getElementById('practiceModal');
+  document.getElementById('modalTitle').textContent = '✏️ 重新练习';
+  document.getElementById('modalResult').className = 'modal-result';
+  document.getElementById('modalResult').style.display = 'none';
+  document.getElementById('btnSubmit').disabled = false;
+  document.getElementById('btnSubmit').textContent = '提交答案';
+  theorySelectedAnswer = '';
+  document.getElementById('recommendSection').classList.remove('show');
+
+  // ★★★ 推荐后台加载（不阻塞弹窗显示）★★★
+  if (record.attempt_count >= 3) {
+    // ★★★ 优先从 sessionStorage 展示缓存（减少白屏）★★★
+    const stored = sessionStorage.getItem('rec_' + recordId + '_' + userId);
+    if (stored) {
+      try { renderRecommendations(JSON.parse(stored)); } catch(e) {}
+    }
+    // ★★★ 始终调用 API 获取最新推荐（覆盖 sessionStorage 的旧数据）★★★
+    fetch(`/wrong-answers/${recordId}/recommend/${userId}`).then(r => r.json()).then(recData => {
+      // ★★★ 只有当前弹窗还是同一个错题时才渲染，防止跨题污染 ★★★
+      if (window._currentRecRecordId !== recordId) return;
+      if (recData.success && recData.should_recommend) {
+        renderRecommendations(recData);
+      }
+    }).catch(e => console.log('加载推荐失败:', e));
+  } else {
+    // ★★★ attempt < 3 但可能已提前推荐过，尝试从 sessionStorage 恢复推荐 ★★★
+    const stored = sessionStorage.getItem('rec_' + recordId + '_' + userId);
+    if (stored) {
+      try { renderRecommendations(JSON.parse(stored)); } catch(e) {}
+    }
+  }
+
+  // ★★★ 检查是否有自我表述历史分析（不限 attempt_count，提前推荐在第2次就会产生）★★★
+  _checkSelfExplanationHistory(userId, recordId);
+
+  if (record.question_type === 'programming') {
+    const title = qd.title || '';
+    const desc = qd.description || '';
+    const storedCode = record.user_answer || '';
+    let modalDescText = '';
+    if (title && desc) {
+      const examples = qd.examples || [];
+      let examplesText = '';
+      if (examples.length > 0) {
+        examplesText = '\n\n【示例】\n' + examples.map((ex, i) =>
+          `示例${i + 1}:\n输入: ${ex.input || ''}\n输出: ${ex.output || ''}`
+        ).join('\n\n');
+      }
+      modalDescText = `【${title}】\n${desc}${examplesText}`;
+    } else {
+      modalDescText = '回顾你之前提交的代码，重新尝试：';
+    }
+    document.getElementById('modalDesc').textContent = modalDescText;
+
+    document.getElementById('modalBody').innerHTML = `
+      <div style="margin-bottom:10px">
+        <label style="font-size:13px;color:#888;margin-right:8px">编程语言：</label>
+        <select id="codeLang" style="padding:6px 12px;border:1px solid #ddd;border-radius:6px;font-size:13px;outline:none">
+          <option value="python">Python</option>
+          <option value="java">Java</option>
+          <option value="cpp">C++</option>
+          <option value="c">C</option>
+          <option value="javascript">JavaScript</option>
+          <option value="go">Go</option>
+          <option value="rust">Rust</option>
+        </select>
+      </div>
+      <p style="font-size:13px;color:#888;margin-bottom:6px;">✏️ 编写你的代码答案：</p>
+      <textarea id="codeInput" placeholder="在此编写代码...">${escapeHtml(storedCode)}</textarea>
+    `;
+    document.getElementById('btnSubmit').onclick = () => submitProgramming(record, qd);
+
+  } else {
+    const question = qd.description || qd.title || qd.question || '(无题目内容)';
+    document.getElementById('modalDesc').textContent = question;
+
+    let optionsHtml = '';
+    let options = qd.options || [];
+    // ★★★ 判断题默认补上"正确/错误"选项 ★★★
+    if (record.question_type === 'judge' && options.length === 0) {
+      options = ['正确', '错误'];
+    }
+    if (options.length > 0) {
+      optionsHtml = '<div class="modal-options">';
+      const isMultiple = record.question_type === 'multiple_choice';
+      options.forEach((opt, i) => {
+        const val = record.question_type === 'judge' ? opt : (opt.includes('.') ? opt.split('.')[0].trim() : String.fromCharCode(65 + i));
+        optionsHtml += `
+          <label onclick="selectTheoryOption(event, this, '${val}', ${isMultiple})">
+            <input type="${isMultiple ? 'checkbox' : 'radio'}" name="theoryAnswer" value="${val}">
+            <span>${escapeHtml(opt)}</span>
+          </label>
+        `;
+      });
+      optionsHtml += '</div>';
+    } else {
+      optionsHtml = `
+        <textarea id="fillAnswer" placeholder="输入你的答案..."
+                  style="min-height:60px;font-family:inherit;">${escapeHtml(record.user_answer || '')}</textarea>
+      `;
+    }
+    document.getElementById('modalBody').innerHTML = optionsHtml;
+    document.getElementById('btnSubmit').onclick = () => submitTheory(record, qd);
+  }
+
+  modal.classList.add('active');
+}
+
+function selectTheoryOption(event, el, val, isMultiple) {
+  if (isMultiple) {
+    event.preventDefault();
+    el.classList.toggle('selected');
+    const cb = el.querySelector('input[type="checkbox"]');
+    cb.checked = !cb.checked;
+    const checked = document.querySelectorAll('.modal-options label.selected input[type="checkbox"]:checked');
+    theorySelectedAnswer = Array.from(checked).map(c => c.value).join(',');
+  } else {
+    document.querySelectorAll('.modal-options label').forEach(l => l.classList.remove('selected'));
+    el.classList.add('selected');
+    el.querySelector('input[type="radio"]').checked = true;
+    theorySelectedAnswer = val;
+  }
+}
+
+function closeModal() {
+  document.getElementById('practiceModal').classList.remove('active');
+  document.getElementById('recommendSection').classList.remove('show');
+  currentPracticeRecord = null;
+  // ★★★ 关闭弹窗时清理自我表述状态 ★★★
+  _resetSelfExplanationState();
+}
+
+function _resetSelfExplanationState() {
+  const seSection = document.getElementById('selfExplainSection');
+  if (seSection) {
+    seSection.classList.remove('show');
+    seSection.setAttribute('data-session-id', '');
+    seSection.setAttribute('data-record-id', '');
+  }
+  // 重置输入区
+  const textarea = document.getElementById('seTextarea');
+  if (textarea) { textarea.value = ''; textarea.disabled = false; }
+  // 重置按钮
+  const submitBtn = document.getElementById('seSubmitBtn');
+  if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '提交并分析'; }
+  // 隐藏分析结果
+  const resultDiv = document.getElementById('seResult');
+  if (resultDiv) { resultDiv.className = 'se-result'; resultDiv.style.display = 'none'; resultDiv.innerHTML = ''; }
+  // 重置录音按钮
+  const voiceBtn = document.getElementById('seVoiceBtn');
+  if (voiceBtn) { voiceBtn.className = 'se-voice-btn'; document.getElementById('seVoiceIcon').textContent = '🎤'; document.getElementById('seVoiceLabel').textContent = '点击说话'; }
+  const voiceHint = document.getElementById('seVoiceHint');
+  if (voiceHint) voiceHint.textContent = '• 点击按钮开始录音 • 自动识别为文字 • 超30秒自动停止';
+  const voiceTimer = document.getElementById('seVoiceTimer');
+  if (voiceTimer) voiceTimer.style.display = 'none';
+  // 清理全局变量
+  window._savedAnalysisHtml = '';
+  currentSeSessionId = null;
+  // 停止可能的录音
+  if (window._seMediaRecorder && window._seMediaRecorder.state === 'recording') {
+    stopVoiceRecording();
+  }
+}
+
+function renderRecommendations(recData) {
+  const section = document.getElementById('recommendSection');
+  const grid = document.getElementById('recGrid');
+  const sub = document.getElementById('recSub');
+
+  if (!recData || !recData.should_recommend) {
+    section.classList.remove('show');
+    return;
+  }
+
+  const recIconMap = {
+    document: '📄', question: '✏️', video: '🎬',
+    mindmap: '🧠', practice: '💻'
+  };
+  const recLabelMap = {
+    document: '学习文档', question: '练习题', video: '视频讲解',
+    mindmap: '思维导图', practice: '编程练习'
+  };
+
+  const styleMap = {
+    '动手型': '动手型', '视觉型': '视觉型', '阅读型': '阅读型',
+    '听觉型': '听觉型', '综合型': '综合型',
+    'ineffective': '待改善', 'reading': '阅读型', 'visual': '视觉型',
+    'hands-on': '动手型', 'auditory': '听觉型',
+  };
+  const rawStyle = recData.learning_style || '';
+  const friendlyStyle = styleMap[rawStyle] || rawStyle || '综合型';
+
+  const materials = recData.materials || {};
+  const types = Object.keys(materials);
+  if (types.length === 0) {
+    section.classList.remove('show');
+    return;
+  }
+
+  sub.textContent = `检测到这道题已经错了 ${recData.attempt_count} 次，根据你的学习风格（${friendlyStyle}）为你推荐以下资料，点击卡片查看详情：`;
+
+  let cardsHtml = '';
+  let cardIndex = 0;
+  let hasLibraryRecs = false; // 标记是否有库推荐资源
+  for (const rt of types) {
+    const items = materials[rt] || [];
+    for (const item of items) {
+      const isLlm = item.source === 'agent_generated' || item.source === 'llm_search_suggestion';
+      if (!isLlm) hasLibraryRecs = true;
+      // ★★★ 兜底标题：优先 title → name → content 截断 → question → topic 标签 → 跳过   ★★★
+      const name = item.title || item.name
+        || truncTitle(item.content || item.description, 35)
+        || item.question
+        || (item.topic ? `【${item.topic}】${recLabelMap[rt] || rt}` : '');
+      // 标题和内容都为空 → 不渲染空卡片
+      if (!name && !(item.content || item.description)) continue;
+
+      const desc = item.description || item.content || item.recommendation_reason || '';
+      const dataAttrs = `data-type="${rt}" data-index="${cardIndex}" data-id="${escapeHtml(item.id || item.resource_id || '')}"`;
+      // ★★★ 按 sub_topic 区分理论题/编程练习标签 ★★★
+      const theoryTypes = ['single_choice','multiple_choice','judge','fill_blank','short_answer'];
+      const itemLabel = (rt === 'question' && theoryTypes.includes(item.sub_topic))
+        ? '理论题' : recLabelMap[rt] || rt;
+      cardsHtml += `
+        <div class="rec-card clickable ${isLlm ? 'llm' : ''}" ${dataAttrs} onclick="onRecCardClick(this)">
+          <div class="rec-icon">${recIconMap[rt] || '📚'}</div>
+          <div class="rec-body">
+            <div class="rec-name">${escapeHtml(name)}</div>
+            ${desc ? `<div class="rec-desc">${escapeHtml(desc)}</div>` : ''}
+            <span class="rec-tag ${rt}">${itemLabel}</span>
+            ${item.difficulty ? `<span class="rec-tag" style="background:#f5f5f5;color:#666;margin-left:6px">难度${'⭐'.repeat(item.difficulty)}</span>` : ''}
+            ${isLlm ? '<span style="font-size:11px;color:#8e44ad;margin-left:6px">🤖 AI生成</span>' : ''}
+            <span style="font-size:11px;color:#667eea;margin-top:4px;display:inline-block">点击查看 →</span>
+          </div>
+        </div>
+      `;
+      cardIndex++;
+    }
+  }
+
+  grid.innerHTML = cardsHtml;
+  window._recMaterials = materials;
+  window._recKps = recData.knowledge_points || [];
+  window._recResourceTypes = recData.resource_types || ['question', 'practice'];
+  window._recDifficulty = recData.difficulty || '';
+  _recCache[window._currentRecRecordId || ''] = recData;
+
+  // ★★★ 显示"AI生成补充"按钮 ★★★
+  const existingBtn = document.getElementById('llmGenBtn');
+  if (existingBtn) existingBtn.remove();
+  if (!document.getElementById('llmGenBtn')) {
+    const btnDiv = document.createElement('div');
+    btnDiv.id = 'llmGenBtn';
+    btnDiv.style.cssText = 'margin-top:14px;text-align:center';
+    btnDiv.innerHTML = `<button onclick="onLlmGenerate()" style="padding:10px 24px;background:linear-gradient(135deg,#8e44ad,#667eea);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;transition:all.2s">
+      🤖 用AI生成补充资料
+    </button>
+    <div id="llmGenSpinner" style="display:none;margin-top:8px;color:#8e44ad;font-size:13px">⏳ AI 正在生成学习材料...</div>`;
+    grid.parentNode.appendChild(btnDiv);
+  }
+
+  const recKey = 'rec_' + (window._currentRecRecordId || '') + '_' + getUserId();
+  try { sessionStorage.setItem(recKey, JSON.stringify(recData)); } catch(e) {}
+  section.classList.add('show');
+}
+
+async function onLlmGenerate() {
+  const btn = document.querySelector('#llmGenBtn button');
+  const spinner = document.getElementById('llmGenSpinner');
+  if (btn) btn.disabled = true;
+  if (spinner) spinner.style.display = 'block';
+
+  try {
+    const resp = await fetch('/wrong-answers/llm-generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id: getUserId(),
+        record_id: window._currentRecRecordId || '',  // 新增：传入错题记录ID
+        knowledge_points: window._recKps || [],
+        resource_types: window._recResourceTypes || ['doc', 'video', 'question'],
+        difficulty: window._recDifficulty || '',
+      })
+    });
+    const data = await resp.json();
+    if (data.success && data.materials) {
+      // 将 LLM 生成结果合并到当前题目的推荐中
+      const rid = window._currentRecRecordId || '';
+      const merged = _recCache[rid] ? { ..._recCache[rid] } : {};
+      merged.materials = merged.materials || {};
+      for (const key of Object.keys(data.materials)) {
+        if (!merged.materials[key]) merged.materials[key] = [];
+        merged.materials[key] = merged.materials[key].concat(data.materials[key]);
+      }
+      renderRecommendations(merged);
+    } else {
+      alert('AI 生成失败，请稍后重试');
+    }
+  } catch (e) {
+    alert('请求失败: ' + e.message);
+  } finally {
+    if (btn) btn.disabled = false;
+    if (spinner) spinner.style.display = 'none';
+  }
+}
+
+let _recMaterialsFlat = null;
+
+function restoreRecommendations() {
+  const rid = window._currentRecRecordId || '';
+  if (_recCache[rid]) {
+    renderRecommendations(_recCache[rid]);
+  }
+}
+
+function onRecCardClick(el) {
+  const rt = el.dataset.type;
+  const idx = parseInt(el.dataset.index);
+  const materials = window._recMaterials || {};
+  const allItems = [];
+  for (const type of Object.keys(materials)) {
+    for (const item of materials[type]) {
+      allItems.push({ type, item });
+    }
+  }
+  const entry = allItems[idx];
+  if (!entry) return;
+  const { type, item } = entry;
+
+  if (type === 'question' || type === 'practice') {
+    const actualType = detectRecQuestionType(item, type);
+    openRecPractice(actualType, item);
+  } else if (type === 'document') {
+    showRecDocument(item);
+  } else if (type === 'video') {
+    openRecVideo(item);
+  } else if (type === 'mindmap') {
+    showRecDocument(item);
+  }
+}
+
+function detectRecQuestionType(item, defaultType) {
+  // 优先：options 数组 → 选择题
+  if (item.options && item.options.length > 0) return 'single_choice';
+  // 次优先：DB 的 sub_topic 字段（question_generator_agent 会设置）
+  if (item.sub_topic && ['single_choice','multiple_choice','judge','fill_blank','short_answer'].includes(item.sub_topic)) {
+    return item.sub_topic;
+  }
+
+  const content = (item.content || item.question || '') + (item.title || '');
+  const solution = item.solution || item.answer || '';
+
+  // ★ 答案像选项字母（A,B,D,E 或 A 或 ABD）→ 选择题
+  if (/^[A-E](,[A-E])*$/i.test(solution.trim())) return 'single_choice';
+
+  // ★ 答案像代码（多行/含大括号/含函数定义）→ 编程题
+  if (solution && solution.length > 40 && /[{;}]|class\s|public\s|def\s|import\s|System\.out|printf?\(/.test(solution)) {
+    return 'programming';
+  }
+
+  // 编程题强信号：标准输入输出格式
+  const strongProg = ['输入格式','输出格式','input_format','output_format','样例输入','样例输出','示例输入','示例输出'];
+  for (const p of strongProg) {
+    if (content.includes(p)) return 'programming';
+  }
+  // 编程题明确指令
+  const instructionProg = ['编写程序','编写代码','编程实现','实现一个函数','实现一个类','请编写','请编程'];
+  for (const p of instructionProg) {
+    if (content.includes(p)) return 'programming';
+  }
+  // 编程题弱信号（只有同时有代码解答才判定）
+  const weakProg = ['打印如下','打印一个','输出如下','使用循环','嵌套循环','循环输出','循环打印','打印.*金字塔','输出.*图案'];
+  for (const p of weakProg) {
+    try {
+      if (new RegExp(p).test(content)) return 'programming';
+    } catch(e) {}
+  }
+
+  // metadata/examples
+  if (item.metadata && item.metadata.examples) return 'programming';
+  if (item.examples && Array.isArray(item.examples) && item.examples.length > 0) return 'programming';
+  if (item.hints && Array.isArray(item.hints) && item.hints.length > 0 && content.includes('输入')) return 'programming';
+
+  // 默认：理论简答题
+  return 'short_answer';
+}
+
+function openRecPractice(type, item) {
+  currentRecItem = item;
+  currentRecType = type;
+  const content = item.content || item.question || '';
+  const title = item.title || '练习题';
+  const hasOptions = item.options && item.options.length > 0;
+  const modal = document.getElementById('recPracticeModal');
+
+  document.getElementById('recPTitle').textContent = '✏️ ' + title;
+  document.getElementById('recPDesc').textContent = content;
+  document.getElementById('recPResult').className = 'modal-result';
+  document.getElementById('recPResult').style.display = 'none';
+  document.getElementById('recPBtn').disabled = false;
+  document.getElementById('recPBtn').textContent = '提交答案';
+
+  let hints = item.hints;
+  if (typeof hints === 'string') {
+    try { hints = JSON.parse(hints); } catch(e) { hints = []; }
+  }
+
+  let bodyHtml = '';
+  if (hasOptions) {
+    bodyHtml = '<div class="modal-options" id="recPOptions">';
+    item.options.forEach((opt, i) => {
+      const val = opt.includes('.') ? opt.split('.')[0].trim() : String.fromCharCode(65 + i);
+      bodyHtml += `
+        <label onclick="selectRecPption(this, '${val}')">
+          <input type="radio" name="recPAnswer" value="${val}">
+          <span>${escapeHtml(opt)}</span>
+        </label>
+      `;
+    });
+    bodyHtml += '</div>';
+  } else if ((type === 'single_choice' || type === 'multiple_choice') && !hasOptions) {
+    // ★ options 为空但识别为选择题 → 从 solution 或 content 提取选项 ★
+    const extOptions = extractOptionsFromContent(content, item.solution || item.answer || '');
+    if (extOptions.length > 0) {
+      // 注入到 item 供后续使用
+      item.options = extOptions;
+      bodyHtml = '<div class="modal-options" id="recPOptions">';
+      extOptions.forEach((opt, i) => {
+        const val = typeof opt === 'string' && opt.includes('.') ? opt.split('.')[0].trim() : String.fromCharCode(65 + i);
+        bodyHtml += `
+          <label onclick="selectRecPption(this, '${val}')">
+            <input type="radio" name="recPAnswer" value="${val}">
+            <span>${escapeHtml(opt)}</span>
+          </label>
+        `;
+      });
+      bodyHtml += '</div>';
+    } else {
+      // 实在提取不到选项，回退到文本框
+      bodyHtml = `
+        <p style="font-size:13px;color:#888;margin-bottom:6px;">✏️ 输入你的答案（如 A,B,D）：</p>
+        <textarea id="recPFill" placeholder="在此输入答案..." style="width:100%;min-height:80px;padding:14px;border:1px solid #ddd;border-radius:8px;font-size:14px;line-height:1.6;resize:vertical;outline:none"></textarea>
+      `;
+    }
+  } else if (type === 'judge') {
+    // ★ 判断题：显示正确/错误两个选项 ★
+    bodyHtml = '<div class="modal-options" id="recPOptions">';
+    ['正确', '错误'].forEach((opt, i) => {
+      const val = ['正确', '错误'][i];
+      bodyHtml += `
+        <label onclick="selectRecPption(this, '${val}')">
+          <input type="radio" name="recPAnswer" value="${val}">
+          <span>${opt}</span>
+        </label>
+      `;
+    });
+    bodyHtml += '</div>';
+  } else if (type === 'practice' || type === 'programming') {
+    bodyHtml = `
+      <div style="margin-bottom:10px">
+        <label style="font-size:13px;color:#888;margin-right:8px">编程语言：</label>
+        <select id="recPLang" style="padding:6px 12px;border:1px solid #ddd;border-radius:6px;font-size:13px;outline:none">
+          <option value="python">Python</option>
+          <option value="java">Java</option>
+          <option value="cpp">C++</option>
+          <option value="c">C</option>
+          <option value="javascript">JavaScript</option>
+          <option value="go">Go</option>
+          <option value="rust">Rust</option>
+        </select>
+      </div>
+      <p style="font-size:13px;color:#888;margin-bottom:6px;">✏️ 编写你的代码答案：</p>
+      <textarea id="recPCode" placeholder="在此编写代码..." style="width:100%;min-height:160px;padding:14px;border:1px solid #ddd;border-radius:8px;font-family:Consolas,monospace;font-size:14px;line-height:1.6;resize:vertical;outline:none"></textarea>
+    `;
+  } else {
+    bodyHtml = `
+      <p style="font-size:13px;color:#888;margin-bottom:6px;">✏️ 输入你的答案：</p>
+      <textarea id="recPFill" placeholder="在此输入答案..." style="width:100%;min-height:80px;padding:14px;border:1px solid #ddd;border-radius:8px;font-size:14px;line-height:1.6;resize:vertical;outline:none"></textarea>
+    `;
+  }
+
+  if (item.solution || (hints && hints.length > 0)) {
+    bodyHtml += '<div style="margin-top:12px">';
+    if (item.solution) {
+      bodyHtml += `<details><summary style="cursor:pointer;font-weight:600;color:#667eea;font-size:14px">📖 查看解答</summary><div style="background:#fff8e1;padding:12px;border-radius:8px;margin-top:8px;font-size:14px;line-height:1.7;white-space:pre-wrap">${escapeHtml(item.solution)}</div></details>`;
+    }
+    if (hints && Array.isArray(hints) && hints.length > 0) {
+      bodyHtml += '<div style="margin-top:8px;font-size:13px;color:#8e44ad;font-weight:600">💡 提示</div>';
+      hints.forEach((h, i) => {
+        bodyHtml += `<div style="background:#f5eef8;padding:8px 12px;border-radius:6px;margin-top:4px;font-size:13px;line-height:1.6">${i + 1}. ${escapeHtml(h)}</div>`;
+      });
+    }
+    bodyHtml += '</div>';
+  }
+
+  document.getElementById('recPBody').innerHTML = bodyHtml;
+  modal.classList.add('active');
+}
+
+function selectRecPption(el, val) {
+  document.querySelectorAll('#recPOptions label').forEach(l => l.classList.remove('selected'));
+  el.classList.add('selected');
+  el.querySelector('input[type="radio"]').checked = true;
+  window._recPAnswer = val;
+}
+
+function closeRecPracticeModal() {
+  document.getElementById('recPracticeModal').classList.remove('active');
+  currentRecItem = null;
+}
+
+function normalizeKps(raw) {
+  if (Array.isArray(raw)) return raw;
+  if (typeof raw === 'string') return raw.split(',').map(s => s.trim()).filter(Boolean);
+  return [];
+}
+
+async function submitRecPractice() {
+  const item = currentRecItem;
+  if (!item) return;
+  const btn = document.getElementById('recPBtn');
+  btn.disabled = true;
+  btn.textContent = '提交中...';
+
+  const hasOptions = item.options && item.options.length > 0;
+  const recType = currentRecType || '';
+  const isJudge = recType === 'judge';
+  const isCode = !hasOptions && !isJudge && (recType === 'practice' || recType === 'programming');
+
+  let userAnswer = '';
+  if (hasOptions || isJudge) {
+    userAnswer = window._recPAnswer || '';
+    if (!userAnswer) { alert('请先选择一个选项'); btn.disabled = false; btn.textContent = '提交答案'; return; }
+  } else if (isCode) {
+    userAnswer = document.getElementById('recPCode')?.value || '';
+  } else {
+    userAnswer = document.getElementById('recPFill')?.value || '';
+  }
+  if (!userAnswer.trim()) { alert('请先作答'); btn.disabled = false; btn.textContent = '提交答案'; return; }
+
+  const userId = getUserId();
+
+  try {
+    if (isCode) {
+      const langSelect = document.getElementById('recPLang');
+      const language = langSelect ? langSelect.value : 'python';
+      const problemData = {
+        problem_id: item.id || 'rec_' + Date.now(),
+        title: item.title || (item.topic ? `【${item.topic}】练习题` : '练习题'),
+        description: item.content || item.question || '',
+        knowledge_points: normalizeKps(item.knowledge_points),
+        // ★★★ 如果缺少 examples/hints，补上默认值避免评判出错 ★★★
+        examples: item.examples || [],
+        hints: item.hints || [],
+        difficulty: item.difficulty || 2,
+      };
+      // ★★★ 如果 content 不包含标准评判所需的关键词，补充模板式描述 ★★★
+      if (problemData.description && !problemData.description.includes('输入') && !problemData.description.includes('输出')) {
+        const kpText = (item.knowledge_points || item.topic || '编程').toString();
+        problemData.description = `题目：${problemData.title}\n知识点：${kpText}\n请根据题目要求编写代码实现功能。\n${problemData.description}`;
+      }
+      const resp = await fetch('/practice/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: userId,
+          problem: problemData,
+          problem_id: problemData.problem_id,
+          code: userAnswer,
+          language: language
+        })
+      });
+      const result = await resp.json();
+      const jr = result.judge_result || {};
+      const score = jr.score || 0;
+      const isPass = score >= 60;
+      const resultDiv = document.getElementById('recPResult');
+      resultDiv.className = `modal-result show ${isPass ? 'success' : 'fail'}`;
+      resultDiv.innerHTML = `
+        <div class="result-title">${isPass ? '✅ 答对了！' : '❌ 仍需努力'}</div>
+        <div class="result-detail">
+          <p>评判结果: ${jr.verdict || 'Unknown'} | 得分: ${score}分</p>
+          ${jr.analysis ? `<p>${escapeHtml(jr.analysis.correctness || '')}</p>` : ''}
+        </div>
+      `;
+      resultDiv.style.display = 'block';
+      btn.textContent = '已完成';
+    } else {
+      const questionPayload = {
+        question: item.content || item.question || '',
+        answer: item.answer || item.solution || '',
+      };
+      if (item.options) questionPayload.options = item.options;
+
+      const resp = await fetch('/theory/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: userId,
+          question_type: isJudge ? 'judge' : (hasOptions ? 'single_choice' : recType || 'short_answer'),
+          question: questionPayload,
+          user_answer: userAnswer,
+          knowledge_points: normalizeKps(item.knowledge_points),
+          source: 'recommendation'
+        })
+      });
+      const result = await resp.json();
+      const isCorrect = result.is_correct;
+      const resultDiv = document.getElementById('recPResult');
+      resultDiv.className = `modal-result show ${isCorrect ? 'success' : 'fail'}`;
+      resultDiv.innerHTML = `
+        <div class="result-title">${isCorrect ? '✅ 回答正确！' : '❌ 回答错误'}</div>
+        <div class="result-detail">
+          <p>你的答案: ${escapeHtml(userAnswer)}</p>
+          <p>正确答案: ${escapeHtml(result.correct_answer || item.solution || '')}</p>
+        </div>
+      `;
+      resultDiv.style.display = 'block';
+      btn.textContent = '已完成';
+    }
+  } catch (e) {
+    alert('提交失败: ' + e.message);
+    btn.disabled = false;
+    btn.textContent = '提交答案';
+  }
+}
+
+function showRecDocument(item) {
+  const content = item.content || item.description || '';
+  const title = item.title || '学习文档';
+  const existing = document.getElementById('docViewerModal');
+  if (existing) existing.remove();
+
+  // LLM 生成的 doc/ppt 可下载
+  let downloadHtml = '';
+  if (item.downloadable && item.source === 'llm_generated') {
+    const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const filename = (title.replace(/[\\/:*?"<>|]/g, '_') + '.md');
+    downloadHtml = `<a href="${url}" download="${filename}" style="display:inline-block;padding:6px 16px;background:#27ae60;color:#fff;border-radius:8px;text-decoration:none;font-size:13px;font-weight:600;margin-bottom:12px">📥 下载${item.file_type === 'markdown' ? '(.md)' : ''}</a>`;
+  }
+
+  const div = document.createElement('div');
+  div.id = 'docViewerModal';
+  div.className = 'modal-overlay active';
+  div.innerHTML = `
+    <div class="modal-box" style="max-width:900px">
+      <button class="close" onclick="this.closest('.modal-overlay').remove()">&times;</button>
+      <div class="modal-title">📄 ${escapeHtml(title)}</div>
+      ${downloadHtml}
+      <div style="background:#f8f9fa;padding:20px;border-radius:8px;max-height:60vh;overflow-y:auto;font-size:14px;line-height:1.9;white-space:pre-wrap">${escapeHtml(content || '(暂无内容)')}</div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="this.closest('.modal-overlay').remove()">关闭</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(div);
+}
+
+function openRecVideo(item) {
+  const url = item.url || '';
+  if (url) {
+    window.open(url, '_blank');
+  } else {
+    alert('该视频暂无播放链接');
+  }
+}
+
+async function submitProgramming(record, qd) {
+  const btn = document.getElementById('btnSubmit');
+  btn.disabled = true;
+  btn.textContent = '评判中...';
+
+  const code = document.getElementById('codeInput').value;
+  if (!code.trim()) { alert('请先编写代码'); btn.disabled = false; btn.textContent = '提交答案'; return; }
+
+  const langSelect = document.getElementById('codeLang');
+  const language = langSelect ? langSelect.value : 'python';
+
+  try {
+    const resp = await fetch('/practice/rejudge', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id: getUserId(),
+        problem_data: qd,
+        user_code: code,
+        language: language,
+        record_id: record.record_id
+      })
+    });
+    const result = await resp.json();
+
+    const jr = result.judge_result || {};
+    const score = jr.score || 0;
+    const verdict = jr.verdict || 'Unknown';
+    const isPass = score >= 60;
+
+    const resultDiv = document.getElementById('modalResult');
+    resultDiv.className = `modal-result show ${isPass ? 'success' : 'fail'}`;
+    resultDiv.innerHTML = `
+      <div class="result-title">${isPass ? '✅ 答对了！' : '❌ 仍需努力'}</div>
+      <div class="result-detail">
+        <p>评判结果: ${verdict} | 得分: ${score}分</p>
+        ${isPass && result.auto_marked_as_resolved ? '<p>🎉 已标记为已掌握</p>' : ''}
+        ${jr.analysis ? `<p>${escapeHtml(jr.analysis.correctness || '')}</p>` : ''}
+        ${jr.suggestions ? '<p>💡 ' + escapeHtml(jr.suggestions.slice(0, 2).join('；')) + '</p>' : ''}
+      </div>
+    `;
+    resultDiv.style.display = 'block';
+    btn.textContent = '已完成';
+
+    // ★★★ fire-and-forget 场景下可能无 material_recommendations，回退到缓存 ★★★
+    if (result.material_recommendations) {
+      renderRecommendations(result.material_recommendations);
+    } else {
+      restoreRecommendations();
+    }
+
+    // ★★★ 有自我表述历史分析数据时，加"历史分析"按钮（第2次之后都可能有）★★★
+    if (result.self_explanation_data) {
+      window._savedAnalysisData = result.self_explanation_data;
+      addSeHistoryButton();
+    }
+
+    // ★★★ 答错时触发自我表述（已有推荐资源时不弹，直接显示推荐）★★★
+    if (result.explain_required && !result.material_recommendations && record && record.record_id) {
+      openSelfExplanation(record.record_id, record.question_type, record);
+    }
+
+    await loadList();
+    await loadMasteredList();
+    await loadStats();
+    await loadFrequentlyWrongList();
+    await loadFrequentlyWrongStats();
+  } catch (e) {
+    alert('提交失败: ' + e.message);
+    btn.disabled = false;
+    btn.textContent = '提交答案';
+  }
+}
+
+async function submitTheory(record, qd) {
+  const btn = document.getElementById('btnSubmit');
+  btn.disabled = true;
+  btn.textContent = '评判中...';
+
+  const hasOptions = (qd.options && qd.options.length > 0) || record.question_type === 'judge';
+  let userAnswer = hasOptions ? theorySelectedAnswer : '';
+
+  if (!hasOptions) {
+    userAnswer = document.getElementById('fillAnswer')?.value || '';
+  }
+  if (!userAnswer.trim()) { alert('请先作答'); btn.disabled = false; btn.textContent = '提交答案'; return; }
+
+  try {
+    const resp = await fetch('/theory/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id: getUserId(),
+        question_type: record.question_type,
+        question: qd,
+        user_answer: userAnswer,
+        knowledge_points: record.knowledge_points || [],
+        source: record.source || 'theory',
+        record_id: record.record_id || ''
+      })
+    });
+    const result = await resp.json();
+    const isCorrect = result.is_correct;
+
+    const resultDiv = document.getElementById('modalResult');
+    resultDiv.className = `modal-result show ${isCorrect ? 'success' : 'fail'}`;
+
+    // 构建分析HTML
+    let analysisHtml = '';
+    if (result.analysis) {
+      analysisHtml = '<div style="margin-top:10px;padding-top:10px;border-top:1px solid ' + (isCorrect ? '#a9dfbf' : '#f5b7b1') + '">';
+      if (result.analysis.correctness) {
+        analysisHtml += '<div style="font-size:13px;margin-bottom:6px"><strong>📊 评判分析：</strong>' + escapeHtml(result.analysis.correctness) + '</div>';
+      }
+      if (result.analysis.explanation) {
+        analysisHtml += '<details style="margin-top:6px"><summary style="font-size:13px;font-weight:600;cursor:pointer;color:' + (isCorrect ? '#1e8449' : '#c0392b') + '">📖 查看答案解析</summary><div style="font-size:13px;line-height:1.7;margin-top:6px;padding:10px;background:' + (isCorrect ? '#e8f8f5' : '#fdedec') + ';border-radius:6px;white-space:pre-wrap">' + escapeHtml(result.analysis.explanation) + '</div></details>';
+      }
+      analysisHtml += '</div>';
+    }
+
+    resultDiv.innerHTML = `
+      <div class="result-title">${isCorrect ? '✅ 回答正确！' : '❌ 回答错误'}</div>
+      <div class="result-detail">
+        <p>你的答案: <strong>${escapeHtml(userAnswer)}</strong></p>
+        <p>正确答案: <strong>${escapeHtml(result.correct_answer || '')}</strong></p>
+        <p>得分: <strong>${result.score || 0}</strong> / 100</p>
+        ${isCorrect ? '<p>🎉 已掌握！</p>' : '<p>📝 继续加油，下次一定做对！</p>'}
+      </div>
+      ${analysisHtml}
+    `;
+    resultDiv.style.display = 'block';
+    btn.textContent = '已完成';
+
+    // ★★★ fire-and-forget 场景下可能无 material_recommendations，回退到缓存 ★★★
+    if (result.material_recommendations) {
+      renderRecommendations(result.material_recommendations);
+    } else {
+      restoreRecommendations();
+    }
+
+    // ★★★ 有自我表述历史分析数据时，加"历史分析"按钮（第2次之后都可能有）★★★
+    if (result.self_explanation_data) {
+      window._savedAnalysisData = result.self_explanation_data;
+      addSeHistoryButton();
+    }
+
+    // ★★★ 答错时触发自我表述（已有推荐资源时不弹，直接显示推荐）★★★
+    if (result.explain_required && !result.material_recommendations && record && record.record_id) {
+      openSelfExplanation(record.record_id, record.question_type, record);
+    }
+
+    await loadList();
+    await loadMasteredList();
+    await loadStats();
+    await loadFrequentlyWrongList();
+    await loadFrequentlyWrongStats();
+  } catch (e) {
+    alert('提交失败: ' + e.message);
+    btn.disabled = false;
+    btn.textContent = '提交答案';
+  }
+}
+
+// ==================== Frequently Wrong (易错题) ====================
+
+async function loadFrequentlyWrongStats() {
+  const userId = getUserId();
+  const statsRow = document.getElementById('fwStatsRow');
+  const kpArea = document.getElementById('fwKpArea');
+
+  try {
+    const resp = await fetch(`/wrong-answers/${userId}/frequently-wrong/stats`);
+    const data = await resp.json();
+
+    if (!data.success) {
+      statsRow.innerHTML = '<div class="fw-stat-card"><div class="label">获取统计失败</div></div>';
+      kpArea.innerHTML = '';
+      return;
+    }
+
+    const total = data.total || 0;
+    const avgAttempts = data.avg_attempts || 0;
+    const maxAttempts = data.max_attempts || 0;
+    const threshold = data.threshold || 4;
+    const weakKps = data.weak_knowledge_points || [];
+
+    statsRow.innerHTML = `
+      <div class="fw-stat-card"><div class="num">${total}</div><div class="label">🔥 易错题总数</div></div>
+      <div class="fw-stat-card"><div class="num">${avgAttempts}</div><div class="label">📊 平均错误次数</div></div>
+      <div class="fw-stat-card"><div class="num">${maxAttempts}</div><div class="label">🚨 最高错误次数</div></div>
+      <div class="fw-stat-card"><div class="num">${threshold}</div><div class="label">⚙️ 易错阈值(次)</div></div>
+    `;
+
+    if (weakKps.length > 0) {
+      kpArea.innerHTML = `
+        <div style="font-size:13px;color:#888;margin-bottom:6px">🏷️ 薄弱知识点 TOP${weakKps.length}</div>
+        ${weakKps.map(kp => `<span class="fw-kp-tag">${escapeHtml(kp.knowledge_point)} (${kp.count})</span>`).join('')}
+      `;
+    } else {
+      kpArea.innerHTML = '';
+    }
+  } catch (e) {
+    statsRow.innerHTML = '<div class="fw-stat-card"><div class="label">⚠️ 加载统计失败</div></div>';
+    kpArea.innerHTML = '';
+  }
+}
+
+async function loadFrequentlyWrongList() {
+  const userId = getUserId();
+  const type = document.getElementById('filterType').value;
+  const source = document.getElementById('filterSource').value;
+  const listArea = document.getElementById('frequentlyWrongListArea');
+  const pagination = document.getElementById('frequentlyWrongPagination');
+
+  listArea.innerHTML = '<div class="loading"><div class="spinner"></div><p>加载中...</p></div>';
+
+  try {
+    let url = `/wrong-answers/${userId}/frequently-wrong?page=${currentFwPage}&page_size=${pageSize}`;
+    if (type) url += `&question_type=${type}`;
+    if (source) url += `&source=${source}`;
+
+    const resp = await fetch(url);
+    const data = await resp.json();
+
+    if (!data.success) {
+      listArea.innerHTML = `<div class="empty-state"><p>⚠️ ${data.detail || '加载失败'}</p></div>`;
+      return;
+    }
+
+    const records = data.records || [];
+    const total = data.total || 0;
+    const totalPages = data.total_pages || 0;
+    const maxAttempts = records.length > 0 ? Math.max(...records.map(r => r.attempt_count || 1)) : 1;
+
+    if (records.length === 0) {
+      listArea.innerHTML = '<div class="empty-state"><div class="icon">🎉</div><p>暂无易错题，继续保持！</p></div>';
+      pagination.innerHTML = '';
+      return;
+    }
+
+    listArea.innerHTML = records.map((r, idx) => renderFrequentlyWrongCard(r, maxAttempts, idx)).join('');
+
+    // 渲染完成后绘制所有环形图
+    setTimeout(() => {
+      records.forEach((r, idx) => {
+        drawFwRing('fwRing_' + idx, r);
+      });
+    }, 50);
+
+    pagination.innerHTML = `
+      <button onclick="goFwPage(${currentFwPage - 1})" ${currentFwPage <= 1 ? 'disabled' : ''}>上一页</button>
+      <span class="page-info">第 ${currentFwPage} / ${totalPages} 页（共 ${total} 题）</span>
+      <button onclick="goFwPage(${currentFwPage + 1})" ${currentFwPage >= totalPages ? 'disabled' : ''}>下一页</button>
+    `;
+  } catch (e) {
+    listArea.innerHTML = '<div class="empty-state"><p>⚠️ 网络错误</p></div>';
+  }
+}
+
+function renderFrequentlyWrongCard(r, maxAttempts, idx) {
+  const qd = r.question_data || {};
+  const qText = qd.question || qd.title || qd.description || '';
+  const kps = r.knowledge_points || [];
+  let question = qText || '';
+  if (!question && r.question_type === 'programming') {
+    question = kps.length > 0 ? `【知识点】${kps.join('、')}` : '编程题';
+  }
+  if (!question) question = '(无题目内容)';
+
+  const typeName = {
+    programming: '💻 编程题', single_choice: '🔘 单选题',
+    multiple_choice: '☑️ 多选题', judge: '⚖️ 判断题',
+    fill_blank: '✏️ 填空题', short_answer: '📝 简答题'
+  }[r.question_type] || r.question_type;
+
+  const attemptCount = r.attempt_count || 1;
+  const barPercent = Math.min(100, Math.round((attemptCount / Math.max(maxAttempts, 1)) * 100));
+  const scoreClass = r.score < 60 ? 'fail' : 'pass';
+  const scoreText = r.score !== undefined ? `${r.score}分` : '-';
+  const canvasId = 'fwRing_' + idx;
+
+  return `
+    <div class="wa-card fw-card">
+      <div class="fw-ring-wrap">
+        <canvas id="${canvasId}" width="80" height="80"></canvas>
+        <div class="fw-ring-center">
+          <span class="ring-num">${attemptCount}</span>
+          <span class="ring-label">次错误</span>
+        </div>
+      </div>
+      <div class="fw-body">
+        <div class="header-row">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="type-badge ${r.question_type}">${typeName}</span>
+            <span class="fw-badge">🔥 顽固</span>
+          </div>
+          <span class="score ${scoreClass}">${scoreText}</span>
+        </div>
+        <div class="question-text" onclick="this.classList.toggle('expanded')">${escapeHtml(question)}</div>
+        <div class="answer-row">
+          <span class="wrong">❌ 你的答案: ${escapeHtml(r.user_answer || '(未作答)')}</span>
+        </div>
+        <div class="attempt-bar">
+          <span style="font-size:11px;color:#888">错误程度</span>
+          <div class="bar-bg"><div class="bar-fill" style="width:${barPercent}%"></div></div>
+          <span style="font-size:11px;color:#c0392b;font-weight:600">${attemptCount}次</span>
+        </div>
+        <div class="meta-row">
+          <span>📅 ${r.created_at ? r.created_at.slice(0, 10) : '-'}</span>
+          <span>📊 难度 ${r.difficulty ? '⭐'.repeat({'简单':1,'中等偏易':2,'中等':3,'中等偏难':4,'困难':5,'挑战':6}[r.difficulty] || 1) : '⭐'}</span>
+          ${kps.length ? `<span>🏷️ ${kps.slice(0, 3).join(', ')}</span>` : ''}
+          <button class="btn-retry" onclick="openPractice('${r.record_id}')">✏️ 重新练习</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function drawFwRing(canvasId, record) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const size = 80;
+  canvas.width = size * dpr;
+  canvas.height = size * dpr;
+  canvas.style.width = size + 'px';
+  canvas.style.height = size + 'px';
+  ctx.scale(dpr, dpr);
+
+  const cx = size / 2, cy = size / 2, radius = 33, lineWidth = 7;
+  const attempts = record.attempts || [];
+  const totalAttempts = attempts.length || record.attempt_count || 1;
+
+  // 统计通过/失败次数
+  let passCount = 0, failCount = 0;
+  if (attempts.length > 0) {
+    attempts.forEach(a => {
+      if (a.score >= 60) passCount++;
+      else failCount++;
+    });
+  } else {
+    // 无详细记录时，全部算失败
+    failCount = totalAttempts;
+  }
+  const total = passCount + failCount || 1;
+  const failRatio = failCount / total;
+  const passRatio = passCount / total;
+
+  const startAngle = -Math.PI / 2;
+
+  // 背景圈
+  ctx.beginPath();
+  ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+  ctx.strokeStyle = '#f0f0f0';
+  ctx.lineWidth = lineWidth;
+  ctx.stroke();
+
+  // 失败弧（红色）
+  if (failRatio > 0) {
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, startAngle, startAngle + failRatio * Math.PI * 2);
+    ctx.strokeStyle = '#e74c3c';
+    ctx.lineWidth = lineWidth;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+  }
+
+  // 通过弧（绿色，接在红色后面）
+  if (passRatio > 0) {
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius,
+      startAngle + failRatio * Math.PI * 2,
+      startAngle + (failRatio + passRatio) * Math.PI * 2);
+    ctx.strokeStyle = '#27ae60';
+    ctx.lineWidth = lineWidth;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+  }
+
+  // 底部小标签：失败/通过次数
+  ctx.font = 'bold 9px sans-serif';
+  ctx.textAlign = 'center';
+  if (failCount > 0) {
+    ctx.fillStyle = '#e74c3c';
+    ctx.fillText('✗' + failCount, cx - 14, cy + radius + 14);
+  }
+  if (passCount > 0) {
+    ctx.fillStyle = '#27ae60';
+    ctx.fillText('✓' + passCount, cx + 14, cy + radius + 14);
+  }
+}
+
+function goFwPage(page) {
+  currentFwPage = page;
+  loadFrequentlyWrongList();
+}
+
+// ==================== ★★★ 自我表述（独立模块）★★★ ====================
+
+/** 记录当前正在进行的自我表述会话ID */
+let currentSeSessionId = null;
+
+/** 打开自我表述界面 */
+async function openSelfExplanation(recordId, questionType, record) {
+  const section = document.getElementById('selfExplainSection');
+  const hint = document.getElementById('seHintText');
+  const textarea = document.getElementById('seTextarea');
+  const submitBtn = document.getElementById('seSubmitBtn');
+  const resultDiv = document.getElementById('seResult');
+
+  // 重置状态
+  textarea.value = '';
+  textarea.disabled = false;
+  resultDiv.className = 'se-result';
+  resultDiv.style.display = 'none';
+  resultDiv.innerHTML = '';
+  submitBtn.disabled = false;
+  submitBtn.textContent = '提交并分析';
+  section.setAttribute('data-record-id', recordId);
+  currentSeSessionId = null;
+
+  // ★★★ 显示自我表述时，先隐藏推荐区域（等分析完成或跳过后再显示）★★★
+  const recSection = document.getElementById('recommendSection');
+  if (recSection) recSection.classList.remove('show');
+
+  // 根据题型设置提示
+  const kp = (record && record.knowledge_points) || [];
+  if (questionType === 'programming') {
+    hint.textContent = '你的代码在哪里出了问题？正确的解法思路是什么？能用你自己的话把逻辑理顺一遍吗？' + (kp.length ? '（知识点：' + kp.join('、') + '）' : '');
+  } else {
+    hint.textContent = '你为什么会选这个选项/答案？你觉得这道题考的是什么知识点？正确的思路应该是怎样的？' + (kp.length ? '（知识点：' + kp.join('、') + '）' : '');
+  }
+
+  section.classList.add('show');
+  textarea.focus();
+}
+
+/** 提交自我表述 */
+async function submitSelfExplanation() {
+  const textarea = document.getElementById('seTextarea');
+  const submitBtn = document.getElementById('seSubmitBtn');
+  const resultDiv = document.getElementById('seResult');
+  const section = document.getElementById('selfExplainSection');
+
+  const explanation = textarea.value.trim();
+  if (!explanation) { alert('请先写下你的解释再提交'); return; }
+  if (explanation.length < 10) { alert('请写得详细一些，至少10个字'); return; }
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = '分析中...';
+
+  try {
+    // 第一步：如果没有 session_id，先启动会话
+    let sessionId = section.getAttribute('data-session-id') || currentSeSessionId;
+    if (!sessionId) {
+      const recordId = section.getAttribute('data-record-id');
+      const userId = getUserId();
+      const startResp = await fetch('/wrong-answers/explain/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: userId, record_id: recordId })
+      });
+      const startData = await startResp.json();
+      if (!startData.success) {
+        alert('启动分析失败: ' + (startData.detail || '未知错误'));
+        submitBtn.disabled = false;
+        submitBtn.textContent = '提交并分析';
+        return;
+      }
+      sessionId = startData.session_id;
+      section.setAttribute('data-session-id', sessionId);
+      currentSeSessionId = sessionId;
+      if (startData.prompt_hint) {
+        document.getElementById('seHintText').textContent = startData.prompt_hint;
+      }
+    }
+
+    // 第二步：提交表述并获取分析
+    const userId = getUserId();
+    const submitResp = await fetch('/wrong-answers/explain/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        session_id: sessionId,
+        user_id: userId,
+        user_explanation: explanation
+      })
+    });
+    const submitData = await submitResp.json();
+
+    if (!submitData.success) {
+      alert('分析失败: ' + (submitData.detail || '未知错误'));
+      submitBtn.disabled = false;
+      submitBtn.textContent = '提交并分析';
+      return;
+    }
+
+    // 第三步：显示分析结果 + 分流
+    renderSelfExplanationResult(submitData, resultDiv, sessionId, userId);
+
+    // 锁定提交按钮
+    submitBtn.textContent = '已分析完成';
+    textarea.disabled = true;
+
+  } catch (e) {
+    alert('分析过程出错: ' + e.message);
+    submitBtn.disabled = false;
+    submitBtn.textContent = '提交并分析';
+  }
+}
+
+/** 渲染自我表述分析结果 + 分流处理 */
+function renderSelfExplanationResult(data, resultDiv, sessionId, userId) {
+  const levelMap = {
+    'deep_understanding': { label: '✅ 理解深入', css: 'level-deep' },
+    'surface_understanding': { label: '⚠️ 理解浅层', css: 'level-surface' },
+    'misunderstanding': { label: '❌ 存在误解', css: 'level-misunderstanding' },
+    'no_understanding': { label: '🔍 尚未理解', css: 'level-none' },
+  };
+  const levelInfo = levelMap[data.analysis_level] || levelMap['no_understanding'];
+
+  let gapsHtml = '';
+  if (data.analysis_gaps && data.analysis_gaps.length > 0) {
+    gapsHtml = '<div style="margin-top:8px"><strong>理解盲区：</strong></div>' +
+      data.analysis_gaps.map(g => '<div class="se-gap-item">' + escapeHtml(g) + '</div>').join('');
+  }
+
+  let suggestHtml = '';
+  if (data.analysis_suggestions && data.analysis_suggestions.length > 0) {
+    suggestHtml = '<div style="margin-top:6px"><strong>学习建议：</strong></div>' +
+      data.analysis_suggestions.map(s => '<div class="se-suggest-item">' + escapeHtml(s) + '</div>').join('');
+  }
+
+  let summaryHtml = '';
+  if (data.summary) {
+    summaryHtml = '<div class="se-summary">' + escapeHtml(data.summary) + '</div>';
+  }
+
+  // ★★★ 分流：理解差 → 推荐按钮；理解好 → 直接展示讲解 ★★★
+  let actionHtml = '';
+  const isPoorLevel = data.analysis_level === 'misunderstanding' || data.analysis_level === 'no_understanding';
+
+  if (isPoorLevel) {
+    // 理解差 → 显示"推荐同类型题巩固"按钮
+    actionHtml = `
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(0,0,0,0.08)">
+        <button class="se-btn se-btn-submit" id="seRecommendBtn"
+                onclick="triggerEarlyRecommendation('${sessionId}', '${userId}')"
+                style="width:100%;padding:10px 0;font-size:15px">
+          📚 推荐同类型题巩固
+        </button>
+        <div style="text-align:center;margin-top:6px;font-size:12px;color:#999">
+          通过练习同类型题目，把正确的思路巩固下来
+        </div>
+      </div>
+    `;
+  } else {
+    // 理解较好 → 鼓励用户继续尝试第3次
+    actionHtml = `
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(0,0,0,0.08);
+                  font-size:13px;color:#555;text-align:center;line-height:1.6">
+        思路基本正确！试着再做一次这道题，把正确的解法写出来。<br>
+        <span style="color:#1e8449;font-size:12px">💡 对比上面的解析，注意你刚才提到的盲区</span>
+      </div>
+    `;
+  }
+
+  resultDiv.className = 'se-result show ' + levelInfo.css;
+  resultDiv.innerHTML = `
+    <div class="se-level-label">${levelInfo.label}</div>
+    ${gapsHtml}
+    ${suggestHtml}
+    ${summaryHtml}
+    ${actionHtml}
+  `;
+  resultDiv.style.display = 'block';
+}
+
+/** 提前触发推荐（理解差时调用，跳过第3次错误） */
+async function triggerEarlyRecommendation(sessionId, userId) {
+  const btn = document.getElementById('seRecommendBtn');
+  if (!btn) return;
+  btn.disabled = true;
+  btn.textContent = '推荐生成中...';
+
+  try {
+    const resp = await fetch('/wrong-answers/explain/trigger-recommendation', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: sessionId, user_id: userId })
+    });
+    const data = await resp.json();
+
+    if (!data.success) {
+      alert('推荐生成失败: ' + (data.detail || '未知错误'));
+      btn.disabled = false;
+      btn.textContent = '📚 推荐同类型题巩固';
+      return;
+    }
+
+    // ★★★ 保存分析结果，隐藏自我表述区域 ★★★
+    const resultDiv = document.getElementById('seResult');
+    window._savedAnalysisHtml = resultDiv ? resultDiv.innerHTML : '';
+    window._savedAnalysisData = null;  // 优先用 HTML 格式
+    closeSelfExplanation();
+
+    // ★★★ 用原有推荐卡片 UI 渲染（recommendSection）★★★
+    renderRecommendations(data);
+
+    // ★★★ 添加历史分析按钮 ★★★
+    addSeHistoryButton();
+
+    // 按钮状态更新
+    btn.textContent = '✅ 推荐已生成';
+    btn.disabled = true;
+
+  } catch (e) {
+    alert('推荐出错: ' + e.message);
+    btn.disabled = false;
+    btn.textContent = '📚 推荐同类型题巩固';
+  }
+}
+
+/** 在推荐区域顶部添加"历史分析"按钮（供缓存渲染和提前推荐共用） */
+function addSeHistoryButton() {
+  const recSection = document.getElementById('recommendSection');
+  if (!recSection) return;
+  // 已存在则不重复添加
+  if (document.getElementById('seHistoryBar')) return;
+  const btn = document.createElement('div');
+  btn.id = 'seHistoryBar';
+  btn.style.cssText = 'margin-bottom:10px;text-align:center';
+  btn.innerHTML = `<button class="se-btn se-btn-skip" onclick="showHistoricalAnalysis()" style="font-size:12px;padding:4px 16px;border-color:#1565c0;color:#1565c0">📋 查看历史分析结果</button>`;
+  recSection.insertBefore(btn, recSection.firstChild);
+}
+
+/** 检查错题记录是否有自我表述历史分析，有则加载数据并显示按钮 */
+async function _checkSelfExplanationHistory(userId, recordId) {
+  try {
+    const resp = await fetch(`/wrong-answers/explain/history/${userId}?page=1&page_size=50`);
+    const data = await resp.json();
+    const records = data.records || [];
+    const match = records.find(r => r.record_id === recordId && r.status === 'analyzed');
+    if (match) {
+      window._savedAnalysisData = {
+        analysis_level: match.analysis_level || '',
+        analysis_gaps: match.analysis_gaps || [],
+        analysis_suggestions: match.analysis_suggestions || [],
+        summary: match.summary || '',
+      };
+      addSeHistoryButton();
+    }
+  } catch (e) {
+    // 静默失败，不影响主流程
+  }
+}
+
+/** 关闭自我表述面板（纯关闭，不加载任何推荐） */
+function closeSelfExplanation() {
+  const section = document.getElementById('selfExplainSection');
+  section.classList.remove('show');
+  // 关闭时停止可能正在进行的录音
+  if (window._seMediaRecorder && window._seMediaRecorder.state === 'recording') {
+    stopVoiceRecording();
+  }
+}
+
+// ==================== ★★★ 语音输入（MediaRecorder + Whisper）★★★ ====================
+
+let _seMediaRecorder = null;
+let _seAudioChunks = [];
+let _seRecordingTimer = null;
+let _seRecordingSeconds = 0;
+const SE_MAX_RECORD_SECONDS = 50; // 50秒强制停止（留余量）
+
+/** 切换录音状态 */
+async function toggleVoiceRecording() {
+  const btn = document.getElementById('seVoiceBtn');
+  if (btn.classList.contains('recording')) {
+    stopVoiceRecording();
+    return;
+  }
+  if (btn.classList.contains('processing')) return;
+
+  await startVoiceRecording();
+}
+
+/** 开始录音 */
+async function startVoiceRecording() {
+  const btn = document.getElementById('seVoiceBtn');
+  const timer = document.getElementById('seVoiceTimer');
+  const hint = document.getElementById('seVoiceHint');
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+    _seAudioChunks = [];
+    _seRecordingSeconds = 0;
+    _seMediaRecorder = new MediaRecorder(stream, {
+      mimeType: MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+        ? 'audio/webm;codecs=opus'
+        : 'audio/webm'
+    });
+
+    _seMediaRecorder.ondataavailable = function(e) {
+      if (e.data.size > 0) _seAudioChunks.push(e.data);
+    };
+
+    _seMediaRecorder.onstop = async function() {
+      // 停止所有音轨
+      stream.getTracks().forEach(t => t.stop());
+
+      // 清除定时器
+      if (_seRecordingTimer) {
+        clearInterval(_seRecordingTimer);
+        _seRecordingTimer = null;
+      }
+
+      btn.classList.remove('recording');
+      btn.classList.add('processing');
+      document.getElementById('seVoiceIcon').textContent = '⏳';
+      document.getElementById('seVoiceLabel').textContent = '识别中...';
+      timer.style.display = 'none';
+      hint.textContent = '• 正在识别语音，请稍候...';
+
+      // 上传音频
+      await uploadAudioForTranscription();
+    };
+
+    // 开始录音
+    _seMediaRecorder.start(100); // 每100ms收集一次数据
+    btn.classList.add('recording');
+    document.getElementById('seVoiceIcon').textContent = '🔴';
+    document.getElementById('seVoiceLabel').textContent = '录音中...点击停止';
+    timer.style.display = 'inline';
+    timer.textContent = '0s';
+    hint.textContent = '• 正在录音，说完后点击停止 • 超30秒自动停止';
+
+    // 计时器 + 30秒自动停止
+    _seRecordingTimer = setInterval(() => {
+      _seRecordingSeconds++;
+      timer.textContent = _seRecordingSeconds + 's';
+      if (_seRecordingSeconds >= SE_MAX_RECORD_SECONDS) {
+        hint.textContent = '• 已达30秒上限，自动停止';
+        stopVoiceRecording();
+      }
+    }, 1000);
+
+  } catch (e) {
+    hint.textContent = '⚠️ 无法访问麦克风，请检查权限设置';
+    btn.classList.remove('recording');
+    document.getElementById('seVoiceIcon').textContent = '🎤';
+    document.getElementById('seVoiceLabel').textContent = '点击说话';
+    console.error('麦克风访问失败:', e);
+  }
+}
+
+/** 停止录音 */
+function stopVoiceRecording() {
+  if (_seMediaRecorder && _seMediaRecorder.state === 'recording') {
+    _seMediaRecorder.stop();
+  }
+  if (_seRecordingTimer) {
+    clearInterval(_seRecordingTimer);
+    _seRecordingTimer = null;
+  }
+}
+
+/** 上传音频到后端进行 Whisper 识别 */
+async function uploadAudioForTranscription() {
+  const btn = document.getElementById('seVoiceBtn');
+  const textarea = document.getElementById('seTextarea');
+  const hint = document.getElementById('seVoiceHint');
+
+  try {
+    if (_seAudioChunks.length === 0) {
+      throw new Error('未录制到音频数据');
+    }
+
+    const blob = new Blob(_seAudioChunks, { type: 'audio/webm' });
+    const formData = new FormData();
+    formData.append('audio_file', blob, 'recording.webm');
+
+    const resp = await fetch('/speech/recognize', {
+      method: 'POST',
+      body: formData
+    });
+
+    const data = await resp.json();
+
+    if (!data.success) {
+      throw new Error(data.detail || '识别失败');
+    }
+
+    // 将识别结果填入文本框
+    const transcribedText = data.text || '';
+    if (transcribedText) {
+      // 追加到现有文本后面
+      const existingText = textarea.value.trim();
+      textarea.value = existingText
+        ? existingText + '\n' + transcribedText
+        : transcribedText;
+      // 更新字符计数
+      const count = document.getElementById('seCharCount');
+      if (count) count.textContent = textarea.value.length;
+      // 自动滚动到文本框底部
+      textarea.scrollTop = textarea.scrollHeight;
+      hint.textContent = '✅ 语音识别完成，文字已填入上方';
+    } else {
+      hint.textContent = '⚠️ 识别结果为空，请重试';
+    }
+
+  } catch (e) {
+    hint.textContent = '⚠️ 语音识别失败: ' + e.message;
+  }
+
+  // 恢复按钮状态
+  btn.classList.remove('processing');
+  document.getElementById('seVoiceIcon').textContent = '🎤';
+  document.getElementById('seVoiceLabel').textContent = '点击说话';
+}
+
+/** 弹窗展示历史分析结果（支持 HTML 和结构化数据两种格式） */
+function showHistoricalAnalysis() {
+  // 优先用 HTML 格式（第2次触发推荐时保存的）
+  let html = window._savedAnalysisHtml;
+  
+  // 没有 HTML 但有结构化数据（第3次缓存渲染时后端返回的）
+  if (!html && window._savedAnalysisData) {
+    const d = window._savedAnalysisData;
+    const levelMap = {
+      'deep_understanding': '✅ 理解深入',
+      'surface_understanding': '⚠️ 理解浅层',
+      'misunderstanding': '❌ 存在误解',
+      'no_understanding': '🔍 尚未理解',
+    };
+    const levelLabel = levelMap[d.analysis_level] || d.analysis_level || '分析结果';
+
+    let gapsHtml = '';
+    if (d.analysis_gaps && d.analysis_gaps.length > 0) {
+      gapsHtml = '<div style="margin-top:8px"><strong>理解盲区：</strong></div>' +
+        d.analysis_gaps.map(g => '<div style="padding:3px 0;font-size:13px">⚠️ ' + escapeHtml(g) + '</div>').join('');
+    }
+
+    let suggestHtml = '';
+    if (d.analysis_suggestions && d.analysis_suggestions.length > 0) {
+      suggestHtml = '<div style="margin-top:6px"><strong>学习建议：</strong></div>' +
+        d.analysis_suggestions.map(s => '<div style="padding:3px 0;font-size:13px">💡 ' + escapeHtml(s) + '</div>').join('');
+    }
+
+    let summaryHtml = '';
+    if (d.summary) {
+      summaryHtml = '<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(0,0,0,0.08);font-size:13px">' + escapeHtml(d.summary) + '</div>';
+    }
+
+    html = `
+      <div class="se-level-label" style="font-weight:700;font-size:15px;margin-bottom:6px">${levelLabel}</div>
+      ${gapsHtml}
+      ${suggestHtml}
+      ${summaryHtml}
+    `;
+  }
+
+  if (!html) { alert('暂无可查看的历史分析'); return; }
+
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay active';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:2000;display:flex;align-items:center;justify-content:center';
+  overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:16px;padding:28px;max-width:600px;width:90%;max-height:70vh;overflow-y:auto;position:relative;box-shadow:0 8px 32px rgba(0,0,0,0.15)">
+      <button onclick="this.closest('.modal-overlay').remove()" style="position:absolute;top:12px;right:16px;background:none;border:none;font-size:24px;cursor:pointer;color:#888">&times;</button>
+      <div style="font-size:18px;font-weight:700;margin-bottom:16px;color:#1565c0">📋 历史分析结果</div>
+      <div class="se-result show" style="display:block;border-left:4px solid #b3d9f2;background:#e8f4fd;padding:16px;border-radius:8px">${html}</div>
+      <div style="text-align:right;margin-top:16px">
+        <button class="se-btn se-btn-skip" onclick="this.closest('.modal-overlay').remove()" style="font-size:13px;padding:6px 20px">关闭</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+}
+
+// ★★★ 字符计数 ★★★
+document.addEventListener('DOMContentLoaded', function() {
+  const textarea = document.getElementById('seTextarea');
+  if (textarea) {
+    textarea.addEventListener('input', function() {
+      const count = document.getElementById('seCharCount');
+      if (count) count.textContent = this.value.length;
+    });
+  }
+});
+
+loadData();
+</script>
+<script>
+window.addEventListener('message', function(e){if(e.data&&e.data.type==='setUserId'){var inp=document.getElementById('userId');if(inp)inp.value=e.data.userId;}});
+</script>
+<script>
+(function(){try{window.parent.postMessage({type:'pageContext',page:'wrong_answers',title:'错题本',action:'viewing',detail:''},'*');}catch(e){}})();
+</script>
+</body>
+</html>

@@ -1,0 +1,49 @@
+# dark_tech.yaml 深色科技黑底主题（编程课件专用）
+layout:
+  slide_width_emu: 12192000
+  slide_height_emu: 6858000
+  floating_shadow_blur: "4pt"
+  floating_shadow_dist: "1pt"
+  floating_shadow_alpha: "65000"
+  floating_title_box_height_emu: 1600000
+  cover_title_separator: "："
+  cover_main_title_top_emu: 1000000
+  cover_subtitle_top_emu: 2100000
+  cover_section_start_top_emu: 2900000
+  cover_section_gap_emu: 280000
+  section_title_box_height_emu: 380000
+  section_title_to_content_gap_emu: 360000
+  section_content_box_height_emu: 550000
+  content_margin_left_emu: 500000
+  content_margin_top_emu: 457200
+  content_width_emu: 5500000
+  content_title_box_height_emu: 800000
+  content_title_to_points_gap_emu: 1300000
+  content_shadow_blur: "12pt"
+  content_shadow_dist: "6pt"
+  content_shadow_alpha: "55000"
+  point_bullet: "◆"
+  point_box_height_emu: 480000
+  point_to_detail_gap_emu: 380000
+  detail_indent_emu: 300000
+  detail_box_height_emu: 680000
+  point_vertical_gap_emu: 1050000
+
+font_size:
+  cover_main_title_pt: 72
+  cover_subtitle_pt: 24
+  section_title_pt: 26
+  section_content_pt: 16
+  content_title_pt: 36
+  point_pt: 22
+  detail_pt: 16
+  code_pt: 14
+
+color:
+  cover_main_title_color: "#00D4FF"
+  cover_subtitle_color: "#87CEFA"
+  section_title_color: "#00D4FF"
+  section_content_color: "#E8E8E8"
+  content_title_color: "#00D4FF"
+  accent: "#39FF14"
+  text_body: "#E8E8E8"

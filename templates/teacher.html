@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>教师工作台</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+       background:#f5f7fa; color:#1a1a2e; min-height:100vh; }
+
+.header { background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); color:#fff;
+          padding:14px 28px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
+.header h1 { font-size:18px; font-weight:600; display:flex; align-items:center; gap:8px; }
+.header .subtitle { font-size:12px; opacity:0.8; margin-top:2px; }
+.header .id-box { display:flex; align-items:center; gap:8px; font-size:13px; }
+.header input { background:rgba(255,255,255,0.2); border:none; color:#fff;
+                padding:7px 12px; border-radius:6px; font-size:13px; outline:none; width:180px; }
+.header input::placeholder { color:rgba(255,255,255,0.6); }
+.header input:focus { background:rgba(255,255,255,0.3); }
+
+.container { max-width:1200px; margin:0 auto; padding:20px 16px; }
+
+.tab-bar { background:#fff; display:flex; border-radius:10px 10px 0 0;
+           box-shadow:0 1px 3px rgba(0,0,0,0.06); overflow-x:auto; }
+.tab-bar .tab { padding:12px 20px; cursor:pointer; font-size:13px; font-weight:500;
+                color:#888; transition:all .2s; border-bottom:3px solid transparent;
+                user-select:none; white-space:nowrap; }
+.tab-bar .tab:hover { color:#667eea; background:#fafbfc; }
+.tab-bar .tab.active { color:#667eea; border-bottom-color:#667eea; background:#fff; }
+
+.tab-content { display:none; }
+.tab-content.active { display:block; }
+
+.card { background:#fff; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.06);
+        padding:20px 24px; margin-bottom:16px; }
+.card-title { font-size:14px; font-weight:600; color:#333; margin-bottom:14px;
+              padding-bottom:8px; border-bottom:1px solid #eee; display:flex; align-items:center;
+              justify-content:space-between; }
+.card-title .ttxt { display:flex; align-items:center; gap:6px; }
+.card-title .ttxt::before { content:"▌"; color:#667eea; }
+
+.btn { padding:7px 18px; border:none; border-radius:8px; cursor:pointer;
+       font-size:13px; font-weight:500; transition:all .2s; display:inline-flex;
+       align-items:center; gap:5px; }
+.btn-primary { background:linear-gradient(135deg,#667eea,#764ba2); color:#fff; }
+.btn-primary:hover { transform:translateY(-1px); box-shadow:0 4px 12px rgba(102,126,234,0.3); }
+.btn-success { background:linear-gradient(135deg,#00b894,#00cec9); color:#fff; }
+.btn-success:hover { transform:translateY(-1px); box-shadow:0 4px 12px rgba(0,184,148,0.3); }
+.btn-danger { background:linear-gradient(135deg,#ff7675,#d63031); color:#fff; }
+.btn-danger:hover { transform:translateY(-1px); box-shadow:0 4px 12px rgba(255,118,117,0.3); }
+.btn-sm { padding:5px 12px; font-size:12px; }
+.btn:disabled { opacity:0.5; cursor:not-allowed; transform:none !important; }
+
+.form-row { display:flex; align-items:center; gap:10px; margin-bottom:12px; flex-wrap:wrap; }
+.form-row label { font-size:13px; color:#555; min-width:90px; font-weight:500; }
+.form-row input,.form-row select,.form-row textarea {
+  background:#fff; border:1px solid #ddd; border-radius:6px; padding:7px 10px;
+  font-size:13px; flex:1; min-width:160px; outline:none; font-family:inherit;
+}
+.form-row input:focus,.form-row select:focus,.form-row textarea:focus {
+  border-color:#667eea; box-shadow:0 0 0 2px rgba(102,126,234,0.1);
+}
+.form-row textarea { min-height:60px; resize:vertical; }
+
+.status { padding:8px 14px; border-radius:6px; font-size:12px; margin-top:10px; display:none; }
+.status.show { display:block; }
+.status.ok { background:#d5f5e3; color:#1a7a42; border:1px solid #a3e4bc; }
+.status.err { background:#fde8e8; color:#c0392b; border:1px solid #f5b7b1; }
+.status.info { background:#d6eaf8; color:#1a5276; border:1px solid #aed6f1; }
+
+.grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:14px; }
+.item { border:1px solid #eef0f5; border-radius:8px; padding:14px; background:#fafbfc;
+        cursor:pointer; transition:all .2s; }
+.item:hover { border-color:#667eea; box-shadow:0 2px 8px rgba(102,126,234,0.08); }
+.item .name { font-size:14px; font-weight:600; color:#667eea; margin-bottom:6px; word-break:break-all; }
+.item .meta { font-size:11px; color:#999; margin-bottom:4px; }
+.item .tag { display:inline-block; background:#f0f2ff; border:1px solid #dde0f0;
+             color:#556; padding:2px 8px; font-size:10px; margin-top:4px; border-radius:4px; }
+
+table { width:100%; border-collapse:collapse; font-size:13px; }
+th { background:#f8f9fc; color:#667eea; padding:10px; text-align:left; border-bottom:2px solid #667eea; font-weight:600; }
+td { padding:10px; border-bottom:1px solid #eef0f5; color:#333; word-break:break-all; }
+tr:hover td { background:#fafbfc; }
+
+.empty { color:#aaa; text-align:center; padding:30px; font-size:13px; }
+
+.stat-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; margin-bottom:8px; }
+.stat { background:#f8f9fc; border:1px solid #eef0f5; border-radius:8px; padding:14px; text-align:center; }
+.stat .v { font-size:24px; color:#667eea; font-weight:bold; }
+.stat .k { font-size:11px; color:#999; margin-top:4px; }
+.stat.warn .v { color:#d63031; }
+.stat.good .v { color:#00b894; }
+
+.chat-box { height:380px; overflow-y:auto; background:#f8f9fc; border:1px solid #eef0f5;
+           border-radius:8px; padding:14px; margin-bottom:10px; font-size:13px; }
+.msg { margin-bottom:12px; padding:8px 12px; border-radius:8px; max-width:85%; line-height:1.5; }
+.msg.user { background:#667eea; color:#fff; margin-left:auto; }
+.msg.bot { background:#fff; border:1px solid #eef0f5; color:#333; }
+.msg .role { font-size:10px; color:rgba(255,255,255,0.7); margin-bottom:4px; }
+.msg.bot .role { color:#aaa; }
+.chat-input { display:flex; gap:8px; }
+.chat-input input { flex:1; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>👨‍🏫 教师工作台</h1>
+    <div class="subtitle">班级 · 作业 · 批改 · 学情</div>
+  </div>
+  <div class="id-box">
+    <span>TEACHER_ID:</span>
+    <input id="teacherId" value="teacher_001" placeholder="teacher_xxx">
+  </div>
+</div>
+
+<div class="container">
+  <div class="tab-bar">
+    <div class="tab active" data-tab="classes" onclick="switchTab('classes')">📚 班级管理</div>
+    <div class="tab" data-tab="homework" onclick="switchTab('homework')">📝 作业管理</div>
+    <div class="tab" data-tab="grading" onclick="switchTab('grading')">✏ 批改中心</div>
+    <div class="tab" data-tab="analytics" onclick="switchTab('analytics')">📊 学情分析</div>
+    <div class="tab" data-tab="ai" onclick="switchTab('ai')">🤖 AI 助手</div>
+  </div>
+
+  <div class="tab-content active" id="tab-classes">
+    <div class="card">
+      <div class="card-title"><span class="ttxt">创建班级</span></div>
+      <div class="form-row">
+        <label>班级名称</label>
+        <input id="clsName" placeholder="如：高三(2)班">
+        <label>描述</label>
+        <input id="clsDesc" placeholder="可选">
+      </div>
+      <div class="form-row"><button class="btn btn-primary" onclick="createClass()">+ 创建班级</button></div>
+      <div class="status" id="clsStatus"></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="ttxt">我的班级</span><button class="btn btn-sm btn-primary" onclick="loadClasses()">↻ 刷新</button></div>
+      <div class="grid" id="classList"><div class="empty">— 暂无班级 —</div></div>
+    </div>
+    <div class="card" id="studentPanel" style="display:none">
+      <div class="card-title"><span class="ttxt">班级学生 · <span id="curClassName" style="color:#667eea"></span></span></div>
+      <div class="form-row">
+        <label>添加学生ID</label>
+        <input id="addStudentIds" placeholder="多个用逗号分隔，如 stu_1,stu_2">
+        <button class="btn btn-success" onclick="addStudents()">+ 加入</button>
+      </div>
+      <div class="status" id="stuStatus"></div>
+      <table style="margin-top:10px"><thead><tr><th>学生ID</th><th>加入时间</th></tr></thead><tbody id="studentTbody"></tbody></table>
+    </div>
+  </div>
+
+  <div class="tab-content" id="tab-homework">
+    <div class="card">
+      <div class="card-title"><span class="ttxt">创建作业</span></div>
+      <div class="form-row"><label>班级</label><select id="hwClass"></select></div>
+      <div class="form-row"><label>标题</label><input id="hwTitle" placeholder="如：第一周练习"></div>
+      <div class="form-row"><label>说明</label><textarea id="hwDesc" placeholder="可选"></textarea></div>
+      <div class="form-row"><label>题目ID</label><input id="hwQids" placeholder="逗号分隔，如 q1,q2,q3"><label>截止</label><input id="hwDue" type="datetime-local"></div>
+      <div class="form-row"><label>自动批改</label><select id="hwAuto"><option value="true">启用</option><option value="false">关闭</option></select><button class="btn btn-primary" onclick="createHomework()">+ 发布作业</button></div>
+      <div class="status" id="hwStatus"></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="ttxt">作业列表</span><button class="btn btn-sm btn-primary" onclick="loadHomework()">↻ 刷新</button></div>
+      <table><thead><tr><th>作业ID</th><th>班级</th><th>标题</th><th>题目</th><th>截止</th><th>创建时间</th></tr></thead><tbody id="hwTbody"></tbody></table>
+    </div>
+  </div>
+
+  <div class="tab-content" id="tab-grading">
+    <div class="card">
+      <div class="card-title"><span class="ttxt">选择作业查看提交</span></div>
+      <div class="form-row"><label>作业</label><select id="gradeHwSel" onchange="loadSubmissions()"></select><button class="btn btn-sm btn-primary" onclick="loadGradingHw()">↻ 刷新作业</button></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="ttxt">提交列表</span></div>
+      <div class="status" id="gradeStatus"></div>
+      <table><thead><tr><th>提交ID</th><th>学生</th><th>自动分</th><th>手动分</th><th>状态</th><th>评语</th><th>操作</th></tr></thead><tbody id="subTbody"></tbody></table>
+    </div>
+    <div class="card" id="gradeFormPanel" style="display:none">
+      <div class="card-title"><span class="ttxt">批改 · <span id="gradeSubId" style="color:#667eea"></span></span></div>
+      <div class="form-row"><label>手动评分</label><input id="gradeScore" type="number" min="0" max="100" step="0.5"></div>
+      <div class="form-row"><label>评语</label><textarea id="gradeComment" placeholder="给学生的反馈"></textarea></div>
+      <div class="form-row"><button class="btn btn-danger" onclick="submitGrade()">提交批改</button><button class="btn btn-sm" onclick="closeGradeForm()">取消</button></div>
+      <div class="status" id="gradeFormStatus"></div>
+    </div>
+  </div>
+
+  <div class="tab-content" id="tab-analytics">
+    <div class="card">
+      <div class="card-title"><span class="ttxt">班级学情概览</span></div>
+      <div class="form-row"><label>班级</label><select id="anaClassSel" onchange="loadClassProgress()"></select><button class="btn btn-sm btn-primary" onclick="loadAnaClasses()">↻ 刷新</button></div>
+      <div class="stat-grid" id="progressGrid"></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="ttxt">学生提交历史查询</span></div>
+      <div class="form-row"><label>学生ID</label><input id="anaStudentId" placeholder="如 stu_1"><button class="btn btn-primary" onclick="loadStudentHistory()">查询</button></div>
+      <table><thead><tr><th>提交ID</th><th>作业ID</th><th>自动分</th><th>手动分</th><th>状态</th><th>提交时间</th></tr></thead><tbody id="studentHisTbody"></tbody></table>
+    </div>
+  </div>
+
+  <div class="tab-content" id="tab-ai">
+    <div class="card">
+      <div class="card-title"><span class="ttxt">AI 教学助手</span><span style="font-size:11px;color:#999;font-weight:normal">自然语言操作班级/作业/批改/学情</span></div>
+      <div class="chat-box" id="chatBox">
+        <div class="msg bot"><div class="role">SYSTEM</div>已接入教师工作台。可输入"查看我的班级""创建作业""批改提交xxx"等指令，AI 会自动调用工具执行。</div>
+      </div>
+      <div class="chat-input"><input id="chatInput" placeholder="输入指令，如：查看班级 cls_xxx 的学情" onkeydown="if(event.key==='Enter')sendChat()"><button class="btn btn-primary" onclick="sendChat()">发送</button></div>
+      <div class="status" id="chatStatus"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const tid = () => $('teacherId').value.trim() || 'teacher_001';
+
+// 接收父页面 unified.html 同步的 userId（若父页面 teacher_id 与学生 user_id 不同，可手动改输入框）
+window.addEventListener('message', function(e){
+  if(e.data && e.data.type==='setUserId' && e.data.userId){
+    // 仅当当前 teacher_id 为空或为默认值时，采用父页面传入的 ID
+    const cur = $('teacherId').value.trim();
+    if(!cur || cur==='teacher_001'){ $('teacherId').value = e.data.userId; }
+  }
+});
+// 启动时向父页面请求 userId
+try { window.parent.postMessage({type:'getUserId'}, '*'); } catch(_){}
+
+async function apiGet(url){
+  const r = await fetch(url);
+  if(!r.ok){ const t=await r.text(); throw new Error(`${r.status} ${t}`); }
+  return r.json();
+}
+async function apiPost(url, body){
+  const r = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+  if(!r.ok){ const t=await r.text(); throw new Error(`${r.status} ${t}`); }
+  return r.json();
+}
+function showStatus(el, msg, type='info'){
+  el.className='status show '+type; el.textContent=msg;
+  setTimeout(()=> el.className='status', 3500);
+}
+function escape(s){ return String(s==null?'':s).replace(/[&<>]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+function fmt(v){ return v==null||v==='' ? '—' : escape(v); }
+
+function switchTab(tab){
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active', x.dataset.tab===tab));
+  document.querySelectorAll('.tab-content').forEach(x=>x.classList.toggle('active', x.id==='tab-'+tab));
+  if(tab==='classes') loadClasses();
+  else if(tab==='homework'){ loadHwClassOptions(); loadHomework(); }
+  else if(tab==='grading') loadGradingHw();
+  else if(tab==='analytics') loadAnaClasses();
+}
+
+async function createClass(){
+  const name=$('clsName').value.trim(), desc=$('clsDesc').value.trim();
+  if(!name){ showStatus($('clsStatus'),'请输入班级名称','err'); return; }
+  try{
+    const r=await apiPost('/teacher/classes',{class_name:name,description:desc,teacher_id:tid()});
+    showStatus($('clsStatus'),`✓ 班级已创建: ${r.data.class_id}`,'ok');
+    $('clsName').value=''; $('clsDesc').value=''; loadClasses();
+  }catch(e){ showStatus($('clsStatus'),'✗ '+e.message,'err'); }
+}
+async function loadClasses(){
+  try{
+    const r=await apiGet('/teacher/classes?teacher_id='+encodeURIComponent(tid()));
+    const list=r.data||[];
+    $('classList').innerHTML = list.length ? list.map(c=>`
+      <div class="item" onclick="openClass('${c.class_id}','${escape(c.class_name)}')">
+        <div class="name">${fmt(c.class_name)}</div>
+        <div class="meta">ID: ${fmt(c.class_id)}</div>
+        <div class="meta">学生数: ${c.student_count}</div>
+        <div class="meta">${fmt(c.created_at)}</div>
+        <div class="tag">${c.description||'无描述'}</div>
+      </div>`).join('') : '<div class="empty">— 暂无班级 —</div>';
+  }catch(e){ $('classList').innerHTML=`<div class="empty">加载失败: ${escape(e.message)}</div>`; }
+}
+let _curClassId=null;
+async function openClass(cid, cname){
+  _curClassId=cid; $('curClassName').textContent=cname; $('studentPanel').style.display='block';
+  try{
+    const r=await apiGet('/teacher/classes/'+cid+'/students');
+    const list=r.data||[];
+    $('studentTbody').innerHTML = list.length ? list.map(s=>`<tr><td>${fmt(s.student_id)}</td><td>${fmt(s.added_at)}</td></tr>`).join('') : '<tr><td colspan="2" class="empty">暂无学生</td></tr>';
+  }catch(e){ showStatus($('stuStatus'),'加载失败: '+e.message,'err'); }
+}
+async function addStudents(){
+  if(!_curClassId){ showStatus($('stuStatus'),'请先选择班级','err'); return; }
+  const ids=$('addStudentIds').value.split(',').map(s=>s.trim()).filter(Boolean);
+  if(!ids.length){ showStatus($('stuStatus'),'请输入学生ID','err'); return; }
+  try{
+    const r=await apiPost(`/teacher/classes/${_curClassId}/students`,{student_ids:ids});
+    showStatus($('stuStatus'),`✓ 已加入 ${r.data.added_count} 名学生`,'ok');
+    $('addStudentIds').value=''; openClass(_curClassId,$('curClassName').textContent);
+  }catch(e){ showStatus($('stuStatus'),'✗ '+e.message,'err'); }
+}
+
+async function loadHwClassOptions(){
+  try{
+    const r=await apiGet('/teacher/classes?teacher_id='+encodeURIComponent(tid()));
+    const list=r.data||[];
+    $('hwClass').innerHTML = list.length ? list.map(c=>`<option value="${c.class_id}">${escape(c.class_name)} (${c.class_id})</option>`).join('') : '<option value="">无班级</option>';
+  }catch(e){}
+}
+async function createHomework(){
+  const class_id=$('hwClass').value;
+  if(!class_id){ showStatus($('hwStatus'),'请先创建班级','err'); return; }
+  const qids=$('hwQids').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const due=$('hwDue').value ? new Date($('hwDue').value).toISOString() : null;
+  try{
+    const r=await apiPost('/teacher/homework',{class_id,teacher_id:tid(),title:$('hwTitle').value.trim(),description:$('hwDesc').value.trim(),question_ids:qids,auto_grade:$('hwAuto').value==='true',due_at:due});
+    showStatus($('hwStatus'),`✓ 作业已发布: ${r.data.homework_id}`,'ok');
+    $('hwTitle').value=''; $('hwDesc').value=''; $('hwQids').value=''; $('hwDue').value=''; loadHomework();
+  }catch(e){ showStatus($('hwStatus'),'✗ '+e.message,'err'); }
+}
+async function loadHomework(){
+  try{
+    const r=await apiGet('/teacher/homework?teacher_id='+encodeURIComponent(tid()));
+    const list=r.data||[];
+    $('hwTbody').innerHTML = list.length ? list.map(h=>`<tr>
+      <td>${fmt(h.homework_id)}</td><td>${fmt(h.class_id)}</td><td>${fmt(h.title)}</td>
+      <td>${(h.question_ids||[]).length} 题</td><td>${fmt(h.due_at)}</td><td>${fmt(h.created_at)}</td>
+    </tr>`).join('') : '<tr><td colspan="6" class="empty">暂无作业</td></tr>';
+  }catch(e){ $('hwTbody').innerHTML=`<tr><td colspan="6" class="empty">加载失败: ${escape(e.message)}</td></tr>`; }
+}
+
+async function loadGradingHw(){
+  try{
+    const r=await apiGet('/teacher/homework?teacher_id='+encodeURIComponent(tid()));
+    const list=r.data||[];
+    $('gradeHwSel').innerHTML = list.length ? list.map(h=>`<option value="${h.homework_id}">${escape(h.title)} (${h.homework_id})</option>`).join('') : '<option value="">无作业</option>';
+    if(list.length) loadSubmissions();
+  }catch(e){}
+}
+async function loadSubmissions(){
+  const hid=$('gradeHwSel').value;
+  if(!hid){ $('subTbody').innerHTML='<tr><td colspan="7" class="empty">请选择作业</td></tr>'; return; }
+  try{
+    const r=await apiGet('/teacher/homework/'+hid+'/submissions');
+    const list=r.data||[];
+    $('subTbody').innerHTML = list.length ? list.map(s=>`<tr>
+      <td>${fmt(s.submission_id)}</td><td>${fmt(s.student_id)}</td>
+      <td>${fmt(s.auto_score)}</td><td>${fmt(s.manual_score)}</td>
+      <td>${s.status==='graded'?'<span style="color:#00b894">已批改</span>':'<span style="color:#f59e0b">待批改</span>'}</td>
+      <td>${fmt(s.teacher_comment)}</td>
+      <td><button class="btn btn-sm btn-danger" onclick="openGrade('${s.submission_id}')">批改</button></td>
+    </tr>`).join('') : '<tr><td colspan="7" class="empty">暂无提交</td></tr>';
+  }catch(e){ $('subTbody').innerHTML=`<tr><td colspan="7" class="empty">加载失败: ${escape(e.message)}</td></tr>`; }
+}
+let _gradeSubId=null;
+function openGrade(sid){ _gradeSubId=sid; $('gradeSubId').textContent=sid; $('gradeFormPanel').style.display='block'; }
+function closeGradeForm(){ $('gradeFormPanel').style.display='none'; _gradeSubId=null; }
+async function submitGrade(){
+  if(!_gradeSubId){ showStatus($('gradeFormStatus'),'未选择提交','err'); return; }
+  const score=parseFloat($('gradeScore').value);
+  if(isNaN(score)){ showStatus($('gradeFormStatus'),'请输入有效分数','err'); return; }
+  try{
+    await apiPost('/teacher/submissions/'+_gradeSubId+'/grade',{manual_score:score,teacher_comment:$('gradeComment').value.trim()});
+    showStatus($('gradeFormStatus'),'✓ 批改已提交','ok');
+    closeGradeForm(); $('gradeScore').value=''; $('gradeComment').value=''; loadSubmissions();
+  }catch(e){ showStatus($('gradeFormStatus'),'✗ '+e.message,'err'); }
+}
+
+async function loadAnaClasses(){
+  try{
+    const r=await apiGet('/teacher/classes?teacher_id='+encodeURIComponent(tid()));
+    const list=r.data||[];
+    $('anaClassSel').innerHTML = list.length ? list.map(c=>`<option value="${c.class_id}">${escape(c.class_name)} (${c.class_id})</option>`).join('') : '<option value="">无班级</option>';
+    if(list.length) loadClassProgress();
+  }catch(e){}
+}
+async function loadClassProgress(){
+  const cid=$('anaClassSel').value;
+  if(!cid){ $('progressGrid').innerHTML='<div class="empty">请选择班级</div>'; return; }
+  try{
+    const r=await apiGet('/teacher/classes/'+cid+'/progress');
+    const p=r.data||{};
+    const pct=(v)=>(v*100).toFixed(1)+'%';
+    const rateClass = p.submit_rate>=0.8?'good':(p.submit_rate<0.5?'warn':'');
+    $('progressGrid').innerHTML=`
+      <div class="stat"><div class="v">${p.student_count}</div><div class="k">学生数</div></div>
+      <div class="stat"><div class="v">${p.homework_count}</div><div class="k">作业数</div></div>
+      <div class="stat"><div class="v">${p.submission_count}</div><div class="k">提交数</div></div>
+      <div class="stat"><div class="v">${p.graded_count}</div><div class="k">已批改</div></div>
+      <div class="stat"><div class="v">${p.avg_score}</div><div class="k">平均分</div></div>
+      <div class="stat ${rateClass}"><div class="v">${pct(p.submit_rate)}</div><div class="k">提交率</div></div>
+    `;
+  }catch(e){ $('progressGrid').innerHTML=`<div class="empty">加载失败: ${escape(e.message)}</div>`; }
+}
+async function loadStudentHistory(){
+  const sid=$('anaStudentId').value.trim();
+  if(!sid) return;
+  try{
+    const r=await apiGet('/teacher/students/'+encodeURIComponent(sid)+'/submissions');
+    const list=r.data||[];
+    $('studentHisTbody').innerHTML = list.length ? list.map(s=>`<tr>
+      <td>${fmt(s.submission_id)}</td><td>${fmt(s.homework_id)}</td>
+      <td>${fmt(s.auto_score)}</td><td>${fmt(s.manual_score)}</td>
+      <td>${s.status}</td><td>${fmt(s.submitted_at)}</td>
+    </tr>`).join('') : '<tr><td colspan="6" class="empty">暂无提交记录</td></tr>';
+  }catch(e){ $('studentHisTbody').innerHTML=`<tr><td colspan="6" class="empty">加载失败: ${escape(e.message)}</td></tr>`; }
+}
+
+function appendMsg(role, text){
+  const box=$('chatBox'); const div=document.createElement('div');
+  div.className='msg '+(role==='user'?'user':'bot');
+  div.innerHTML=`<div class="role">${role==='user'?'YOU':'AI'}</div>${escape(text)}`;
+  box.appendChild(div); box.scrollTop=box.scrollHeight;
+}
+async function sendChat(){
+  const input=$('chatInput'); const text=input.value.trim();
+  if(!text) return;
+  appendMsg('user', text); input.value='';
+  try{
+    const r=await fetch('/teacher/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({teacher_id:tid(),message:text})});
+    if(!r.ok){ appendMsg('bot',`⚠ AI 助手接口未接入（${r.status}）。请使用上方功能 Tab 操作，或后端补 /teacher/chat 流式接口。`); return; }
+    if(r.body && r.body.getReader){
+      const reader=r.body.getReader(); const dec=new TextDecoder();
+      let buf=''; appendMsg('bot',''); let last=$('chatBox').lastChild;
+      while(true){
+        const {done,value}=await reader.read();
+        if(done) break;
+        buf+=dec.decode(value,{stream:true});
+        const lines=buf.split('\n'); buf=lines.pop();
+        for(const ln of lines){
+          if(!ln.startsWith('data:')) continue;
+          const payload=ln.slice(5).trim();
+          if(payload==='[DONE]') continue;
+          try{
+            const j=JSON.parse(payload);
+            if(j.type==='tool_result'){
+              last.innerHTML += `<div style="font-size:11px;color:#00b894;margin-top:4px">🔧 已执行 ${escape(j.tool)}</div>`;
+            } else if(j.type==='error'){
+              last.innerHTML += `<div style="color:#c0392b;margin-top:4px">⚠ ${escape(j.content)}</div>`;
+            } else if(j.type==='final'){
+              last.innerHTML += escape(j.content);
+            } else if(j.type==='assistant' && j.content){
+              last.innerHTML += `<div style="font-size:11px;color:#999;margin-top:4px">${escape(j.content)}</div>`;
+            }
+          }catch(_){}
+        }
+      }
+    } else {
+      const j=await r.json(); appendMsg('bot', j.reply||j.content||JSON.stringify(j));
+    }
+  }catch(e){ appendMsg('bot','✗ 请求失败: '+e.message); }
+}
+
+loadClasses();
+</script>
+</body>
+</html>

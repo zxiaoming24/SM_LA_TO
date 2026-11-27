@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI数字孪生 - 你的学习分身</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+       background: #f0f2f5; color: #1a1a2e; min-height: 100vh; }
+
+.header { background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+           color: #fff; padding: 20px 32px; display: flex; align-items: center;
+           justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.header h1 { font-size: 22px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+.header h1 .badge { font-size: 11px; background: rgba(255,255,255,0.15); padding: 2px 10px;
+                     border-radius: 10px; font-weight: 400; }
+.header .user-area { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.header .user-area input { padding: 8px 14px; border: none; border-radius: 8px;
+                           background: rgba(255,255,255,0.15); color: #fff;
+                           font-size: 14px; width: 160px; outline: none; }
+.header .user-area input::placeholder { color: rgba(255,255,255,0.5); }
+
+.btn { padding: 8px 18px; border: none; border-radius: 8px; cursor: pointer;
+       font-size: 13px; font-weight: 500; transition: all .2s; white-space: nowrap; }
+.btn-primary { background: #667eea; color: #fff; }
+.btn-primary:hover { background: #5a6fd6; }
+.btn-success { background: #22c55e; color: #fff; }
+.btn-success:hover { background: #16a34a; }
+.btn-danger { background: #ef4444; color: #fff; }
+.btn-danger:hover { background: #dc2626; }
+.btn-warning { background: #f59e0b; color: #fff; }
+.btn-warning:hover { background: #d97706; }
+.btn-outline { background: transparent; color: rgba(255,255,255,0.85); border: 1px solid rgba(255,255,255,0.3); }
+.btn-outline:hover { background: rgba(255,255,255,0.1); }
+.btn-sm { padding: 5px 12px; font-size: 12px; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.tab-bar { display: flex; background: #fff; border-bottom: 1px solid #e0e0e0; padding: 0 32px;
+           position: sticky; top: 0; z-index: 10; }
+.tab-bar .tab { padding: 14px 24px; cursor: pointer; font-size: 14px; font-weight: 500;
+                color: #888; border-bottom: 3px solid transparent; transition: all .2s; }
+.tab-bar .tab:hover { color: #667eea; }
+.tab-bar .tab.active { color: #302b63; border-bottom-color: #302b63; font-weight: 600; }
+
+.container { max-width: 1100px; margin: 0 auto; padding: 24px 16px; }
+
+/* 开关 */
+.toggle-wrap { display: flex; align-items: center; gap: 8px; }
+.toggle { position: relative; display: inline-block; width: 44px; height: 24px; cursor: pointer; }
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle .slider { position: absolute; inset: 0; background: rgba(255,255,255,0.25);
+                  border-radius: 24px; transition: .3s; }
+.toggle .slider::before { content: ''; position: absolute; left: 3px; bottom: 3px;
+                          width: 18px; height: 18px; border-radius: 50%; background: #fff;
+                          transition: .3s; }
+.toggle input:checked + .slider { background: #22c55e; }
+.toggle input:checked + .slider::before { transform: translateX(20px); }
+.toggle-label { font-size: 13px; color: rgba(255,255,255,0.85); }
+
+/* 状态横幅 */
+.status-banner { display: flex; align-items: center; gap: 16px; padding: 16px 20px;
+                 border-radius: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+.status-banner.active { background: linear-gradient(135deg, #d4edda, #c3e6cb); border: 1px solid #b8daff; }
+.status-banner.inactive { background: linear-gradient(135deg, #f8f9fa, #e9ecef); border: 1px solid #dee2e6; }
+.status-banner .status-icon { font-size: 28px; }
+.status-banner .status-text { flex: 1; }
+.status-banner .status-text h3 { font-size: 16px; margin-bottom: 2px; }
+.status-banner .status-text p { font-size: 13px; color: #666; }
+
+/* 统计卡片 */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.stat-card { background: #fff; border-radius: 12px; padding: 16px; text-align: center;
+             box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+.stat-card .num { font-size: 28px; font-weight: 700; }
+.stat-card .num.green { color: #22c55e; }
+.stat-card .num.red { color: #ef4444; }
+.stat-card .num.blue { color: #3b82f6; }
+.stat-card .num.orange { color: #f59e0b; }
+.stat-card .num.purple { color: #8b5cf6; }
+.stat-card .label { font-size: 12px; color: #888; margin-top: 4px; }
+
+/* 区段卡片 */
+.section-card { background: #fff; border-radius: 16px; padding: 24px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 16px; }
+.section-card .card-header { display: flex; align-items: center; justify-content: space-between;
+                             margin-bottom: 16px; flex-wrap: wrap; gap: 8px; }
+.section-card .card-header h2 { font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.section-card .card-header .subtitle { font-size: 12px; color: #999; font-weight: 400; }
+
+/* 雷达图 */
+.chart-container { width: 100%; height: 340px; }
+
+/* 知识掌握度 */
+.kp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+.kp-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px;
+           border-radius: 8px; background: #f8f9fa; }
+.kp-item .kp-name { font-size: 13px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kp-item .kp-bar { flex: 1; height: 6px; background: #e0e0e0; border-radius: 3px; overflow: hidden; }
+.kp-item .kp-bar .fill { height: 100%; border-radius: 3px; transition: width .5s; }
+.kp-item .kp-val { font-size: 12px; font-weight: 600; width: 34px; text-align: right; }
+
+/* 对比历史表格 */
+.history-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.history-table th { text-align: left; padding: 10px 12px; background: #f8f9fa;
+                    font-weight: 600; color: #666; border-bottom: 2px solid #e0e0e0; }
+.history-table td { padding: 10px 12px; border-bottom: 1px solid #f0f0f0; }
+.history-table tr:hover { background: #f8f9fa; }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; }
+.tag-success { background: #d4edda; color: #155724; }
+.tag-danger { background: #f8d7da; color: #721c24; }
+.tag-warning { background: #fff3cd; color: #856404; }
+.tag-info { background: #d1ecf1; color: #0c5460; }
+.tag-secondary { background: #e2e3e5; color: #383d41; }
+
+/* 加载 */
+.loading { text-align: center; padding: 40px; color: #999; font-size: 14px; }
+.loading .spinner { display: inline-block; width: 24px; height: 24px; border: 3px solid #e0e0e0;
+                    border-top-color: #667eea; border-radius: 50%; animation: spin .8s linear infinite;
+                    margin-bottom: 8px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.empty-state { text-align: center; padding: 40px 20px; color: #999; }
+.empty-state .icon { font-size: 48px; margin-bottom: 12px; opacity: 0.4; }
+.empty-state p { font-size: 14px; }
+
+.error-state { text-align: center; padding: 40px; color: #ef4444; }
+.error-state p { font-size: 14px; }
+
+/* 诊断提示 */
+.diagnosis-box { padding: 14px 18px; border-radius: 10px; margin-bottom: 12px;
+                 font-size: 13px; line-height: 1.5; }
+.diagnosis-box.insight { background: #d1ecf1; border-left: 4px solid #17a2b8; color: #0c5460; }
+.diagnosis-box.warning-box { background: #fff3cd; border-left: 4px solid #ffc107; color: #856404; }
+.diagnosis-box.success-box { background: #d4edda; border-left: 4px solid #28a745; color: #155724; }
+
+/* ★★★ 构建进度条 + 状态面板 ★★★ */
+.build-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+                  background: rgba(0,0,0,0.5); z-index: 1000; align-items: center;
+                  justify-content: center; }
+.build-overlay.show { display: flex; }
+.build-modal { background: #1a1a2e; border-radius: 16px; padding: 32px; width: 620px;
+               max-width: 92vw; max-height: 80vh; color: #fff; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+.build-modal h2 { font-size: 18px; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+.build-modal .subtitle { font-size: 13px; color: rgba(255,255,255,0.5); margin-bottom: 20px; }
+
+.progress-wrap { margin-bottom: 20px; }
+.progress-bar-bg { height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; }
+.progress-bar-fill { height: 100%; width: 0%; border-radius: 3px;
+                     background: linear-gradient(90deg, #667eea, #764ba2);
+                     transition: width 0.4s ease; }
+.progress-text { display: flex; justify-content: space-between; margin-top: 6px;
+                 font-size: 12px; color: rgba(255,255,255,0.5); }
+
+.build-status-panel { background: rgba(255,255,255,0.05); border-radius: 10px;
+                      padding: 16px; max-height: 280px; overflow-y: auto;
+                      font-family: 'Consolas', 'Courier New', monospace; font-size: 12px;
+                      line-height: 1.6; }
+.build-status-panel::-webkit-scrollbar { width: 4px; }
+.build-status-panel::-webkit-scrollbar-track { background: transparent; }
+.build-status-panel::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
+
+.status-line { display: flex; align-items: flex-start; gap: 8px; padding: 4px 0;
+               opacity: 0; animation: statusFadeIn 0.3s ease forwards; }
+.status-line .dot { width: 6px; height: 6px; border-radius: 50%; margin-top: 5px;
+                    flex-shrink: 0; }
+.status-line .dot.waiting { background: rgba(255,255,255,0.2); }
+.status-line .dot.running { background: #667eea; box-shadow: 0 0 8px #667eea; animation: dotPulse 1s ease-in-out infinite; }
+.status-line .dot.done { background: #22c55e; }
+.status-line .dot.error { background: #ef4444; }
+.status-line .msg { flex: 1; color: rgba(255,255,255,0.8); }
+.status-line .msg .detail { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 2px; }
+.status-line .msg .detail .highlight { color: #22d3ee; }
+.status-line .pct { font-size: 11px; color: rgba(255,255,255,0.3); white-space: nowrap; }
+.status-line.completed .msg { color: #22c55e; }
+.status-line.errored .msg { color: #ef4444; }
+
+@keyframes statusFadeIn { to { opacity: 1; } }
+@keyframes dotPulse { 0%,100% { box-shadow: 0 0 8px #667eea; } 50% { box-shadow: 0 0 16px #667eea, 0 0 24px #667eea; } }
+
+@media (max-width: 768px) {
+  .header { padding: 16px; flex-direction: column; align-items: stretch; }
+  .header .user-area { justify-content: center; }
+  .container { padding: 16px 12px; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .kp-grid { grid-template-columns: 1fr; }
+  .tab-bar { padding: 0 12px; overflow-x: auto; }
+  .tab-bar .tab { padding: 12px 16px; font-size: 13px; white-space: nowrap; }
+  .build-modal { padding: 20px; width: 100%; max-height: 90vh; border-radius: 12px; }
+  .build-status-panel { max-height: 200px; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>AI 数字孪生 <span class="badge">BETA</span></h1>
+  <div class="user-area">
+    <input id="userId" type="text" placeholder="用户ID" value="user_001">
+    <button class="btn btn-outline" onclick="loadTwin()">加载</button>
+    <div class="toggle-wrap">
+      <label class="toggle">
+        <input id="twinToggle" type="checkbox" onchange="toggleTwin(this.checked)">
+        <span class="slider"></span>
+      </label>
+      <span class="toggle-label" id="toggleLabel">孪生关闭</span>
+    </div>
+  </div>
+</div>
+
+<div class="tab-bar">
+  <div class="tab active" onclick="switchTab('overview',this)">总览</div>
+  <div class="tab" onclick="switchTab('profile',this)">孪生画像</div>
+  <div class="tab" onclick="switchTab('history',this)">对比历史</div>
+</div>
+
+<!-- ============ 构建进度弹窗 ============ -->
+<div id="buildOverlay" class="build-overlay">
+  <div class="build-modal">
+    <h2>&#x1f916; 正在构建数字孪生</h2>
+    <div class="subtitle">正在从多个数据源采集你的特征数据...</div>
+    <div class="progress-wrap">
+      <div class="progress-bar-bg">
+        <div id="buildProgress" class="progress-bar-fill" style="width:0%"></div>
+      </div>
+      <div class="progress-text">
+        <span id="buildProgressLabel">0%</span>
+        <span id="buildStepLabel">初始化...</span>
+      </div>
+    </div>
+    <div id="buildStatusPanel" class="build-status-panel">
+      <div class="status-line">
+        <div class="dot waiting"></div>
+        <div class="msg">
+          等待开始...
+          <div class="detail">准备构建引擎</div>
+        </div>
+        <div class="pct">--</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- ============ TAB: 总览 ============ -->
+  <div id="tab-overview" class="tab-content">
+
+    <div id="statusBanner" class="status-banner inactive">
+      <div class="status-icon">&#x1f916;</div>
+      <div class="status-text">
+        <h3 id="statusTitle">尚未构建孪生</h3>
+        <p id="statusDesc">输入用户ID后点击"加载"，然后构建你的数字孪生</p>
+      </div>
+      <button id="btnBuild" class="btn btn-primary" onclick="buildTwin()">构建孪生</button>
+    </div>
+
+    <div id="loadingState" class="loading" style="display:none">
+      <div class="spinner"></div>
+      <p>正在加载...</p>
+    </div>
+
+    <div id="statsArea" style="display:none">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="num blue" id="statTotal">0</div>
+          <div class="label">总对比次数</div>
+        </div>
+        <div class="stat-card">
+          <div class="num green" id="statBothOk">0</div>
+          <div class="label">你对他对</div>
+        </div>
+        <div class="stat-card">
+          <div class="num purple" id="statWrongRight">0</div>
+          <div class="label">你错他对 <span style="color:#8b5cf6;font-weight:600">&#x2b06; 盲区</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="num orange" id="statRightWrong">0</div>
+          <div class="label">你对他错 <span style="color:#f59e0b;font-weight:600">需校准</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="num red" id="statBothWrong">0</div>
+          <div class="label">你错他错 <span style="color:#ef4444;font-weight:600">偏难</span></div>
+        </div>
+        <div class="stat-card" id="batchUpdateCard" style="display:none">
+          <div class="num" id="statBatchPending" style="font-size:22px;color:#8b5cf6">0</div>
+          <div class="label" id="statBatchLabel">待批次更新</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="trendArea" style="display:none">
+      <div class="section-card">
+        <div class="card-header">
+          <h2>&#x1f4c8; 学习趋势对比</h2>
+          <span class="subtitle">用户 vs 孪生 正确率变化</span>
+        </div>
+        <div id="trendChart" class="chart-container" style="height:260px;"></div>
+      </div>
+    </div>
+
+    <div id="overviewContent"></div>
+  </div>
+
+  <!-- ============ TAB: 孪生画像 ============ -->
+  <div id="tab-profile" class="tab-content" style="display:none">
+    <div class="section-card">
+      <div class="card-header">
+        <h2>&#x1f4ca; 八维能力雷达</h2>
+        <span class="subtitle">基于特征提取器的8维度评分</span>
+      </div>
+      <div id="radarChart" class="chart-container"></div>
+    </div>
+
+    <div class="section-card">
+      <div class="card-header">
+        <h2>&#x1f4da; 知识点掌握度</h2>
+        <span class="subtitle" id="masteryCount">共 0 个知识点</span>
+      </div>
+      <div id="masteryList" class="kp-grid empty-state">
+        <div><p>暂无掌握度数据</p></div>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="card-header">
+        <h2>&#x1f9e9; 孪生参数</h2>
+      </div>
+      <div id="twinParams" style="font-size:13px;color:#666;line-height:1.8">
+        <p>加载孪生数据后显示</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ TAB: 对比历史 ============ -->
+  <div id="tab-history" class="tab-content" style="display:none">
+    <div class="section-card">
+      <div class="card-header">
+        <h2>&#x1f4cb; 对比历史</h2>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <select id="historyFilter" class="btn btn-sm btn-outline" style="color:#333;background:#f0f0f0;border:1px solid #ddd"
+                  onchange="loadHistory()">
+            <option value="">全部类型</option>
+            <option value="both_correct">你对他对</option>
+            <option value="both_wrong">你错他错</option>
+            <option value="user_right_twin_wrong">你对他错</option>
+            <option value="user_wrong_twin_right">你错他对</option>
+          </select>
+          <button class="btn btn-sm btn-danger" onclick="clearHistory()">清空历史</button>
+        </div>
+      </div>
+      <div id="historyContent">
+        <div class="empty-state"><p>暂无对比记录</p></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ==================== 全局状态 ====================
+let currentUser = 'user_001';
+let twinData = null;
+let radarChart = null;
+
+// 8维度名称映射
+const DIMENSION_NAMES = ['学术背景', '学习行为', '目标动机', '认知能力', '情绪状态', '社交互动', '时间管理', '创新创造'];
+
+// ==================== 页面初始化 ====================
+document.addEventListener('DOMContentLoaded', function() {
+  loadTwin();
+  // 监听父页面发来的用户ID
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'setUserId') {
+      document.getElementById('userId').value = e.data.userId;
+      loadTwin();
+    }
+  });
+  // 通知父页面让父页面知道这个iframe已就绪
+  if (window.parent && window.parent !== window) {
+    window.parent.postMessage({ type: 'iframeReady', tab: 'digital-twin' }, '*');
+  }
+});
+
+// ==================== Tab切换 ====================
+function switchTab(name, el) {
+  document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+  document.getElementById('tab-' + name).style.display = 'block';
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  if (name === 'profile' && radarChart) radarChart.resize();
+}
+
+// ==================== 数据加载 ====================
+function getUserId() {
+  return document.getElementById('userId').value.trim() || 'user_001';
+}
+
+async function loadTwin() {
+  const uid = getUserId();
+  currentUser = uid;
+
+  document.getElementById('loadingState').style.display = 'block';
+  document.getElementById('statsArea').style.display = 'none';
+  document.getElementById('overviewContent').innerHTML = '';
+
+  try {
+    const resp = await fetch(`/digital-twin/${encodeURIComponent(uid)}`);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const data = await resp.json();
+
+    if (!data.success) throw new Error(data.detail || '加载失败');
+
+    twinData = data;
+    renderStatus(data.status, data.stats);
+    renderStats(data.stats);
+    renderOverview(data);
+    renderProfile(data.status);
+    renderHistory(data.stats);
+
+  } catch (e) {
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('overviewContent').innerHTML =
+      '<div class="error-state"><p>加载失败: ' + e.message + '</p></div>';
+  }
+}
+
+// ==================== 孪生开关 ====================
+async function toggleTwin(enabled) {
+  const uid = getUserId();
+  try {
+    const resp = await fetch(`/digital-twin/${encodeURIComponent(uid)}/toggle`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ enabled })
+    });
+    if (!resp.ok) throw new Error('切换失败');
+    const data = await resp.json();
+    updateToggleUI(enabled);
+    if (enabled) loadTwin();
+  } catch (e) {
+    alert(e.message);
+    document.getElementById('twinToggle').checked = !enabled;
+  }
+}
+
+function updateToggleUI(enabled) {
+  document.getElementById('twinToggle').checked = enabled;
+  document.getElementById('toggleLabel').textContent = enabled ? '孪生已开启' : '孪生关闭';
+}
+
+// ==================== 构建孪生（SSE流式进度） ====================
+function showBuildOverlay() {
+  const overlay = document.getElementById('buildOverlay');
+  overlay.classList.add('show');
+  document.getElementById('buildProgress').style.width = '0%';
+  document.getElementById('buildProgressLabel').textContent = '0%';
+  document.getElementById('buildStepLabel').textContent = '初始化...';
+  document.getElementById('buildStatusPanel').innerHTML = '';
+}
+
+function hideBuildOverlay() {
+  document.getElementById('buildOverlay').classList.remove('show');
+}
+
+function addStatusLine(dotClass, message, detail, pct) {
+  const panel = document.getElementById('buildStatusPanel');
+  const line = document.createElement('div');
+  line.className = 'status-line';
+  line.innerHTML =
+    '<div class="dot ' + dotClass + '"></div>' +
+    '<div class="msg">' + escapeHtml(message) +
+      '<div class="detail">' + escapeHtml(detail) + '</div>' +
+    '</div>' +
+    '<div class="pct">' + pct + '</div>';
+  panel.appendChild(line);
+  panel.scrollTop = panel.scrollHeight;
+  return line;
+}
+
+function updateLastStatusLine(dotClass, message, detail, pct) {
+  const panel = document.getElementById('buildStatusPanel');
+  const last = panel.lastElementChild;
+  if (last) {
+    last.querySelector('.dot').className = 'dot ' + dotClass;
+    last.querySelector('.msg').childNodes[0].textContent = ' ' + message;
+    const detailEl = last.querySelector('.msg .detail');
+    if (detailEl) detailEl.textContent = detail;
+    last.querySelector('.pct').textContent = pct;
+  }
+}
+
+async function buildTwin() {
+  const uid = getUserId();
+  document.getElementById('btnBuild').disabled = true;
+  document.getElementById('btnBuild').textContent = '构建中...';
+
+  showBuildOverlay();
+
+  try {
+    // 使用 SSE 流式构建
+    const resp = await fetch(`/digital-twin/${encodeURIComponent(uid)}/build-stream`);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let lastProgress = 0;
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        try {
+          const event = JSON.parse(line.slice(6));
+
+          // 更新进度条
+          const pct = event.progress || 0;
+          document.getElementById('buildProgress').style.width = pct + '%';
+          document.getElementById('buildProgressLabel').textContent = pct + '%';
+          document.getElementById('buildStepLabel').textContent = event.message || '';
+
+          // 添加新的状态行
+          const dotClass = event.status === 'complete' ? 'done'
+                         : event.status === 'error' ? 'error'
+                         : 'running';
+          addStatusLine(dotClass, event.message, event.detail || '', pct + '%');
+
+          // 更新上一条为已完成
+          if (lastProgress > 0 && pct > lastProgress) {
+            // 上一条已完成
+          }
+          lastProgress = pct;
+
+          // 构建完成
+          if (event.status === 'complete') {
+            document.getElementById('buildStepLabel').textContent = '完成！';
+            updateToggleUI(true);
+            // 延迟关闭，让用户看到完成状态
+            setTimeout(() => {
+              hideBuildOverlay();
+              loadTwin();
+            }, 1500);
+            return;
+          }
+
+          // 构建出错
+          if (event.status === 'error') {
+            document.getElementById('buildStepLabel').textContent = '构建出错';
+            setTimeout(() => {
+              hideBuildOverlay();
+              alert('构建失败: ' + (event.message || '未知错误'));
+            }, 2000);
+            return;
+          }
+
+        } catch (e) {
+          console.warn('SSE parse error:', e);
+        }
+      }
+    }
+  } catch (e) {
+    hideBuildOverlay();
+    alert('构建失败: ' + e.message);
+  } finally {
+    document.getElementById('btnBuild').disabled = false;
+    document.getElementById('btnBuild').textContent = '重建孪生';
+  }
+}
+
+// ==================== 渲染：状态横幅 ====================
+function renderStatus(status, stats) {
+  document.getElementById('loadingState').style.display = 'none';
+
+  const banner = document.getElementById('statusBanner');
+  const title = document.getElementById('statusTitle');
+  const desc = document.getElementById('statusDesc');
+  const btn = document.getElementById('btnBuild');
+
+  if (status.exists) {
+    banner.className = 'status-banner active';
+    const profile = status.profile || {};
+    const builtAt = profile.built_at ? profile.built_at.replace('T', ' ').substring(0, 19) : '未知';
+    title.textContent = '孪生已构建';
+    desc.textContent = '构建时间: ' + builtAt + ' | 综合评分: ' + (profile.overall_score || '--');
+    btn.textContent = status.enabled ? '重建孪生' : '构建孪生';
+    updateToggleUI(status.enabled);
+    if (status.enabled) {
+      document.getElementById('statsArea').style.display = 'block';
+    } else {
+      document.getElementById('statsArea').style.display = 'none';
+    }
+  } else {
+    banner.className = 'status-banner inactive';
+    title.textContent = '尚未构建孪生';
+    desc.textContent = '点击"构建孪生"按钮，系统将基于你的特征和知识掌握度创建数字分身';
+    btn.textContent = '构建孪生';
+    document.getElementById('twinToggle').checked = false;
+    document.getElementById('toggleLabel').textContent = '孪生关闭';
+    document.getElementById('statsArea').style.display = 'none';
+  }
+}
+
+// ==================== 渲染：统计卡片 ====================
+function renderStats(stats) {
+  if (!stats || !stats.exists) return;
+  document.getElementById('statTotal').textContent = stats.total || 0;
+  document.getElementById('statBothOk').textContent = stats.both_correct || 0;
+  document.getElementById('statWrongRight').textContent = stats.user_wrong_twin_right || 0;
+  document.getElementById('statRightWrong').textContent = stats.user_right_twin_wrong || 0;
+  document.getElementById('statBothWrong').textContent = stats.both_wrong || 0;
+
+  // 批次更新信息
+  const batchCard = document.getElementById('batchUpdateCard');
+  const pendingRecords = stats.pending_records;
+  const batchSize = stats.batch_update_size;
+  if (pendingRecords !== undefined && pendingRecords !== null && batchSize !== undefined && batchSize !== null) {
+    batchCard.style.display = 'block';
+    document.getElementById('statBatchPending').textContent = pendingRecords + '/' + batchSize;
+    const label = document.getElementById('statBatchLabel');
+    if (stats.pending_batch) {
+      label.innerHTML = '待更新 &#x1f504; 批次已满';
+      document.getElementById('statBatchPending').style.color = '#f59e0b';
+    } else {
+      label.textContent = '待批次更新（' + batchSize + '条触发）';
+      document.getElementById('statBatchPending').style.color = '#8b5cf6';
+    }
+  } else {
+    batchCard.style.display = 'none';
+  }
+}
+
+// ==================== 渲染：总览内容 ====================
+function renderOverview(data) {
+  const container = document.getElementById('overviewContent');
+  const stats = data.stats;
+
+  let html = '';
+
+  if (stats && stats.exists && stats.total > 0) {
+    // 诊断提示
+    if (stats.user_wrong_twin_right > stats.total * 0.3) {
+      html += '<div class="diagnosis-box warning-box">&#x26a0;&#xfe0f; 检测到较多"你错他对"的情况（' +
+              stats.user_wrong_twin_right_pct + '%），表明存在明显的知识盲区，建议重点关注薄弱知识点。</div>';
+    }
+    if (stats.user_right_twin_wrong > stats.total * 0.3) {
+      html += '<div class="diagnosis-box insight">&#x1f4a1; 检测到较多"你对他错"的情况（' +
+              stats.user_right_twin_wrong_pct + '%），孪生画像可能需要校准。</div>';
+    }
+
+    // 批次更新提示
+    if (stats.pending_batch) {
+      html += '<div class="diagnosis-box warning-box">&#x1f504; <strong>孪生特征待更新:</strong> ' +
+              '已累积 ' + stats.pending_records + ' 条新对比记录（触发阈值 ' + stats.batch_update_size + ' 条），' +
+              '系统将在下次对比时自动执行批量特征更新。</div>';
+    } else if (stats.batch_update_at) {
+      const batchTime = stats.batch_update_at.replace('T', ' ').substring(0, 16);
+      html += '<div class="diagnosis-box insight">&#x2705; <strong>孪生特征已更新:</strong> ' +
+              '上次批次更新于 ' + batchTime + '，' +
+              '累积 ' + stats.pending_records + ' 条待处理记录（' + stats.batch_update_size + '条触发批量更新）。</div>';
+    }
+
+    // 薄弱知识点
+    if (stats.weak_knowledge_points && stats.weak_knowledge_points.length > 0) {
+      html += '<div class="section-card">';
+      html += '<div class="card-header"><h2>&#x1f4a1; 薄弱知识点</h2><span class="subtitle">你错他对的知识点</span></div>';
+      html += '<div style="display:flex;flex-wrap:wrap;gap:8px;">';
+      stats.weak_knowledge_points.forEach(kp => {
+        html += '<span class="tag tag-danger">' + escapeHtml(kp) + '</span>';
+      });
+      html += '</div></div>';
+    }
+
+  } else if (data.status.exists && data.status.enabled) {
+    html = '<div class="empty-state"><div class="icon">&#x2705;</div><p>孪生已就绪，开始学习后自动生成对比数据</p></div>';
+  } else {
+    html = '<div class="empty-state"><div class="icon">&#x1f916;</div><p>构建孪生后查看总览</p></div>';
+  }
+
+  container.innerHTML = html;
+
+  // 趋势图（始终显示区域）
+  document.getElementById('trendArea').style.display = 'block';
+  setTimeout(() => loadTrendChart(), 300);
+}
+
+function loadTrendChart() {
+  const uid = getUserId();
+  document.getElementById('trendArea').style.display = 'block';
+  fetch(`/digital-twin/${encodeURIComponent(uid)}/comparison?limit=200`)
+    .then(r => r.json())
+    .then(data => {
+      const history = data.history || [];
+      if (history.length < 2) {
+        document.getElementById('trendChart').innerHTML = '<div class="empty-state" style="padding:20px"><p>暂无足够数据，继续学习后将自动生成对比曲线</p></div>';
+        return;
+      }
+
+      // 生成 x 轴标签（用索引表示第几次对比）
+      const labels = history.map((_, i) => '#' + (i + 1));
+
+      // 正确率：每条记录是0或1，直接算累计正确率
+      const correctRate = (arr, idx) => {
+        const slice = arr.slice(0, idx + 1);
+        return Math.round(slice.filter(Boolean).length / slice.length * 100);
+      };
+      const userData = history.map((_, i) => correctRate(history.map(r => r.user_correct), i));
+      const twinData = history.map((_, i) => correctRate(history.map(r => r.twin_correct), i));
+
+      const dom = document.getElementById('trendChart');
+      if (!dom) return;
+
+      let chart = window._trendChart;
+      if (!chart) {
+        chart = echarts.init(dom);
+        window._trendChart = chart;
+      }
+
+      chart.setOption({
+        tooltip: {
+          trigger: 'axis',
+          backgroundColor: 'rgba(255,255,255,0.95)',
+          borderColor: '#eee',
+          borderWidth: 1,
+          padding: [8, 12],
+          textStyle: { color: '#333', fontSize: 12 },
+          formatter: function(params) {
+            let s = `<div style="font-weight:600;margin-bottom:4px">${params[0].axisValue}</div>`;
+            params.forEach(p => {
+              s += `<div style="display:flex;align-items:center;gap:6px;margin:2px 0">`;
+              s += `${p.marker}<span>${p.seriesName}:</span>`;
+              s += `<span style="font-weight:600;margin-left:auto">${p.value}%</span></div>`;
+            });
+            return s;
+          }
+        },
+        legend: {
+          data: ['用户', '孪生'],
+          bottom: 0,
+          itemWidth: 20,
+          itemHeight: 3,
+          textStyle: { fontSize: 12, color: '#666' }
+        },
+        grid: { left: '4%', right: '5%', top: '10%', bottom: '20%', containLabel: true },
+        xAxis: {
+          type: 'category',
+          data: labels,
+          boundaryGap: false,
+          axisLine: { lineStyle: { color: '#e0e0e0' } },
+          axisTick: { show: false },
+          axisLabel: { fontSize: 11, color: '#999', interval: 'auto' }
+        },
+        yAxis: {
+          type: 'value',
+          min: 0,
+          max: 100,
+          interval: 25,
+          axisLine: { show: false },
+          axisTick: { show: false },
+          splitLine: { lineStyle: { color: '#f0f0f0', type: 'dashed' } },
+          axisLabel: { formatter: '{value}%', fontSize: 11, color: '#999' }
+        },
+        series: [
+          {
+            name: '用户',
+            type: 'line',
+            data: userData,
+            smooth: 0.4,
+            symbol: 'circle',
+            symbolSize: 6,
+            showSymbol: false,
+            emphasis: { focus: 'series', itemStyle: { borderWidth: 2, borderColor: '#fff' } },
+            lineStyle: { width: 2.5, color: '#667eea', shadowColor: 'rgba(102,126,234,0.3)', shadowBlur: 8, shadowOffsetY: 3 },
+            itemStyle: { color: '#667eea' },
+            areaStyle: {
+              color: {
+                type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+                colorStops: [
+                  { offset: 0, color: 'rgba(102,126,234,0.25)' },
+                  { offset: 1, color: 'rgba(102,126,234,0.02)' }
+                ]
+              }
+            }
+          },
+          {
+            name: '孪生',
+            type: 'line',
+            data: twinData,
+            smooth: 0.4,
+            symbol: 'circle',
+            symbolSize: 6,
+            showSymbol: false,
+            emphasis: { focus: 'series', itemStyle: { borderWidth: 2, borderColor: '#fff' } },
+            lineStyle: { width: 2.5, color: '#f59e0b', shadowColor: 'rgba(245,158,11,0.3)', shadowBlur: 8, shadowOffsetY: 3 },
+            itemStyle: { color: '#f59e0b' },
+            areaStyle: {
+              color: {
+                type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+                colorStops: [
+                  { offset: 0, color: 'rgba(245,158,11,0.2)' },
+                  { offset: 1, color: 'rgba(245,158,11,0.02)' }
+                ]
+              }
+            }
+          }
+        ]
+      }, true);
+      chart.resize();
+
+    })
+    .catch(() => {
+      document.getElementById('trendChart').innerHTML = '<div class="empty-state" style="padding:20px"><p>暂无对比数据</p></div>';
+    });
+}
+
+// ==================== 渲染：孪生画像 ====================
+function renderProfile(status) {
+  if (!status || !status.exists || !status.profile) {
+    document.getElementById('masteryList').innerHTML =
+      '<div class="empty-state"><p>孪生未构建，无法显示画像</p></div>';
+    document.getElementById('twinParams').innerHTML = '<p>孪生未构建</p>';
+    return;
+  }
+
+  const profile = status.profile;
+
+  // 雷达图
+  drawRadarChart(profile.dimension_scores);
+
+  // 知识点掌握度
+  renderKnowledgeMastery(profile.knowledge_mastery);
+
+  // 孪生参数
+  renderTwinParams(profile);
+}
+
+function drawRadarChart(scores) {
+  const dom = document.getElementById('radarChart');
+  if (!dom) return;
+
+  if (!scores || scores.length !== 8) {
+    dom.innerHTML = '<div class="empty-state"><p>无维度评分数据</p></div>';
+    return;
+  }
+
+  if (!radarChart) {
+    radarChart = echarts.init(dom);
+  }
+
+  const option = {
+    tooltip: {
+      trigger: 'item',
+      formatter: function(params) {
+        if (params.componentType === 'radar') {
+          return params.seriesName + '<br/>' + params.name + ': ' + params.value;
+        }
+        return '';
+      }
+    },
+    legend: {
+      data: ['你', '孪生'],
+      bottom: 0,
+      textStyle: { fontSize: 12 }
+    },
+    radar: {
+      indicator: DIMENSION_NAMES.map((name, i) => ({
+        name: name,
+        max: 100
+      })),
+      shape: 'polygon',
+      splitNumber: 4,
+      axisName: {
+        color: '#333',
+        fontSize: 11
+      },
+      splitArea: {
+        areaStyle: {
+          color: ['rgba(102,126,234,0.02)', 'rgba(102,126,234,0.04)']
+        }
+      }
+    },
+    series: [{
+      type: 'radar',
+      name: '你',
+      data: [{
+        value: scores,
+        areaStyle: { color: 'rgba(102,126,234,0.2)' },
+        lineStyle: { color: '#667eea', width: 2 },
+        itemStyle: { color: '#667eea' }
+      }]
+    }]
+  };
+
+  radarChart.setOption(option, true);
+  radarChart.resize();
+}
+
+function renderKnowledgeMastery(mastery) {
+  const container = document.getElementById('masteryList');
+  const countEl = document.getElementById('masteryCount');
+
+  if (!mastery || Object.keys(mastery).length === 0) {
+    container.innerHTML = '<div class="empty-state"><p>暂无掌握度数据</p></div>';
+    countEl.textContent = '共 0 个知识点';
+    return;
+  }
+
+  // 非知识点的过滤规则（与孪生构建时一致）
+  const nonKpPatterns = new Set([
+    "fill_blank", "judge", "multiple_choice", "short_answer",
+    "single_choice", "rag_knowledge", "true_false", "completion",
+    "essay", "matching", "ordering", "code_completion"
+  ]);
+
+  let entries = Object.entries(mastery).filter(([kp]) => {
+    if (nonKpPatterns.has(kp)) return false;         // 题型标签
+    if (kp.trim().length <= 1) return false;          // 单字符
+    if (kp.includes('帮我复习') || kp.includes('rag_')) return false;  // 自动生成的无效知识点
+    return true;
+  }).sort((a, b) => a[0].localeCompare(b[0]));
+
+  countEl.textContent = '共 ' + entries.length + ' 个知识点';
+
+  let html = '';
+  entries.forEach(([kp, val]) => {
+    const pct = Math.round(val * 100);
+    const color = pct >= 80 ? '#22c55e' : pct >= 60 ? '#3b82f6' : pct >= 40 ? '#f59e0b' : '#ef4444';
+    html += '<div class="kp-item">';
+    html += '  <span class="kp-name">' + escapeHtml(kp) + '</span>';
+    html += '  <div class="kp-bar"><div class="fill" style="width:' + pct + '%;background:' + color + '"></div></div>';
+    html += '  <span class="kp-val" style="color:' + color + '">' + pct + '%</span>';
+    html += '</div>';
+  });
+  container.innerHTML = html;
+}
+
+function renderTwinParams(profile) {
+  const el = document.getElementById('twinParams');
+  el.innerHTML =
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px">' +
+    '  <div><strong>综合评分:</strong> ' + (profile.overall_score || '--') + '</div>' +
+    '  <div><strong>猜对概率 P(G):</strong> ' + (profile.guess_probability || '--') + '</div>' +
+    '  <div><strong>失误概率 P(S):</strong> ' + (profile.slip_probability || '--') + '</div>' +
+    '  <div><strong>信心因子:</strong> ' + (profile.confidence_factor || '--') + '</div>' +
+    '  <div><strong>特征来源:</strong> ' + (profile.feature_source ? '&#x2705;已加载' : '&#x274c;未加载') + '</div>' +
+    '  <div><strong>掌握度来源:</strong> ' + (profile.mastery_source ? '&#x2705;已加载' : '&#x274c;未加载') + '</div>' +
+    '</div>' +
+    '<div style="margin-top:12px;padding:10px;background:#f0f2f5;border-radius:8px;font-size:12px">' +
+    '<strong>错误模式分布:</strong> ' + JSON.stringify(profile.error_patterns || {}) +
+    '</div>';
+}
+
+// ==================== 渲染：对比历史 ====================
+function renderHistory(stats) {
+  if (stats && stats.exists && stats.total > 0) {
+    loadHistory();
+  }
+}
+
+async function loadHistory() {
+  const uid = getUserId();
+  const filter = document.getElementById('historyFilter').value;
+  const container = document.getElementById('historyContent');
+
+  try {
+    let url = `/digital-twin/${encodeURIComponent(uid)}/comparison?limit=50`;
+    if (filter) url += '&result_type=' + encodeURIComponent(filter);
+
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error('加载失败');
+    const data = await resp.json();
+
+    if (!data.success || !data.history || data.history.length === 0) {
+      container.innerHTML = '<div class="empty-state"><p>暂无对比记录</p></div>';
+      return;
+    }
+
+    let html = '';
+    data.history.slice().reverse().forEach((r, displayIdx) => {
+      // 用原始索引（从后往前数的原始索引）
+      const origIdx = data.history.length - 1 - displayIdx;
+      const time = (r.timestamp || '').replace('T', ' ').substring(0, 16);
+      const resultInfo = getResultInfo(r.result_type);
+      const confidence = r.twin_confidence ? Math.round(r.twin_confidence * 100) + '%' : '--';
+
+      // 答案详情
+      const userAns = r.user_answer !== undefined && r.user_answer !== null ? String(r.user_answer) : null;
+      const twinAns = r.twin_answer !== undefined && r.twin_answer !== null ? String(r.twin_answer) : null;
+      const correctAns = r.correct_answer !== undefined && r.correct_answer !== null ? String(r.correct_answer) : null;
+      const qContent = r.question_content || '';
+
+      html += '<div class="history-entry" style="border:1px solid #eee;border-radius:12px;margin-bottom:12px;overflow:hidden">';
+
+      // 头行
+      html += '<div class="history-row" style="display:flex;align-items:center;gap:12px;padding:10px 12px;font-size:13px;background:#fafafa;">' +
+              '  <span style="font-size:20px;">' + resultInfo.icon + '</span>' +
+              '  <div style="flex:1;min-width:0">' +
+              '    <div style="font-weight:500;color:#333">' + resultInfo.label + '</div>' +
+              '    <div style="font-size:12px;color:#999;margin-top:2px">' +
+                     escapeHtml(r.knowledge_point || '--') + ' &middot; ' + time +
+              '    </div>' +
+              '  </div>' +
+              '  <div style="text-align:right;flex-shrink:0">' +
+              '    <div style="font-size:11px;color:#888">孪生信心</div>' +
+              '    <div style="font-size:14px;font-weight:600;color:' + resultInfo.color + '">' + confidence + '</div>' +
+              '  </div>' +
+              '</div>';
+
+      // 答案卡片
+      html += '<div style="padding:8px 12px 4px 12px;display:flex;gap:10px;flex-wrap:wrap;font-size:12px;">';
+      if (qContent) {
+        const qId = 'qtext_' + origIdx;
+        const isLong = qContent.length > 120;
+        html += '<div style="width:100%;padding:6px 10px;background:#f8f9fa;border-radius:6px;color:#555;margin-bottom:4px;">' +
+                '  <strong>题目：</strong>' +
+                '  <span id="' + qId + '_short" style="display:' + (isLong ? 'inline' : 'none') + ';">' + escapeHtml(qContent.slice(0, 120)) + '... <a href="javascript:void(0)" onclick="document.getElementById(\'' + qId + '_short\').style.display=\'none\';document.getElementById(\'' + qId + '_full\').style.display=\'inline\'" style="color:#667eea;font-size:11px;">展开</a></span>' +
+                '  <span id="' + qId + '_full" style="display:' + (isLong ? 'none' : 'inline') + ';">' + escapeHtml(qContent) + (isLong ? ' <a href="javascript:void(0)" onclick="document.getElementById(\'' + qId + '_short\').style.display=\'inline\';document.getElementById(\'' + qId + '_full\').style.display=\'none\'" style="color:#667eea;font-size:11px;">收起</a>' : '') + '</span>' +
+                '</div>';
+      }
+      // 选项展示
+      const opts = r.question_options;
+      if (opts && Array.isArray(opts) && opts.length > 0) {
+        html += '<div style="width:100%;padding:4px 10px;margin-bottom:4px;">';
+        opts.forEach((opt, oi) => {
+          const letter = String.fromCharCode(65 + oi); // A, B, C, D ...
+          html += '<div style="font-size:12px;color:#555;padding:2px 0;">' +
+                  '  <span style="display:inline-block;width:20px;font-weight:600;color:#667eea;">' + letter + '.</span>' +
+                  '  <span>' + escapeHtml(String(opt)) + '</span>' +
+                  '</div>';
+        });
+        html += '</div>';
+      }
+      html += '  <div style="flex:1;min-width:120px;padding:6px 10px;background:#e8f5e9;border-radius:6px;"><strong style="color:#2e7d32;">你的答案：</strong><span style="color:#333">' + escapeHtml(userAns || '--') + '</span></div>';
+      html += '  <div style="flex:1;min-width:120px;padding:6px 10px;background:#fff3e0;border-radius:6px;"><strong style="color:#e65100;">孪生答案：</strong><span style="color:#333">' + escapeHtml(twinAns || '--') + '</span></div>';
+      if (correctAns) {
+        html += '  <div style="flex:1;min-width:120px;padding:6px 10px;background:#e3f2fd;border-radius:6px;"><strong style="color:#1565c0;">正确答案：</strong><span style="color:#333">' + escapeHtml(correctAns) + '</span></div>';
+      }
+      html += '</div>';
+
+      // 分析按钮 + 结果
+      html += '<div style="padding:4px 12px 10px 12px;">' +
+              '  <button class="btn btn-sm btn-primary" onclick="analyzeRecord(' + origIdx + ', this)" style="font-size:11px;">&#x1f50d; 分析</button>' +
+              '  <div id="analysis_' + origIdx + '" style="margin-top:8px;display:none;padding:10px 12px;background:#f0f4ff;border-radius:8px;font-size:12px;line-height:1.6;color:#333;white-space:pre-wrap;"></div>' +
+              '</div>';
+
+      html += '</div>';
+    });
+
+    container.innerHTML = html;
+
+  } catch (e) {
+    container.innerHTML = '<div class="error-state"><p>加载失败: ' + e.message + '</p></div>';
+  }
+}
+
+function getResultInfo(type) {
+  const map = {
+    'both_correct':    { icon: '&#x2705;', label: '你对他对，掌握一致', color: '#22c55e' },
+    'both_wrong':      { icon: '&#x274c;', label: '你错他错，题目偏难', color: '#ef4444' },
+    'user_right_twin_wrong': { icon: '&#x1f504;', label: '你对他错，孪生需校准', color: '#f59e0b' },
+    'user_wrong_twin_right': { icon: '&#x1f4a1;', label: '你错他对，发现知识盲区', color: '#3b82f6' },
+  };
+  return map[type] || { icon: '&#x2753;', label: type, color: '#888' };
+}
+
+async function clearHistory() {
+  if (!confirm('确定清空所有对比历史？')) return;
+  const uid = getUserId();
+  try {
+    const resp = await fetch(`/digital-twin/${encodeURIComponent(uid)}/history`, {
+      method: 'DELETE'
+    });
+    if (!resp.ok) throw new Error('清空失败');
+    document.getElementById('historyContent').innerHTML = '<div class="empty-state"><p>对比历史已清空</p></div>';
+    await loadTwin();
+  } catch (e) {
+    alert(e.message);
+  }
+}
+
+// ==================== 实时分析（点击"分析"按钮触发） ====================
+async function analyzeRecord(recordIdx, btn) {
+  const uid = getUserId();
+  const resultDiv = document.getElementById('analysis_' + recordIdx);
+  if (!resultDiv) return;
+
+  // 切换状态：已显示则折叠
+  if (resultDiv.style.display === 'block' && resultDiv.dataset.loaded) {
+    resultDiv.style.display = 'none';
+    btn.textContent = '\u{1f50d} 分析';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '分析中...';
+  resultDiv.style.display = 'block';
+  resultDiv.textContent = '正在生成分析...';
+
+  try {
+    const resp = await fetch(`/digital-twin/${encodeURIComponent(uid)}/comparison/${recordIdx}/analyze`);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const data = await resp.json();
+    console.log('分析响应数据:', data, 'visual_data:', data.visual_data);
+    if (data.success) {
+      let html = '';
+
+      // --- 可视化数据区 ---
+      const v = data.visual_data;
+      if (v) {
+        // 答案对比表
+        const uc = v.comparison.user;
+        const tc = v.comparison.twin;
+        html += '<div style="display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap;">';
+        // 用户卡片
+        html += '<div style="flex:1;min-width:100px;padding:10px;border-radius:8px;background:' + (uc.correct ? '#e8f5e9' : '#ffebee') + ';text-align:center;">' +
+                '  <div style="font-size:11px;color:#666;margin-bottom:4px;">\u{1f464} 你的答案</div>' +
+                '  <div style="font-size:16px;font-weight:700;color:' + (uc.correct ? '#2e7d32' : '#c62828') + ';">' + escapeHtml(uc.answer) + '</div>' +
+                '  <div style="font-size:11px;color:#888;margin-top:4px;">' + (uc.correct ? '\u2705 正确' : '\u274c 错误') + '</div>' +
+                '</div>';
+        // 孪生卡片
+        html += '<div style="flex:1;min-width:100px;padding:10px;border-radius:8px;background:' + (tc.correct ? '#e8f5e9' : '#fff3e0') + ';text-align:center;">' +
+                '  <div style="font-size:11px;color:#666;margin-bottom:4px;">\u{1f916} 孪生答案</div>' +
+                '  <div style="font-size:16px;font-weight:700;color:' + (tc.correct ? '#2e7d32' : '#e65100') + ';">' + escapeHtml(tc.answer) + '</div>' +
+                '  <div style="font-size:11px;color:#888;margin-top:4px;">' + (tc.correct ? '\u2705 正确' : '\u274c 错误') + '</div>' +
+                '</div>';
+        // 正确答案卡片
+        const ca = v.comparison.correct_answer;
+        if (ca && ca !== '—') {
+          html += '<div style="flex:1;min-width:100px;padding:10px;border-radius:8px;background:#e3f2fd;text-align:center;">' +
+                  '  <div style="font-size:11px;color:#666;margin-bottom:4px;">\u{1f3f7} 正确答案</div>' +
+                  '  <div style="font-size:16px;font-weight:700;color:#1565c0;">' + escapeHtml(ca) + '</div>' +
+                  '</div>';
+        }
+        html += '</div>';
+
+        // 指标进度条
+        html += '<div style="margin-bottom:10px;">';
+        const metrics = v.metrics;
+        console.log('metrics数据:', JSON.stringify(metrics));
+        if (metrics) {
+          const bars = [];
+          if (metrics.match_degree && metrics.match_degree.pct !== undefined && metrics.match_degree.pct !== null) {
+            bars.push({ label: '匹配度', pct: metrics.match_degree.pct, color: metrics.match_degree.color });
+          }
+          if (metrics.twin_confidence && metrics.twin_confidence.pct !== undefined && metrics.twin_confidence.pct !== null) {
+            bars.push({ label: '孪生信心', pct: metrics.twin_confidence.pct, color: metrics.twin_confidence.color });
+          }
+          if (metrics.kp_mastery && metrics.kp_mastery.pct !== null && metrics.kp_mastery.pct !== undefined) {
+            bars.push({ label: v.knowledge_point + ' 掌握度', pct: metrics.kp_mastery.pct, color: metrics.kp_mastery.color });
+          }
+          if (metrics.difficulty !== undefined && metrics.difficulty !== null) {
+            bars.push({ label: '题目难度', pct: metrics.difficulty, color: metrics.difficulty >= 70 ? '#ef4444' : metrics.difficulty >= 40 ? '#f59e0b' : '#22c55e' });
+          }
+          if (bars.length === 0) {
+            html += '<div style="font-size:12px;color:#999;text-align:center;padding:8px;">暂无指标数据</div>';
+          } else {
+            bars.forEach(b => {
+              const pct = Math.max(0, Math.min(100, Number(b.pct) || 0));
+              const color = b.color || '#888';
+              html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">' +
+                      '  <span style="width:80px;font-size:11px;color:#666;text-align:right;">' + b.label + '</span>' +
+                      '  <div style="flex:1;height:10px;border-radius:5px;background:linear-gradient(to right,' + color + ' ' + pct + '%,#e8e8e8 ' + pct + '%);"></div>' +
+                      '  <span style="width:34px;font-size:11px;font-weight:600;color:' + color + ';">' + pct + '%</span>' +
+                      '</div>';
+            });
+          }
+        } else {
+          html += '<div style="font-size:12px;color:#999;text-align:center;padding:8px;">指标数据为空</div>';
+        }
+        html += '</div>';
+      }
+
+      // --- 分析文字 ---
+      html += '<div style="background:#f0f4ff;border-radius:8px;padding:10px 12px;font-size:13px;line-height:1.7;color:#333;">' +
+              data.analysis_text + '</div>';
+
+      resultDiv.innerHTML = html;
+      resultDiv.dataset.loaded = 'true';
+      btn.textContent = '\u{1f50d} 收起分析';
+    } else {
+      resultDiv.textContent = '分析失败: ' + (data.analysis || '未知错误');
+    }
+  } catch (e) {
+    resultDiv.textContent = '请求失败: ' + e.message;
+  } finally {
+    btn.disabled = false;
+    if (!resultDiv.dataset.loaded) {
+      btn.textContent = '\u{1f50d} 分析';
+    }
+  }
+}
+
+// ==================== 工具 ====================
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+</script>
+
+</body>
+</html>
